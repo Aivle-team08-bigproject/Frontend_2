@@ -8,6 +8,7 @@ import RequirementAnalysisRegister from './pages/TaskFlow/RequirementAnalysisReg
 import AnalysisInProgress from './pages/TaskFlow/AnalysisInProgress'
 import ReviewFeedback from './pages/TaskFlow/ReviewFeedback'
 import DataSelectionInProgress from './pages/TaskFlow/DataSelectionInProgress'
+import SampleDataFeedback from './pages/TaskFlow/SampleDataFeedback'
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
         <Route path="/tasks/analyzing" element={<AnalysisInProgress />} />
         <Route path="/tasks/review" element={<ReviewFeedback />} />
         <Route path="/tasks/selection" element={<DataSelectionInProgress />} />
+        <Route path="/tasks/sample-feedback" element={<SampleDataFeedback />} />
       </Routes>
     </BrowserRouter>
   )

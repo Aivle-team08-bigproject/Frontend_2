@@ -19,6 +19,7 @@ import liveDotSrc from '../assets/icons/live-dot.svg'
 import refreshCwSrc from '../assets/icons/refresh-cw.svg'
 import refreshCwSmSrc from '../assets/icons/refresh-cw-sm.svg'
 import radioSelectedSrc from '../assets/icons/radio-selected.svg'
+import infoSrc from '../assets/icons/info.svg'
 
 export {
   searchIconSrc,
@@ -42,4 +43,5 @@ export {
   refreshCwSrc,
   refreshCwSmSrc,
   radioSelectedSrc,
+  infoSrc,
 }
