@@ -11,6 +11,7 @@ import DataSelectionInProgress from './pages/TaskFlow/DataSelectionInProgress'
 import SampleDataFeedback from './pages/TaskFlow/SampleDataFeedback'
 import DataProcessingInProgress from './pages/TaskFlow/DataProcessingInProgress'
 import FinalOutputFeedback from './pages/TaskFlow/FinalOutputFeedback'
+import TaskComplete from './pages/TaskFlow/TaskComplete'
 
 function App() {
   return (
@@ -29,6 +30,7 @@ function App() {
         <Route path="/tasks/sample-feedback" element={<SampleDataFeedback />} />
         <Route path="/tasks/processing" element={<DataProcessingInProgress />} />
         <Route path="/tasks/final-feedback" element={<FinalOutputFeedback />} />
+        <Route path="/tasks/complete" element={<TaskComplete />} />
       </Routes>
     </BrowserRouter>
   )

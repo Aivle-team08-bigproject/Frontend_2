@@ -22,6 +22,13 @@ import radioSelectedSrc from '../assets/icons/radio-selected.svg'
 import infoSrc from '../assets/icons/info.svg'
 import arrowRightSrc from '../assets/icons/arrow-right.svg'
 import arrowLeftSrc from '../assets/icons/arrow-left.svg'
+import downloadSrc from '../assets/icons/download.svg'
+import fileTextSrc from '../assets/icons/file-text.svg'
+import fileSpreadsheetSrc from '../assets/icons/file-spreadsheet.svg'
+import databaseSrc from '../assets/icons/database.svg'
+import copySrc from '../assets/icons/copy.svg'
+import mailSrc from '../assets/icons/mail.svg'
+import plusSmSrc from '../assets/icons/plus-sm.svg'
 
 export {
   searchIconSrc,
@@ -48,4 +55,11 @@ export {
   infoSrc,
   arrowRightSrc,
   arrowLeftSrc,
+  downloadSrc,
+  fileTextSrc,
+  fileSpreadsheetSrc,
+  databaseSrc,
+  copySrc,
+  mailSrc,
+  plusSmSrc,
 }
