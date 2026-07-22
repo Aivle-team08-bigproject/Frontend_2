@@ -3,14 +3,33 @@ import GNB from '../../shared/GNB'
 import SubNav from '../../shared/SubNav'
 import { chevronDownSrc, chevronLeftSrc, chevronRightSrc } from '../../shared/icons'
 import { useAsyncData } from '../../shared/hooks'
-import { MainContent, PageWrapper } from '../../shared/layout.styles'
+import { MainContent, PageWrapper, SectionHeader, SectionTitle, SectionTitleGroup } from '../../shared/layout.styles'
+import {
+  Cell,
+  MutedCell,
+  NavIcon,
+  PageNav,
+  PageNumber,
+  PageNumbers,
+  Pagination,
+  ReqIdCell,
+  SortBar,
+  SortChip,
+  SortChipIcon,
+  StatusCell,
+  StatusPill,
+  StrongCell as ClientCell,
+  TableBody,
+  TableContainer,
+  TableHeaderRow,
+  TableRowEl,
+} from '../../shared/Table.styles'
 import { fetchPractitionerDashboardData, taskStatusColors } from './data'
 import {
   ActionLink,
   AlertBadge,
   AlertsRow,
   AlertsSection,
-  Cell,
   ColHeader,
   ColHeaderMeta,
   ColHeaderTitle,
@@ -24,19 +43,9 @@ import {
   ItemTexts,
   ItemTitle,
   ListCol,
-  MutedCell,
-  NavIcon,
-  PageNumber,
-  PageNumbers,
-  PageNav,
-  Pagination,
   RankNumber,
   RankedRow,
-  ReqIdCell,
   SmallTag,
-  SortBar,
-  SortChip,
-  SortChipIcon,
   StatCaption,
   StatCardEl,
   StatLabel,
@@ -44,24 +53,12 @@ import {
   StatUnit,
   StatValue,
   StatsRow,
-  StatusCell,
-  StrongCell,
-  StrongCell as ClientCell,
   SupplementRow,
-  TableBody,
-  TableContainer,
-  TableHeaderRow,
-  TableRowEl,
   TableSection,
   WarningCardEl,
   WarningDesc,
   WarningTitle,
 } from './PractitionerDashboardMain.styles'
-import {
-  SectionHeader,
-  SectionTitle,
-  SectionTitleGroup,
-} from '../../shared/layout.styles'
 
 export default function PractitionerDashboardMain() {
   const { data } = useAsyncData(fetchPractitionerDashboardData)
@@ -217,19 +214,9 @@ export default function PractitionerDashboardMain() {
                   <MutedCell $width={110}>{row.createdAt}</MutedCell>
                   <MutedCell $width={110}>{row.updatedAt}</MutedCell>
                   <StatusCell $width={120}>
-                    <StrongCell
-                      as="span"
-                      style={{
-                        display: 'inline-flex',
-                        padding: '4px 10px',
-                        borderRadius: 6,
-                        fontWeight: 700,
-                        background: taskStatusColors[row.status].bg,
-                        color: taskStatusColors[row.status].color,
-                      }}
-                    >
+                    <StatusPill $bg={taskStatusColors[row.status].bg} $color={taskStatusColors[row.status].color}>
                       {row.status}
-                    </StrongCell>
+                    </StatusPill>
                   </StatusCell>
                 </TableRowEl>
               ))}

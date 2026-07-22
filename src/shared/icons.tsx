@@ -5,6 +5,8 @@ import chevronLeftSrc from '../assets/icons/chevron-left.svg'
 import chevronRightSrc from '../assets/icons/chevron-right.svg'
 import avatarSrc from '../assets/icons/avatar.png'
 import avatarLgSrc from '../assets/icons/avatar-lg.png'
+import alertCircleSrc from '../assets/icons/alert-circle.svg'
+import xCircleSrc from '../assets/icons/x-circle.svg'
 
 export {
   searchIconSrc,
@@ -14,4 +16,6 @@ export {
   chevronRightSrc,
   avatarSrc,
   avatarLgSrc,
+  alertCircleSrc,
+  xCircleSrc,
 }
