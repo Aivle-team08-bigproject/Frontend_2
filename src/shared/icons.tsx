@@ -7,6 +7,10 @@ import avatarSrc from '../assets/icons/avatar.png'
 import avatarLgSrc from '../assets/icons/avatar-lg.png'
 import alertCircleSrc from '../assets/icons/alert-circle.svg'
 import xCircleSrc from '../assets/icons/x-circle.svg'
+import statusDotGreenSrc from '../assets/icons/status-dot-green.svg'
+import statusDotOrangeSrc from '../assets/icons/status-dot-orange.svg'
+import statusDotRedSrc from '../assets/icons/status-dot-red.svg'
+import tokenUsageChartSrc from '../assets/charts/token-usage-chart.png'
 
 export {
   searchIconSrc,
@@ -18,4 +22,8 @@ export {
   avatarLgSrc,
   alertCircleSrc,
   xCircleSrc,
+  statusDotGreenSrc,
+  statusDotOrangeSrc,
+  statusDotRedSrc,
+  tokenUsageChartSrc,
 }
