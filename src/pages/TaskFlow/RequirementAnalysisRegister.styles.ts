@@ -70,6 +70,12 @@ export const ActionsRow = styled.div`
   width: 100%;
 `
 
+export const ErrorMessage = styled.p`
+  margin: 0;
+  color: #dc2626;
+  font-size: 14px;
+`
+
 export const SubmitButton = styled.button`
   display: flex;
   align-items: center;

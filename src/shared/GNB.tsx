@@ -28,7 +28,7 @@ export default function GNB() {
   return (
     <Bar>
       <Left>
-        <LogoGroup>
+        <LogoGroup to="/dashboard" aria-label="대시보드로 이동">
           <LogoMark />
           <LogoTexts>
             <LogoTitle>Lumen Platform</LogoTitle>

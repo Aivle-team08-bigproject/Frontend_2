@@ -139,11 +139,25 @@ export const FootNote = styled.p`
   color: ${colors.textMuted};
 `
 
-export const ActionLink = styled.p`
+export const ActionLink = styled.button`
   margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
   font-size: 13px;
   font-weight: 700;
   color: ${colors.primary};
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+
+  &:focus-visible {
+    outline: 2px solid ${colors.primary};
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
 `
 
 export const InsightRow = styled.div`

@@ -7,6 +7,7 @@ import StepProgressBar from '../../shared/StepProgressBar'
 import SectionCard from '../../shared/SectionCard'
 import { arrowLeftSrc, arrowRightSrc } from '../../shared/icons'
 import { useAsyncData } from '../../shared/hooks'
+import { currentRequestNo } from '../../shared/api'
 import { FlowContentArea, PageWrapper } from '../../shared/layout.styles'
 import { fetchFinalOutputFeedbackData } from './finalOutputFeedbackData'
 import {
@@ -158,7 +159,7 @@ export default function FinalOutputFeedback() {
           </BackLink>
           <RightActions>
             <RecutButton type="button">수정 후 재생성</RecutButton>
-            <ApproveButton type="button" onClick={() => navigate('/tasks/complete')}>
+            <ApproveButton type="button" onClick={() => navigate(`/tasks/complete?requestNo=${encodeURIComponent(currentRequestNo())}`)}>
               최종 승인
             </ApproveButton>
           </RightActions>

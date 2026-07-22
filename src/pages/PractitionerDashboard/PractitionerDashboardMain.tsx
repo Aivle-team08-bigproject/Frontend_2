@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import GNB from '../../shared/GNB'
 import SubNav from '../../shared/SubNav'
 import { chevronDownSrc, chevronLeftSrc, chevronRightSrc } from '../../shared/icons'
@@ -63,6 +64,14 @@ import {
 export default function PractitionerDashboardMain() {
   const { data } = useAsyncData(fetchPractitionerDashboardData)
   const [page, setPage] = useState(1)
+  const navigate = useNavigate()
+
+  const taskDetailRoute = {
+    '요구사항 분석': '/tasks/review',
+    진행중: '/tasks/selection',
+    가공중: '/tasks/processing',
+    완료: '/tasks/complete',
+  } as const
 
   const pageSize = data?.pageSize ?? 4
   const totalPages = data ? Math.max(1, Math.ceil(data.taskRows.length / pageSize)) : 1
@@ -117,7 +126,9 @@ export default function PractitionerDashboardMain() {
                 <WarningDesc>{card.description}</WarningDesc>
                 <CardBottom>
                   <FootNote>{card.footNote}</FootNote>
-                  <ActionLink>상세 조치 &gt;</ActionLink>
+                  <ActionLink type="button" onClick={() => navigate(card.actionTo)}>
+                    상세 조치 &gt;
+                  </ActionLink>
                 </CardBottom>
               </WarningCardEl>
             ))}
@@ -199,7 +210,20 @@ export default function PractitionerDashboardMain() {
             </TableHeaderRow>
             <TableBody>
               {pagedRows.map((row) => (
-                <TableRowEl key={row.reqId}>
+                <TableRowEl
+                  key={row.reqId}
+                  role="link"
+                  tabIndex={0}
+                  onClick={() => navigate(`${taskDetailRoute[row.status]}?requestNo=${encodeURIComponent(row.reqId)}`)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault()
+                      navigate(`${taskDetailRoute[row.status]}?requestNo=${encodeURIComponent(row.reqId)}`)
+                    }
+                  }}
+                  style={{ cursor: 'pointer' }}
+                  aria-label={`${row.reqId} 작업 상세 보기`}
+                >
                   <ReqIdCell $width={140}>{row.reqId}</ReqIdCell>
                   <ClientCell $width={180}>{row.client}</ClientCell>
                   <Cell $width={160} style={{ color: '#495057' }}>
