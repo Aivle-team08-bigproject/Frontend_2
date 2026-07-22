@@ -20,6 +20,8 @@ import refreshCwSrc from '../assets/icons/refresh-cw.svg'
 import refreshCwSmSrc from '../assets/icons/refresh-cw-sm.svg'
 import radioSelectedSrc from '../assets/icons/radio-selected.svg'
 import infoSrc from '../assets/icons/info.svg'
+import arrowRightSrc from '../assets/icons/arrow-right.svg'
+import arrowLeftSrc from '../assets/icons/arrow-left.svg'
 
 export {
   searchIconSrc,
@@ -44,4 +46,6 @@ export {
   refreshCwSmSrc,
   radioSelectedSrc,
   infoSrc,
+  arrowRightSrc,
+  arrowLeftSrc,
 }
