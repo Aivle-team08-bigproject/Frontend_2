@@ -1,4 +1,5 @@
-import { Bar, StepCircle, StepItem, StepLabel, StepLine } from './StepProgressBar.styles'
+import { checkSrc } from './icons'
+import { Bar, CheckIcon, StepCircle, StepItem, StepLabel, StepLine } from './StepProgressBar.styles'
 
 const steps = [
   '요구사항 분석',
@@ -23,7 +24,7 @@ export default function StepProgressBar({ currentStep }: StepProgressBarProps) {
         const state = step < currentStep ? 'done' : step === currentStep ? 'active' : 'pending'
         return (
           <StepItem key={label}>
-            <StepCircle $state={state}>{step}</StepCircle>
+            <StepCircle $state={state}>{state === 'done' ? <CheckIcon src={checkSrc} alt="완료" /> : step}</StepCircle>
             <StepLabel $state={state}>{label}</StepLabel>
             {step < steps.length && <StepLine />}
           </StepItem>

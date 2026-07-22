@@ -13,6 +13,11 @@ import statusDotRedSrc from '../assets/icons/status-dot-red.svg'
 import tokenUsageChartSrc from '../assets/charts/token-usage-chart.png'
 import plusIconSrc from '../assets/icons/plus-icon.svg'
 import memberAvatarPlaceholderSrc from '../assets/icons/member-avatar-placeholder.svg'
+import checkSrc from '../assets/icons/check.svg'
+import checkSmSrc from '../assets/icons/check-sm.svg'
+import liveDotSrc from '../assets/icons/live-dot.svg'
+import refreshCwSrc from '../assets/icons/refresh-cw.svg'
+import refreshCwSmSrc from '../assets/icons/refresh-cw-sm.svg'
 
 export {
   searchIconSrc,
@@ -30,4 +35,9 @@ export {
   tokenUsageChartSrc,
   plusIconSrc,
   memberAvatarPlaceholderSrc,
+  checkSrc,
+  checkSmSrc,
+  liveDotSrc,
+  refreshCwSrc,
+  refreshCwSmSrc,
 }

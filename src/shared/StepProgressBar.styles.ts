@@ -35,12 +35,18 @@ export const StepCircle = styled.div<{ $state: 'done' | 'active' | 'pending' }>`
   font-weight: 700;
 `
 
+export const CheckIcon = styled.img`
+  width: 16px;
+  height: 16px;
+`
+
 export const StepLabel = styled.p<{ $state: 'done' | 'active' | 'pending' }>`
   margin: 0;
   flex-shrink: 0;
   font-size: 12px;
-  font-weight: ${({ $state }) => ($state === 'pending' ? 500 : 700)};
-  color: ${({ $state }) => ($state === 'pending' ? colors.textMuted : colors.flowPrimary)};
+  font-weight: ${({ $state }) => ($state === 'active' ? 700 : 500)};
+  color: ${({ $state }) =>
+    $state === 'active' ? colors.flowPrimary : $state === 'done' ? colors.text : colors.textMuted};
   white-space: nowrap;
 `
 

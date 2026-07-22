@@ -5,6 +5,7 @@ import TaskLookup from './pages/PractitionerDashboard/TaskLookup'
 import DeveloperDashboardMain from './pages/DeveloperDashboard/DeveloperDashboardMain'
 import MemberManagement from './pages/DeveloperDashboard/MemberManagement'
 import RequirementAnalysisRegister from './pages/TaskFlow/RequirementAnalysisRegister'
+import AnalysisInProgress from './pages/TaskFlow/AnalysisInProgress'
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
         <Route path="/dev-dashboard" element={<DeveloperDashboardMain />} />
         <Route path="/dev-dashboard/members" element={<MemberManagement />} />
         <Route path="/tasks/register" element={<RequirementAnalysisRegister />} />
+        <Route path="/tasks/analyzing" element={<AnalysisInProgress />} />
       </Routes>
     </BrowserRouter>
   )

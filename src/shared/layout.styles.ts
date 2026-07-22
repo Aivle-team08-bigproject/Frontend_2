@@ -104,6 +104,28 @@ export const OutlineButton = styled.button<{ $color?: string }>`
   cursor: pointer;
 `
 
+export const FlowContentArea = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+  padding: 40px;
+`
+
+export const SplitGrid = styled.div`
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+  width: 100%;
+`
+
+export const LeftPanel = styled.div`
+  display: flex;
+  flex: 1 0 0;
+  min-width: 0;
+  flex-direction: column;
+`
+
 export const GhostButton = styled.button`
   display: flex;
   align-items: center;
