@@ -7,6 +7,7 @@ import MemberManagement from './pages/DeveloperDashboard/MemberManagement'
 import RequirementAnalysisRegister from './pages/TaskFlow/RequirementAnalysisRegister'
 import AnalysisInProgress from './pages/TaskFlow/AnalysisInProgress'
 import ReviewFeedback from './pages/TaskFlow/ReviewFeedback'
+import DataSelectionInProgress from './pages/TaskFlow/DataSelectionInProgress'
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
         <Route path="/tasks/register" element={<RequirementAnalysisRegister />} />
         <Route path="/tasks/analyzing" element={<AnalysisInProgress />} />
         <Route path="/tasks/review" element={<ReviewFeedback />} />
+        <Route path="/tasks/selection" element={<DataSelectionInProgress />} />
       </Routes>
     </BrowserRouter>
   )
