@@ -4,6 +4,7 @@ import { avatarLgSrc } from '../../shared/icons'
 import { useAsyncData } from '../../shared/hooks'
 import { MainContent, PageWrapper, SectionTitle } from '../../shared/layout.styles'
 import { fetchMyTaskStatusData } from './myTaskStatusData'
+import { useNavigate } from 'react-router-dom'
 import {
   ActionButton,
   AvatarLg,
@@ -43,6 +44,7 @@ import {
 
 export default function MyTaskStatus() {
   const { data } = useAsyncData(fetchMyTaskStatusData)
+  const navigate = useNavigate()
   if (!data) return null
 
   return (
@@ -120,7 +122,7 @@ export default function MyTaskStatus() {
                       <FooterDate>{card.registeredAt}</FooterDate>
                       <FooterDue $color={card.dueColor}>{card.dueLabel}</FooterDue>
                     </FooterLeft>
-                    <ActionButton type="button">{card.actionLabel}</ActionButton>
+                    <ActionButton type="button" onClick={() => navigate(card.actionTo)}>{card.actionLabel}</ActionButton>
                   </CardFooter>
                 </TaskCard>
               )

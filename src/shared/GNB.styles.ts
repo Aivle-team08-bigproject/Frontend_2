@@ -1,4 +1,5 @@
 import styled from 'styled-components'
+import { Link } from 'react-router-dom'
 import { colors } from './theme'
 
 export const Bar = styled.header`
@@ -18,10 +19,19 @@ export const Left = styled.div`
   align-items: center;
 `
 
-export const LogoGroup = styled.div`
+export const LogoGroup = styled(Link)`
   display: flex;
   align-items: center;
   gap: 8px;
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid ${colors.primary};
+    outline-offset: 4px;
+    border-radius: 6px;
+  }
 `
 
 export const LogoMark = styled.div`

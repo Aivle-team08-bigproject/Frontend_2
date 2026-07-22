@@ -6,6 +6,7 @@ import RequestHeaderCard from '../../shared/RequestHeaderCard'
 import StepProgressBar from '../../shared/StepProgressBar'
 import { infoSrc } from '../../shared/icons'
 import { useAsyncData } from '../../shared/hooks'
+import { currentRequestNo } from '../../shared/api'
 import { FlowContentArea, PageWrapper } from '../../shared/layout.styles'
 import { fetchSampleDataFeedbackData } from './sampleDataFeedbackData'
 import {
@@ -131,7 +132,7 @@ export default function SampleDataFeedback() {
           <RequestButton type="button" disabled={!prompt.trim()}>
             재가공 요청
           </RequestButton>
-          <ApproveButton type="button" onClick={() => navigate('/tasks/processing')}>
+          <ApproveButton type="button" onClick={() => navigate(`/tasks/processing?requestNo=${encodeURIComponent(currentRequestNo())}`)}>
             샘플 승인 → 계약 체결
           </ApproveButton>
           <DisabledButton type="button" disabled>

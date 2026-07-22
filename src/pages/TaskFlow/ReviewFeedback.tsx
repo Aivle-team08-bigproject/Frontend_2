@@ -7,6 +7,7 @@ import StepProgressBar from '../../shared/StepProgressBar'
 import SectionCard from '../../shared/SectionCard'
 import { radioSelectedSrc } from '../../shared/icons'
 import { useAsyncData } from '../../shared/hooks'
+import { currentRequestNo } from '../../shared/api'
 import { FlowContentArea, LeftPanel, PageWrapper, SplitGrid } from '../../shared/layout.styles'
 import { fetchReviewFeedbackData } from './reviewFeedbackData'
 import {
@@ -121,7 +122,7 @@ export default function ReviewFeedback() {
               </OptionGroup>
               <ReviewActions>
                 <BackButton type="button">이전 단계로</BackButton>
-                <ApproveButton type="button" onClick={() => navigate('/tasks/selection')}>
+                <ApproveButton type="button" onClick={() => navigate(`/tasks/selection?requestNo=${encodeURIComponent(currentRequestNo())}`)}>
                   승인 후 다음 단계
                 </ApproveButton>
               </ReviewActions>
