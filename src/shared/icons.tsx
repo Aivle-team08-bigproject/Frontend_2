@@ -11,6 +11,8 @@ import statusDotGreenSrc from '../assets/icons/status-dot-green.svg'
 import statusDotOrangeSrc from '../assets/icons/status-dot-orange.svg'
 import statusDotRedSrc from '../assets/icons/status-dot-red.svg'
 import tokenUsageChartSrc from '../assets/charts/token-usage-chart.png'
+import plusIconSrc from '../assets/icons/plus-icon.svg'
+import memberAvatarPlaceholderSrc from '../assets/icons/member-avatar-placeholder.svg'
 
 export {
   searchIconSrc,
@@ -26,4 +28,6 @@ export {
   statusDotOrangeSrc,
   statusDotRedSrc,
   tokenUsageChartSrc,
+  plusIconSrc,
+  memberAvatarPlaceholderSrc,
 }
