@@ -1,5 +1,7 @@
 export const colors = {
   primary: '#0f5a52',
+  flowPrimary: '#008485',
+  flowPrimaryBg: '#e6f3f3',
   bg: '#f8f9fa',
   bgTint: '#f4faf9',
   white: '#ffffff',

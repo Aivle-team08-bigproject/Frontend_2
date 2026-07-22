@@ -1,0 +1,52 @@
+import styled from 'styled-components'
+import { colors } from './theme'
+
+export const Bar = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 100%;
+  padding: 24px 16px;
+  border-radius: 12px;
+  border: 1px solid ${colors.border};
+  background: ${colors.white};
+`
+
+export const StepItem = styled.div`
+  display: flex;
+  flex: 1 0 0;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+`
+
+export const StepCircle = styled.div<{ $state: 'done' | 'active' | 'pending' }>`
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 14px;
+  background: ${({ $state }) => ($state === 'pending' ? colors.border : colors.flowPrimary)};
+  color: ${({ $state }) => ($state === 'pending' ? colors.textSecondary : colors.white)};
+  font-size: 13px;
+  font-weight: 700;
+`
+
+export const StepLabel = styled.p<{ $state: 'done' | 'active' | 'pending' }>`
+  margin: 0;
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: ${({ $state }) => ($state === 'pending' ? 500 : 700)};
+  color: ${({ $state }) => ($state === 'pending' ? colors.textMuted : colors.flowPrimary)};
+  white-space: nowrap;
+`
+
+export const StepLine = styled.div`
+  flex: 1 0 0;
+  min-width: 0;
+  height: 2px;
+  background: ${colors.border};
+`
