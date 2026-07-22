@@ -1,0 +1,6 @@
+<svg preserveAspectRatio="none" width="100%" height="100%" overflow="visible" style="display: block;" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="alarm-badge">
+<rect width="34" height="34" rx="17" fill="#F8F9FA"/>
+<path id="bell-icon" d="M16.999 9C18.3572 9 19.6417 9.48679 20.5732 10.3252C21.5013 11.1605 22 12.2695 22 13.4004C22 15.543 22.3734 17.052 22.9854 18.2178C23.5202 19.2366 24.2103 19.9299 24.8184 20.5H9.18066C9.78773 19.9302 10.4786 19.2371 11.0137 18.2178C11.6254 17.0523 11.999 15.5432 11.999 13.4004C11.999 12.2695 12.4977 11.1605 13.4258 10.3252C14.3573 9.48688 15.641 9.0001 16.999 9Z" stroke="#495057" stroke-width="2" stroke-linecap="round"/>
+</g>
+</svg>

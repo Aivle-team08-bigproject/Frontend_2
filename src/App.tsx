@@ -1,10 +1,12 @@
-import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import PractitionerDashboardMain from './pages/PractitionerDashboard/PractitionerDashboardMain'
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<div>Frontend_2</div>} />
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/dashboard" element={<PractitionerDashboardMain />} />
       </Routes>
     </BrowserRouter>
   )
