@@ -53,7 +53,7 @@ export default function ReviewFeedback() {
       <FlowPageHeader title="요구사항 완료 피드백" badgeLabel="피드백 대기" badgeBg="#d97706" />
       <FlowContentArea>
         <RequestHeaderCard reqId={data.reqId} title={data.requestTitle} />
-        <StepProgressBar currentStep={3} />
+        <StepProgressBar currentStep={1} />
         <SplitGrid>
           <LeftPanel>
             <SectionCard title="AI 분석 결과 요약">

@@ -73,7 +73,7 @@ export default function TaskComplete() {
       <FlowPageHeader title="작업 완료" badgeLabel="완료" badgeBg="#22c55e" />
       <FlowContentArea>
         <RequestHeaderCard reqId={data.reqId} title={data.requestTitle} />
-        <StepProgressBar currentStep={9} />
+        <StepProgressBar currentStep={4} />
 
         <Card>
           <CardTitle>프로세스 결과 요약</CardTitle>

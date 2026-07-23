@@ -51,7 +51,7 @@ export default function AnalysisInProgress() {
       <FlowPageHeader title="실시간 요구사항 분석 진행" badgeLabel="분석 진행" />
       <FlowContentArea>
         <RequestHeaderCard reqId={data.request_no} title={data.request_title} />
-        <StepProgressBar currentStep={2} />
+        <StepProgressBar currentStep={1} />
         <SplitGrid>
           <LeftPanel>
             <Timeline

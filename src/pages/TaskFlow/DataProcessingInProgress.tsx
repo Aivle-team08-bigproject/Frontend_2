@@ -18,7 +18,7 @@ export default function DataProcessingInProgress() {
       <FlowPageHeader title="실시간 데이터 가공 진행" badgeLabel="데이터 가공" />
       <FlowContentArea>
         <RequestHeaderCard reqId={data.reqId} title={data.requestTitle} />
-        <StepProgressBar currentStep={6} />
+        <StepProgressBar currentStep={3} />
         <SplitGrid>
           <LeftPanel>
             <Timeline
