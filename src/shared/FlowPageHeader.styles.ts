@@ -9,12 +9,25 @@ export const Header = styled.header`
   padding: 20px 40px;
   background: ${colors.white};
   border-bottom: 1px solid ${colors.border};
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: 12px;
+
+  @media (max-width: 900px) {
+    padding: 16px 24px;
+  }
+
+  @media (max-width: 600px) {
+    padding: 16px;
+  }
 `
 
 export const TitleGroup = styled.div`
   display: flex;
   align-items: center;
   gap: 12px;
+  min-width: 0;
+  flex-wrap: wrap;
 `
 
 export const Title = styled.h1`
@@ -22,6 +35,9 @@ export const Title = styled.h1`
   font-size: 24px;
   font-weight: 800;
   color: ${colors.text};
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 `
 

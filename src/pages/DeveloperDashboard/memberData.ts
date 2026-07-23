@@ -1,4 +1,4 @@
-import { fetchDashboardMembers } from '../../shared/api'
+import { fetchDashboardMembers, replaceEmployeeRole, updateEmployeeStatus, type EmployeeRole } from '../../shared/api'
 
 export type MemberStatus = '활성' | '비활성'
 
@@ -18,6 +18,25 @@ export type MemberManagementData = {
   activeCount: number
   inactiveCount: number
   members: Member[]
+}
+
+export const ROLE_OPTIONS = [
+  { label: '관리자', value: 'ADMIN' as EmployeeRole },
+  { label: '책임자', value: 'MANAGER' as EmployeeRole },
+  { label: '선임', value: 'SENIOR' as EmployeeRole },
+  { label: '일반', value: 'GENERAL' as EmployeeRole },
+]
+
+export const ROLE_VALUE_BY_LABEL = Object.fromEntries(ROLE_OPTIONS.map((role) => [role.label, role.value])) as Record<string, EmployeeRole>
+
+export function updateMemberRole(userId: string, role: string) {
+  const roleValue = ROLE_VALUE_BY_LABEL[role]
+  if (!roleValue) throw new Error('지원하지 않는 역할입니다.')
+  return replaceEmployeeRole(userId, roleValue)
+}
+
+export function updateMemberActiveState(userId: string, active: boolean) {
+  return updateEmployeeStatus(userId, active ? 'DISABLED' : 'ACTIVE')
 }
 
 type MemberManagementApiResponse = {

@@ -1,46 +1,58 @@
 import { fetchDeveloperDashboard } from '../../shared/api'
 
-export type SummaryCard = {
-  label: string
-  value: string
-  unit: string
-  highlight?: boolean
+export type DashboardPeriod = 'daily' | 'weekly' | 'monthly'
+
+export type TokenUsageSummary = {
+  monthTokens: number
+  todayTokens: number
+  estimatedCostUsd: number
+  estimatedCostKrw: number
 }
 
-export type AgentStatus = 'ok' | 'delayed' | 'error'
+export type TokenUsagePoint = {
+  label: string
+  inputTokens: number
+  outputTokens: number
+  totalTokens: number
+  costUsd: number
+}
+
+export type AgentStatus = 'ok' | 'delayed' | 'error' | 'unknown'
 
 export type AgentCard = {
+  agentKey: string
   name: string
   status: AgentStatus
-  statusLabel: string
-  responseTimeLabel: string
-  responseTimeColor: string
-  throughputLabel: string
+  lastResponseAt: string | null
+  latencyMs: number | null
+  todayThroughput: number
 }
 
 export type FailureBar = {
+  agentKey: string
   label: string
-  percentLabel: string
+  failedRuns: number
+  totalRuns: number
   percent: number
-  color: string
 }
 
 export type ErrorLogRow = {
-  time: string
+  occurredAt: string
   agent: string
   message: string
   severity: 'HIGH' | 'MEDIUM' | 'LOW'
-  severityBg: string
-  severityColor: string
 }
 
 export type DeveloperDashboardData = {
-  summaryCards: SummaryCard[]
-  agentCards: AgentCard[]
-  failureBars: FailureBar[]
+  period: DashboardPeriod
+  generatedAt: string
+  summary: TokenUsageSummary
+  tokenSeries: TokenUsagePoint[]
+  agents: AgentCard[]
+  failureRates: FailureBar[]
   errorLogs: ErrorLogRow[]
 }
 
-export function fetchDeveloperDashboardData(): Promise<DeveloperDashboardData> {
-  return fetchDeveloperDashboard<DeveloperDashboardData>()
+export function fetchDeveloperDashboardData(period: DashboardPeriod): Promise<DeveloperDashboardData> {
+  return fetchDeveloperDashboard<DeveloperDashboardData>(period)
 }

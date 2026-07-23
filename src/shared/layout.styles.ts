@@ -16,6 +16,16 @@ export const MainContent = styled.main`
   gap: 32px;
   width: 100%;
   padding: 40px;
+
+  @media (max-width: 900px) {
+    gap: 24px;
+    padding: 24px;
+  }
+
+  @media (max-width: 600px) {
+    gap: 20px;
+    padding: 16px;
+  }
 `
 
 export const SectionHeader = styled.div`
@@ -23,6 +33,9 @@ export const SectionHeader = styled.div`
   align-items: center;
   justify-content: space-between;
   width: 100%;
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: 12px;
 `
 
 export const SectionTitleGroup = styled.div`
@@ -110,6 +123,14 @@ export const FlowContentArea = styled.div`
   gap: 24px;
   width: 100%;
   padding: 40px;
+
+  @media (max-width: 900px) {
+    padding: 24px;
+  }
+
+  @media (max-width: 600px) {
+    padding: 16px;
+  }
 `
 
 export const SplitGrid = styled.div`
@@ -117,6 +138,10 @@ export const SplitGrid = styled.div`
   gap: 24px;
   align-items: flex-start;
   width: 100%;
+
+  @media (max-width: 900px) {
+    flex-direction: column;
+  }
 `
 
 export const LeftPanel = styled.div`
