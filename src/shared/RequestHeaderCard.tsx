@@ -11,12 +11,18 @@ const Card = styled.div`
   border-radius: 12px;
   border: 1px solid ${colors.border};
   background: ${colors.white};
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: 16px;
 `
 
 const LeftInfo = styled.div`
   display: flex;
   align-items: center;
   gap: 16px;
+  min-width: 0;
+  flex: 1 1 320px;
+  flex-wrap: wrap;
 `
 
 const IdBadge = styled.span`
@@ -35,6 +41,9 @@ const RequestTitle = styled.p`
   font-size: 20px;
   font-weight: 800;
   color: ${colors.text};
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 `
 

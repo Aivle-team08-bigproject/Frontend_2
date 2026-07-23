@@ -34,7 +34,8 @@ export const TableContainer = styled.div`
   border-radius: 12px;
   border: 1px solid ${colors.border};
   background: ${colors.white};
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
 `
 
 export const TableHeaderRow = styled.div`
@@ -47,6 +48,8 @@ export const TableHeaderRow = styled.div`
   font-size: 13px;
   font-weight: 700;
   color: ${colors.textSecondary};
+  min-width: 1000px;
+  white-space: nowrap;
 `
 
 export const TableBody = styled.div`
@@ -61,6 +64,7 @@ export const TableRowEl = styled.div`
   width: 100%;
   padding: 16px;
   border-bottom: 1px solid ${colors.border};
+  min-width: 1000px;
 
   &:last-child {
     border-bottom: none;
@@ -148,9 +152,9 @@ export const PageNumber = styled.button<{ $active: boolean }>`
   display: flex;
   padding: 8px 12px;
   border-radius: 6px;
-  border: 1px solid ${({ $active }) => ($active ? 'transparent' : colors.border)};
-  background: ${({ $active }) => ($active ? colors.primary : colors.white)};
-  color: ${({ $active }) => ($active ? '#000' : colors.textSecondary)};
+  border: 1px solid ${({ $active }) => ($active ? colors.primary : colors.border)};
+  background: ${colors.white};
+  color: ${({ $active }) => ($active ? colors.primary : colors.textSecondary)};
   font-size: 13px;
   font-weight: ${({ $active }) => ($active ? 700 : 400)};
   cursor: pointer;

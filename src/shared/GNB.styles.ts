@@ -12,6 +12,14 @@ export const Bar = styled.header`
   background: ${colors.white};
   border-bottom: 1px solid ${colors.border};
   flex-shrink: 0;
+
+  @media (max-width: 900px) {
+    padding: 10px 24px;
+  }
+
+  @media (max-width: 600px) {
+    padding: 10px 16px;
+  }
 `
 
 export const Left = styled.div`
@@ -72,6 +80,10 @@ export const Search = styled.div`
   border-radius: 8px;
   background: ${colors.bg};
   border: 1px solid ${colors.border};
+
+  @media (max-width: 900px) {
+    display: none;
+  }
 `
 
 export const SearchIcon = styled.img`
@@ -91,6 +103,10 @@ export const Right = styled.div`
   display: flex;
   align-items: center;
   gap: 20px;
+
+  @media (max-width: 600px) {
+    gap: 8px;
+  }
 `
 
 export const AlarmBadge = styled.img`
@@ -170,6 +186,10 @@ export const UserInfo = styled.div`
   flex-direction: column;
   gap: 2px;
   white-space: nowrap;
+
+  @media (max-width: 600px) {
+    display: none;
+  }
 `
 
 export const UserName = styled.p`

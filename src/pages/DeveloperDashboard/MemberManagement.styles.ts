@@ -6,6 +6,9 @@ export const BodyHeader = styled.div`
   align-items: center;
   justify-content: space-between;
   width: 100%;
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: 12px;
 `
 
 export const HeaderTitleGroup = styled.div`
@@ -40,6 +43,11 @@ export const RegisterButton = styled.button`
   font-weight: 700;
   white-space: nowrap;
   cursor: pointer;
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
 `
 
 export const PlusIcon = styled.img`
@@ -56,6 +64,7 @@ export const FilterBar = styled.div`
   border-radius: 12px;
   border: 1px solid ${colors.border};
   background: ${colors.white};
+  flex-wrap: wrap;
 `
 
 export const SearchInput = styled.div`
@@ -64,10 +73,25 @@ export const SearchInput = styled.div`
   gap: 8px;
   width: 320px;
   flex-shrink: 0;
+  max-width: 100%;
   padding: 10px 16px;
   border-radius: 8px;
   background: ${colors.bg};
   border: 1px solid ${colors.border};
+`
+
+export const SearchTextInput = styled.input`
+  flex: 1 0 0;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: ${colors.text};
+  font-size: 14px;
+
+  &::placeholder {
+    color: ${colors.textMuted};
+  }
 `
 
 export const SearchIconImg = styled.img`
@@ -97,6 +121,19 @@ export const Dropdown = styled.button`
   cursor: pointer;
 `
 
+export const FilterSelect = styled.select`
+  appearance: none;
+  display: flex;
+  min-width: 150px;
+  padding: 10px 36px 10px 16px;
+  border: 1px solid ${colors.border};
+  border-radius: 8px;
+  background: ${colors.white};
+  color: ${colors.textSecondary};
+  font-size: 14px;
+  cursor: pointer;
+`
+
 export const DropdownIcon = styled.img`
   width: 12px;
   height: 12px;
@@ -112,6 +149,8 @@ export const StatusToggleTabs = styled.div`
   padding: 4px;
   border-radius: 8px;
   background: ${colors.bg};
+  max-width: 100%;
+  overflow-x: auto;
 `
 
 export const StatusTab = styled.button<{ $active: boolean }>`
@@ -137,6 +176,8 @@ export const MemberTableHeaderRow = styled.div`
   font-size: 14px;
   font-weight: 700;
   color: ${colors.textSecondary};
+  min-width: 1120px;
+  white-space: nowrap;
 `
 
 export const MemberTableRow = styled.div`
@@ -145,6 +186,7 @@ export const MemberTableRow = styled.div`
   width: 100%;
   padding: 16px 24px;
   border-bottom: 1px solid ${colors.border};
+  min-width: 1120px;
 
   &:last-child {
     border-bottom: none;
@@ -159,6 +201,9 @@ export const MemberCell = styled.p<{ $width?: number; $flex?: boolean }>`
   min-width: ${({ $flex }) => ($flex ? '0' : undefined)};
   font-size: 14px;
   color: ${colors.textSecondary};
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 `
 
 export const NameCell = styled.div`
@@ -237,6 +282,102 @@ export const RoleChangeButton = styled.button`
   font-weight: 600;
   white-space: nowrap;
   cursor: pointer;
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+`
+
+export const RoleEditor = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+`
+
+export const RoleSelect = styled.select`
+  min-width: 76px;
+  padding: 5px 6px;
+  border: 1px solid ${colors.border};
+  border-radius: 6px;
+  background: ${colors.white};
+  color: ${colors.textSecondary};
+  font-size: 12px;
+`
+
+export const RoleDialogBackdrop = styled.div`
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(15, 23, 42, 0.28);
+`
+
+export const RoleDialog = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: min(360px, 100%);
+  padding: 24px;
+  border: 1px solid ${colors.border};
+  border-radius: 14px;
+  background: ${colors.white};
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.18);
+`
+
+export const RoleDialogTitle = styled.h2`
+  margin: 0;
+  color: ${colors.text};
+  font-size: 18px;
+  font-weight: 800;
+`
+
+export const RoleDialogDescription = styled.p`
+  margin: -6px 0 2px;
+  color: ${colors.textMuted};
+  font-size: 13px;
+`
+
+export const RoleDialogActions = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+`
+
+export const DialogButton = styled.button<{ $primary?: boolean }>`
+  padding: 9px 14px;
+  border: 1px solid ${({ $primary }) => ($primary ? colors.primary : colors.border)};
+  border-radius: 7px;
+  background: ${({ $primary }) => ($primary ? colors.primary : colors.white)};
+  color: ${({ $primary }) => ($primary ? colors.white : colors.textSecondary)};
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+`
+
+export const InlineActionButton = styled.button`
+  padding: 5px 7px;
+  border: 1px solid ${colors.border};
+  border-radius: 6px;
+  background: ${colors.white};
+  color: ${colors.primary};
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
 `
 
 export const ToggleActiveButton = styled.button<{ $active: boolean }>`
@@ -250,4 +391,35 @@ export const ToggleActiveButton = styled.button<{ $active: boolean }>`
   font-weight: 700;
   white-space: nowrap;
   cursor: pointer;
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+`
+
+export const PageState = styled.div<{ $error?: boolean }>`
+  display: flex;
+  min-height: 260px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid ${({ $error }) => ($error ? '#fecaca' : colors.border)};
+  border-radius: 12px;
+  background: ${({ $error }) => ($error ? '#fff7f7' : colors.white)};
+  color: ${({ $error }) => ($error ? colors.danger : colors.textSecondary)};
+  font-size: 14px;
+`
+
+export const ActionNotice = styled.p<{ $error?: boolean }>`
+  margin: 12px 0 0;
+  color: ${({ $error }) => ($error ? colors.danger : colors.primary)};
+  font-size: 13px;
+  font-weight: 600;
+`
+
+export const EmptyMemberRow = styled.div`
+  padding: 40px 24px;
+  text-align: center;
+  color: ${colors.textMuted};
+  font-size: 14px;
 `

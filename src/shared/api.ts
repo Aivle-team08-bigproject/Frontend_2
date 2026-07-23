@@ -1,6 +1,7 @@
-import { getAccessToken } from './auth'
+import { clearAccessToken, getAccessToken, remembersLogin, saveAccessToken } from './auth'
 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000').replace(/\/$/, '')
+let refreshPromise: Promise<string> | null = null
 
 export type LoginResponse = {
   access_token: string
@@ -69,7 +70,29 @@ export type TaskViewResponse<T extends object> = {
   payload: T
 }
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
+async function refreshAccessToken(): Promise<string> {
+  if (!refreshPromise) {
+    refreshPromise = fetch(`${API_BASE_URL}/api/auth/refresh`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error('로그인 세션이 만료되었습니다.')
+        }
+        const body = (await response.json()) as { access_token: string }
+        saveAccessToken(body.access_token, remembersLogin())
+        return body.access_token
+      })
+      .finally(() => {
+        refreshPromise = null
+      })
+  }
+  return refreshPromise
+}
+
+async function request<T>(path: string, init?: RequestInit, retried = false): Promise<T> {
   const accessToken = getAccessToken()
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...init,
@@ -80,6 +103,16 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
       ...init?.headers,
     },
   })
+  if (response.status === 401 && !retried && accessToken && path !== '/api/auth/refresh') {
+    try {
+      await refreshAccessToken()
+      return request<T>(path, init, true)
+    } catch (refreshError) {
+      clearAccessToken()
+      if (window.location.pathname !== '/login') window.location.assign('/login')
+      throw refreshError
+    }
+  }
   if (!response.ok) {
     const body = await response.json().catch(() => null)
     const message = body?.detail?.message ?? `API 요청에 실패했습니다. (${response.status})`
@@ -122,13 +155,58 @@ export function fetchDashboardTaskLookup<T>(): Promise<T> {
   return request('/api/v1/dashboard/task-lookup')
 }
 
-export async function fetchDeveloperDashboard<T>(): Promise<T> {
-  const response = await request<{ payload: T }>('/api/v1/dashboard/developer')
+export async function fetchDeveloperDashboard<T>(period: 'daily' | 'weekly' | 'monthly'): Promise<T> {
+  const response = await request<{ payload: T }>(`/api/v1/dashboard/developer?period=${period}`)
   return response.payload
 }
 
 export function fetchDashboardMembers<T>(): Promise<T> {
   return request('/api/v1/dashboard/members')
+}
+
+export type EmployeePermissionCode =
+  | 'EMPLOYEE_READ'
+  | 'EMPLOYEE_CREATE'
+  | 'EMPLOYEE_UPDATE'
+  | 'EMPLOYEE_PERMISSION_MANAGE'
+  | 'EMPLOYEE_SESSION_MANAGE'
+  | 'AUDIT_READ'
+  | 'DATA_PRODUCT_READ'
+  | 'DATA_PRODUCT_WRITE'
+  | 'QUOTE_READ'
+  | 'QUOTE_PROCESS'
+  | 'CONTRACT_MANAGE'
+
+export type AdminEmployee = {
+  employee_code: string
+  name: string
+  department: string
+  status: 'ACTIVE' | 'LOCKED' | 'DISABLED'
+  must_change_password: boolean
+  permissions: EmployeePermissionCode[]
+}
+
+export function replaceEmployeePermissions(employeeCode: string, permissions: EmployeePermissionCode[]) {
+  return request<AdminEmployee>(`/api/admin/employees/${encodeURIComponent(employeeCode)}/permissions`, {
+    method: 'PUT',
+    body: JSON.stringify({ permissions }),
+  })
+}
+
+export type EmployeeRole = 'ADMIN' | 'MANAGER' | 'SENIOR' | 'GENERAL'
+
+export function replaceEmployeeRole(employeeCode: string, role: EmployeeRole) {
+  return request<AdminEmployee>(`/api/admin/employees/${encodeURIComponent(employeeCode)}/role`, {
+    method: 'PATCH',
+    body: JSON.stringify({ role }),
+  })
+}
+
+export function updateEmployeeStatus(employeeCode: string, status: 'ACTIVE' | 'DISABLED') {
+  return request<AdminEmployee>(`/api/admin/employees/${encodeURIComponent(employeeCode)}/status`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status }),
+  })
 }
 
 export function currentRequestNo(fallback = 'REQ-2024-0847'): string {

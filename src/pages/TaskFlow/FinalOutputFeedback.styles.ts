@@ -40,6 +40,9 @@ export const CardHeaderRow = styled.div`
   align-items: center;
   justify-content: space-between;
   width: 100%;
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: 12px;
 `
 
 export const CardTitle = styled.p`
@@ -69,7 +72,8 @@ export const DataTable = styled.div`
   width: 100%;
   border-radius: 8px;
   border: 1px solid ${colors.border};
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
 `
 
 export const THead = styled.div`
@@ -90,6 +94,7 @@ export const TRow = styled.div`
   border-bottom: 1px solid ${colors.border};
   font-size: 14px;
   color: ${colors.text};
+  min-width: 620px;
 
   &:last-child {
     border-bottom: none;

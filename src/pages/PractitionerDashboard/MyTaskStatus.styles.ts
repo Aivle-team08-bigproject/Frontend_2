@@ -10,12 +10,16 @@ export const ProfileHeader = styled.div`
   border-radius: 16px;
   background: ${colors.bgTint};
   border: 1px solid ${colors.primary};
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: 20px;
 `
 
 export const ProfileLeft = styled.div`
   display: flex;
   align-items: center;
   gap: 20px;
+  min-width: 0;
 `
 
 export const AvatarLg = styled.img`
@@ -28,6 +32,7 @@ export const UserDetails = styled.div`
   display: flex;
   flex-direction: column;
   gap: 6px;
+  min-width: 0;
 `
 
 export const TitleRow = styled.div`
@@ -70,6 +75,7 @@ export const UserMeta = styled.p`
 export const QuickStats = styled.div`
   display: flex;
   gap: 32px;
+  flex-wrap: wrap;
 `
 
 export const StatItem = styled.div`
@@ -127,6 +133,9 @@ export const CardHeader = styled.div`
   align-items: center;
   justify-content: space-between;
   width: 100%;
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: 12px;
 `
 
 export const HeaderLeft = styled.div`
@@ -134,6 +143,8 @@ export const HeaderLeft = styled.div`
   align-items: center;
   gap: 12px;
   white-space: nowrap;
+  min-width: 0;
+  flex-wrap: wrap;
 `
 
 export const ReqIdText = styled.p`
@@ -225,12 +236,17 @@ export const CardFooter = styled.div`
   align-items: center;
   justify-content: space-between;
   width: 100%;
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: 12px;
 `
 
 export const FooterLeft = styled.div`
   display: flex;
   gap: 16px;
   white-space: nowrap;
+  min-width: 0;
+  flex-wrap: wrap;
 `
 
 export const FooterDate = styled.p`
