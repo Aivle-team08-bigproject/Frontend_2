@@ -56,7 +56,7 @@ export default function SampleDataFeedback() {
       <FlowPageHeader title="샘플데이터 및 피드백" badgeLabel="샘플 검토" />
       <FlowContentArea>
         <RequestHeaderCard reqId={data.reqId} title={data.requestTitle} />
-        <StepProgressBar currentStep={5} />
+        <StepProgressBar currentStep={2} />
 
         <PreviewCard>
           <PreviewHeader>
