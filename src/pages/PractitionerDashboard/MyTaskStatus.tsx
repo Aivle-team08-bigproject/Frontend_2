@@ -74,12 +74,12 @@ export default function MyTaskStatus() {
           </ProfileLeft>
           <QuickStats>
             <StatItem>
-              <StatItemLabel>이번달 완료</StatItemLabel>
-              <StatItemValue $color="#0f5a52">{data.monthlyCompleted}건</StatItemValue>
+              <StatItemLabel>완료 작업</StatItemLabel>
+              <StatItemValue $color="#0f5a52">{data.completedCount}건</StatItemValue>
             </StatItem>
             <StatItem>
-              <StatItemLabel>품질 만족도</StatItemLabel>
-              <StatItemValue $color="#22c55e">{data.qualityScore}</StatItemValue>
+              <StatItemLabel>완료율</StatItemLabel>
+              <StatItemValue $color="#22c55e">{data.completionRate}</StatItemValue>
             </StatItem>
           </QuickStats>
         </ProfileHeader>

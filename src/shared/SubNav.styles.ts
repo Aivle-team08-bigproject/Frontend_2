@@ -18,7 +18,9 @@ export const Tab = styled.div<{ $active: boolean }>`
   align-items: center;
   padding: 12px 16px;
   border-radius: 6px;
-  background: ${({ $active }) => ($active ? colors.primary : 'transparent')};
+  border: 1.5px solid ${({ $active }) => ($active ? colors.primary : 'transparent')};
+  background: transparent;
+  text-decoration: none;
   cursor: pointer;
 `
 
@@ -26,6 +28,6 @@ export const TabLabel = styled.p<{ $active: boolean }>`
   margin: 0;
   font-size: 13px;
   font-weight: ${({ $active }) => ($active ? 700 : 500)};
-  color: ${({ $active }) => ($active ? '#000' : colors.textSecondary)};
+  color: ${({ $active }) => ($active ? colors.primary : colors.textSecondary)};
   white-space: nowrap;
 `

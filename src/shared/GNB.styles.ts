@@ -104,10 +104,59 @@ export const Divider = styled.div`
   background: ${colors.border};
 `
 
-export const Profile = styled.div`
+export const ProfileMenuWrap = styled.div`
+  position: relative;
+`
+
+export const Profile = styled.button`
   display: flex;
   align-items: center;
   gap: 12px;
+  padding: 2px 4px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    background: ${colors.bgTint};
+    outline: none;
+  }
+`
+
+export const ProfileMenu = styled.div`
+  position: absolute;
+  z-index: 50;
+  top: calc(100% + 10px);
+  right: 0;
+  display: flex;
+  width: 168px;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px;
+  border: 1px solid ${colors.border};
+  border-radius: 10px;
+  background: ${colors.white};
+  box-shadow: 0 10px 28px rgba(15, 90, 82, 0.14);
+`
+
+export const ProfileMenuItem = styled(Link)`
+  padding: 10px 12px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  color: ${colors.textSecondary};
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+
+  &:hover,
+  &:focus-visible {
+    border-color: ${colors.primary};
+    color: ${colors.primary};
+    outline: none;
+  }
 `
 
 export const Avatar = styled.img`

@@ -1,4 +1,5 @@
-import { fetchPractitionerDashboardData, type TaskRow } from './data'
+import { fetchDashboardMyTasks } from '../../shared/api'
+import type { TaskRow, TaskStatus } from './data'
 
 export type TaskCardStatus = 'urgent' | 'normal'
 
@@ -23,9 +24,29 @@ export type MyTaskStatusData = {
   roleBadge: string
   activeCount: number
   urgentCount: number
-  monthlyCompleted: number
-  qualityScore: string
+  completedCount: number
+  completionRate: string
   cards: MyTaskCard[]
+}
+
+type MyTaskStatusApiResponse = {
+  employee_code: string
+  user_name: string
+  department: string
+  active_count: number
+  urgent_count: number
+  completed_count: number
+  completion_rate: number
+  tasks: Array<{
+    request_no: string
+    client: string
+    data_type: string
+    detail: string
+    assignee: string
+    created_at: string
+    updated_at: string
+    status: TaskStatus
+  }>
 }
 
 function progressFor(row: TaskRow): number {
@@ -33,16 +54,26 @@ function progressFor(row: TaskRow): number {
 }
 
 export async function fetchMyTaskStatusData(): Promise<MyTaskStatusData> {
-  const dashboard = await fetchPractitionerDashboardData()
-  const assigned = dashboard.taskRows.filter((row) => row.assignee === '홍길동 책임' && row.status !== '완료')
-  const completed = dashboard.taskRows.filter((row) => row.assignee === '홍길동 책임' && row.status === '완료')
+  const response = await fetchDashboardMyTasks<MyTaskStatusApiResponse>()
+  const assigned: TaskRow[] = response.tasks
+    .filter((row) => row.status !== '완료')
+    .map((row) => ({
+      reqId: row.request_no,
+      client: row.client,
+      dataType: row.data_type,
+      detail: row.detail,
+      assignee: row.assignee,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+      status: row.status,
+    }))
   return {
-    userName: '홍길동 책임님',
-    roleBadge: 'Senior Operator',
-    activeCount: assigned.length,
-    urgentCount: assigned.filter((row) => row.status === '요구사항 분석').length,
-    monthlyCompleted: completed.length,
-    qualityScore: '98.2%',
+    userName: `${response.user_name}님`,
+    roleBadge: response.department,
+    activeCount: response.active_count,
+    urgentCount: response.urgent_count,
+    completedCount: response.completed_count,
+    completionRate: `${response.completion_rate.toFixed(1)}%`,
     cards: assigned.slice(0, 3).map((row, index) => {
       const urgent = row.status === '요구사항 분석' && index === 0
       const progress = progressFor(row)
@@ -59,7 +90,7 @@ export async function fetchMyTaskStatusData(): Promise<MyTaskStatusData> {
         progressLabel: `${progress}% (${row.detail})`,
         progressLabelColor: urgent ? '#dc2626' : '#0f5a52',
         registeredAt: `등록일: ${row.createdAt}`,
-        dueLabel: urgent ? '마감일: 오늘 18:00 (초과 시 패널티)' : '마감일: 데모 일정 확인 필요',
+        dueLabel: urgent ? '마감일: 오늘 18:00' : '마감일: 데모 일정 확인 필요',
         dueColor: urgent ? '#dc2626' : '#495057',
         actionLabel: urgent ? '바로 작업하기' : '상세 보기',
         actionTo: `${route}?requestNo=${encodeURIComponent(row.reqId)}`,
