@@ -16,8 +16,8 @@ export const StatCardEl = styled.div<{ $highlight?: boolean }>`
   gap: 12px;
   padding: 24px;
   border-radius: 16px;
-  border: 1px solid ${({ $highlight }) => ($highlight ? 'transparent' : colors.border)};
-  background: ${({ $highlight }) => ($highlight ? colors.primary : colors.white)};
+  border: ${({ $highlight }) => ($highlight ? `1.5px solid ${colors.primary}` : `1px solid ${colors.border}`)};
+  background: ${colors.white};
   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.02);
 `
 
@@ -25,7 +25,7 @@ export const StatLabel = styled.p<{ $highlight?: boolean }>`
   margin: 0;
   font-size: 14px;
   font-weight: 600;
-  color: ${({ $highlight }) => ($highlight ? 'rgba(255,255,255,0.7)' : colors.textSecondary)};
+  color: ${({ $highlight }) => ($highlight ? colors.primary : colors.textSecondary)};
 `
 
 export const StatNumbers = styled.div`
@@ -38,19 +38,19 @@ export const StatValue = styled.p<{ $highlight?: boolean }>`
   margin: 0;
   font-size: 36px;
   font-weight: 800;
-  color: ${({ $highlight }) => ($highlight ? '#000' : colors.text)};
+  color: ${({ $highlight }) => ($highlight ? colors.primary : colors.text)};
 `
 
 export const StatUnit = styled.p<{ $highlight?: boolean }>`
   margin: 0;
   font-size: 14px;
-  color: ${({ $highlight }) => ($highlight ? 'rgba(255,255,255,0.7)' : colors.textMuted)};
+  color: ${({ $highlight }) => ($highlight ? colors.textSecondary : colors.textMuted)};
 `
 
 export const StatCaption = styled.p<{ $highlight?: boolean }>`
   margin: 0;
   font-size: 13px;
-  color: ${({ $highlight }) => ($highlight ? 'rgba(255,255,255,0.7)' : colors.textMuted)};
+  color: ${({ $highlight }) => ($highlight ? colors.textSecondary : colors.textMuted)};
 `
 
 export const AlertsSection = styled.section`

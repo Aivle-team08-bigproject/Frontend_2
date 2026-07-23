@@ -48,8 +48,9 @@ export const RoleBadge = styled.span`
   display: inline-flex;
   padding: 2px 8px;
   border-radius: 100px;
-  background: ${colors.primary};
-  color: #000;
+  border: 1px solid ${colors.primary};
+  background: transparent;
+  color: ${colors.primary};
   font-size: 11px;
   font-weight: 700;
   white-space: nowrap;
@@ -248,12 +249,18 @@ export const FooterDue = styled.p<{ $color: string }>`
 export const ActionButton = styled.button`
   display: flex;
   padding: 8px 16px;
-  border: none;
+  border: 1.5px solid ${colors.primary};
   border-radius: 6px;
-  background: ${colors.primary};
-  color: #000;
+  background: ${colors.white};
+  color: ${colors.primary};
   font-size: 13px;
   font-weight: 700;
   white-space: nowrap;
   cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    background: ${colors.bgTint};
+    outline: none;
+  }
 `

@@ -114,6 +114,10 @@ export function fetchDashboard<T>(): Promise<T> {
   return request('/api/v1/dashboard')
 }
 
+export function fetchDashboardMyTasks<T>(): Promise<T> {
+  return request('/api/v1/dashboard/my-tasks')
+}
+
 export function fetchDashboardTaskLookup<T>(): Promise<T> {
   return request('/api/v1/dashboard/task-lookup')
 }
