@@ -63,7 +63,7 @@ export default function FinalOutputFeedback() {
       <FlowPageHeader title="최종 산출물 및 피드백" badgeLabel="산출물 검토" />
       <FlowContentArea>
         <RequestHeaderCard reqId={data.reqId} title={data.requestTitle} />
-        <StepProgressBar currentStep={7} />
+        <StepProgressBar currentStep={3} />
         <SplitGrid>
           <LeftCol>
             <Card>

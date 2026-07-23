@@ -18,7 +18,7 @@ export default function DataSelectionInProgress() {
       <FlowPageHeader title="실시간 데이터 선별 진행" badgeLabel="데이터 선별" />
       <FlowContentArea>
         <RequestHeaderCard reqId={data.reqId} title={data.requestTitle} />
-        <StepProgressBar currentStep={4} />
+        <StepProgressBar currentStep={2} />
         <SplitGrid>
           <LeftPanel>
             <Timeline

@@ -7,7 +7,7 @@ export const Bar = styled.div`
   justify-content: center;
   gap: 4px;
   width: 100%;
-  padding: 24px 16px;
+  padding: 24px 280px;
   border-radius: 12px;
   border: 1px solid ${colors.border};
   background: ${colors.white};
