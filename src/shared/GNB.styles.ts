@@ -175,6 +175,32 @@ export const ProfileMenuItem = styled(Link)`
   }
 `
 
+export const ProfileMenuButton = styled.button`
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  color: ${colors.textSecondary};
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    border-color: ${colors.primary};
+    color: ${colors.primary};
+    outline: none;
+  }
+
+  &:disabled {
+    cursor: wait;
+    opacity: 0.6;
+  }
+`
+
 export const Avatar = styled.img`
   width: 36px;
   height: 36px;

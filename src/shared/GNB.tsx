@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { fetchCurrentUser } from './currentUser'
+import { logout } from './api'
+import { clearAccessToken } from './auth'
 import { useAsyncData } from './hooks'
 import { alarmBadgeSrc, avatarSrc, searchIconSrc } from './icons'
 import {
@@ -14,6 +17,7 @@ import {
   LogoTexts,
   LogoTitle,
   ProfileMenu,
+  ProfileMenuButton,
   ProfileMenuItem,
   ProfileMenuWrap,
   Profile,
@@ -28,7 +32,9 @@ import {
 
 export default function GNB() {
   const { data: user } = useAsyncData(fetchCurrentUser)
+  const navigate = useNavigate()
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false)
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
   const profileMenuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -45,6 +51,17 @@ export default function GNB() {
       document.removeEventListener('keydown', closeOnEscape)
     }
   }, [])
+
+  async function handleLogout() {
+    if (isLoggingOut) return
+    setIsLoggingOut(true)
+    try {
+      await logout()
+    } finally {
+      clearAccessToken()
+      navigate('/login', { replace: true })
+    }
+  }
 
   return (
     <Bar>
@@ -82,6 +99,14 @@ export default function GNB() {
               <ProfileMenu role="menu" aria-label="사용자 메뉴">
                 <ProfileMenuItem to="/tasks/register" role="menuitem">새 작업 생성</ProfileMenuItem>
                 <ProfileMenuItem to="/dev-dashboard" role="menuitem">관리자 페이지</ProfileMenuItem>
+                <ProfileMenuButton
+                  type="button"
+                  role="menuitem"
+                  onClick={handleLogout}
+                  disabled={isLoggingOut}
+                >
+                  {isLoggingOut ? '로그아웃 중...' : '로그아웃'}
+                </ProfileMenuButton>
               </ProfileMenu>
             )}
           </ProfileMenuWrap>

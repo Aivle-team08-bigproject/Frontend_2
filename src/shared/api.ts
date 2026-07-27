@@ -118,6 +118,7 @@ async function request<T>(path: string, init?: RequestInit, retried = false): Pr
     const message = body?.detail?.message ?? `API 요청에 실패했습니다. (${response.status})`
     throw new Error(message)
   }
+  if (response.status === 204) return undefined as T
   return response.json() as Promise<T>
 }
 
@@ -130,6 +131,10 @@ export function login(employeeCode: string, password: string, rememberMe: boolea
 
 export function fetchCurrentEmployee(): Promise<LoginResponse['employee']> {
   return request('/api/auth/me')
+}
+
+export function logout(): Promise<void> {
+  return request<void>('/api/auth/logout', { method: 'POST' })
 }
 
 export function createDataRequest(payload: CreateDataRequestPayload): Promise<CreateDataRequestResponse> {
