@@ -1,4 +1,5 @@
-import { fetchDashboard } from '../../shared/api'
+import { fetchDashboard, type DashboardResponse, type DashboardTaskItem, type StageGroupCode } from '../../shared/api'
+import { colors } from '../../shared/theme'
 
 export type StatCard = {
   label: string
@@ -95,71 +96,104 @@ export type PractitionerDashboardData = {
   pageSize: number
 }
 
-type DashboardApiResponse = {
-  stat_cards: StatCard[]
-  alert_banner_count: number
-  warning_cards: Array<Omit<WarningCard, 'countLabel' | 'countBg' | 'countColor' | 'footNote' | 'actionTo'> & {
-    count_label: string
-    count_bg: string
-    count_color: string
-    foot_note: string
-    action_to: string
-  }>
-  preferred_items: Array<Omit<RankedItem, 'tagBg' | 'tagColor'> & { tag_bg: string; tag_color: string }>
-  supplement_items: Array<Omit<SupplementItem, 'noteColor' | 'tagBg' | 'tagColor'> & { note_color: string; tag_bg: string; tag_color: string }>
-  task_rows: Array<{
-    request_no: string
-    client: string
-    data_type: string
-    detail: string
-    assignee: string
-    created_at: string
-    updated_at: string
-    status: TaskStatus
-  }>
-  page_size: number
+const legacyStatusForStageGroup: Record<StageGroupCode, TaskStatus> = {
+  REQUIREMENT_ANALYSIS: '요구사항 분석 진행',
+  SAMPLE_DATA: '샘플데이터 및 피드백',
+  FINAL_OUTPUT: '최종 산출물 및 피드백',
+  COMPLETED: '작업완료',
+  UNKNOWN: '요구사항 분석',
+}
+
+const priorityColors = {
+  REQUIREMENT: { bg: colors.dangerBg, color: colors.danger },
+  SAMPLE: { bg: colors.warningBgAlt, color: colors.warningAlt },
+  FINAL: { bg: colors.warningBg, color: colors.warning },
+} as const
+
+function formatDate(value: string): string {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return value
+  return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`
+}
+
+function taskRowFromDashboardItem(item: DashboardTaskItem): TaskRow {
+  return {
+    reqId: item.request_no,
+    client: item.client,
+    dataType: item.stage_label,
+    detail: item.title,
+    assignee: item.assignee_name,
+    createdAt: formatDate(item.created_at),
+    updatedAt: formatDate(item.updated_at),
+    status: legacyStatusForStageGroup[item.stage_group_code],
+  }
+}
+
+function dashboardTasks(data: DashboardResponse): DashboardTaskItem[] {
+  const uniqueItems = new Map<string, DashboardTaskItem>()
+  for (const item of [...data.priority_actions, ...data.approval_tasks]) {
+    uniqueItems.set(item.request_no, item)
+  }
+  return [...uniqueItems.values()]
+}
+
+function warningCardFromPriority(
+  card: DashboardResponse['priority_cards'][number],
+  actions: DashboardTaskItem[],
+): WarningCard {
+  const palette = priorityColors[card.priority_code]
+  const action = actions.find((item) => item.priority_code === card.priority_code)
+  return {
+    title: card.label,
+    countLabel: `${card.count}건`,
+    countBg: palette.bg,
+    countColor: palette.color,
+    description: action?.title ?? `${card.count}건의 작업이 조치를 기다리고 있습니다.`,
+    footNote: card.count > 0 ? '상세 조치가 필요합니다.' : '현재 조치 대기 작업이 없습니다.',
+    actionTo: card.detail_route,
+  }
 }
 
 export async function fetchPractitionerDashboardData(): Promise<PractitionerDashboardData> {
-  const data = await fetchDashboard<DashboardApiResponse>()
+  const data = await fetchDashboard()
+  const actions = dashboardTasks(data)
   return {
-    statCards: data.stat_cards,
-    alertBannerCount: data.alert_banner_count,
-    warningCards: data.warning_cards.map((item) => ({
-      title: item.title,
-      countLabel: item.count_label,
-      countBg: item.count_bg,
-      countColor: item.count_color,
-      description: item.description,
-      footNote: item.foot_note,
-      actionTo: item.action_to,
+    statCards: [
+      ...data.priority_cards.map((card, index) => ({
+        label: card.label,
+        value: card.count,
+        unit: '건',
+        caption: `우선순위 ${index + 1}`,
+        highlight: card.count > 0,
+      })),
+      {
+        label: '진행 중인 전체 작업',
+        value: data.active_task_count,
+        unit: '건',
+        caption: '전체 작업 현황',
+      },
+    ],
+    alertBannerCount: actions.length,
+    warningCards: data.priority_cards.map((card) => warningCardFromPriority(card, actions)),
+    preferredItems: data.popular_products.map((item, index) => ({
+      rank: index + 1,
+      title: item.product_name,
+      subtitle: `${item.request_count}건 요청`,
+      tag: item.product_code,
+      tagBg: colors.flowPrimaryBg,
+      tagColor: colors.primary,
     })),
-    preferredItems: data.preferred_items.map((item) => ({
-      rank: item.rank,
-      title: item.title,
-      subtitle: item.subtitle,
-      tag: item.tag,
-      tagBg: item.tag_bg,
-      tagColor: item.tag_color,
-    })),
-    supplementItems: data.supplement_items.map((item) => ({
-      title: item.title,
-      note: item.note,
-      noteColor: item.note_color,
-      tag: item.tag,
-      tagBg: item.tag_bg,
-      tagColor: item.tag_color,
-    })),
-    taskRows: data.task_rows.map((item) => ({
-      reqId: item.request_no,
-      client: item.client,
-      dataType: item.data_type,
-      detail: item.detail,
-      assignee: item.assignee,
-      createdAt: item.created_at,
-      updatedAt: item.updated_at,
-      status: item.status,
-    })),
-    pageSize: data.page_size,
+    supplementItems: data.popular_products.length === 0
+      ? [{
+          title: '인기 상품 데이터',
+          note: data.popular_products_unavailable_message,
+          noteColor: colors.textMuted,
+          tag: '제공 불가',
+          tagBg: colors.bg,
+          tagColor: colors.textSecondary,
+        }]
+      : [],
+    taskRows: actions.map(taskRowFromDashboardItem),
+    pageSize: 30,
   }
 }
