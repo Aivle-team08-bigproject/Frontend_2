@@ -49,6 +49,20 @@ export const TASK_STATUSES = [
 
 export type TaskStatus = (typeof TASK_STATUSES)[number]
 
+export const TASK_FILTER_STAGES = ['요구사항 분석', '샘플 데이터', '최종 산출물', '완료'] as const
+export type TaskFilterStage = (typeof TASK_FILTER_STAGES)[number]
+
+export const taskFilterStageForStatus: Record<TaskStatus, TaskFilterStage> = {
+  '요구사항 분석': '요구사항 분석',
+  '요구사항 분석 진행': '요구사항 분석',
+  '요구사항 완료 피드백': '요구사항 분석',
+  '데이터 선별 진행': '샘플 데이터',
+  '샘플데이터 및 피드백': '샘플 데이터',
+  '데이터 가공 진행': '최종 산출물',
+  '최종 산출물 및 피드백': '최종 산출물',
+  작업완료: '완료',
+}
+
 export const taskStatusColors: Record<TaskStatus, { bg: string; color: string }> = {
   '요구사항 분석': { bg: '#e6f0ff', color: '#0066ff' },
   '요구사항 분석 진행': { bg: '#dbeafe', color: '#2563eb' },

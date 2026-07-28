@@ -25,7 +25,13 @@ import {
   TableHeaderRow,
   TableRowEl,
 } from '../../shared/Table.styles'
-import { fetchPractitionerDashboardData, TASK_STATUSES, taskStatusColors, type TaskStatus } from './data'
+import {
+  fetchPractitionerDashboardData,
+  TASK_FILTER_STAGES,
+  taskFilterStageForStatus,
+  taskStatusColors,
+  type TaskFilterStage,
+} from './data'
 import {
   ActionLink,
   AlertBadge,
@@ -70,7 +76,7 @@ import {
 export default function PractitionerDashboardMain() {
   const { data } = useAsyncData(fetchPractitionerDashboardData)
   const [page, setPage] = useState(1)
-  const [statusFilter, setStatusFilter] = useState<TaskStatus | 'all'>('all')
+  const [statusFilter, setStatusFilter] = useState<TaskFilterStage | 'all'>('all')
   const [assigneeFilter, setAssigneeFilter] = useState('all')
   const [monthFilter, setMonthFilter] = useState('all')
   const [openFilter, setOpenFilter] = useState<'status' | 'assignee' | 'month' | null>(null)
@@ -99,7 +105,7 @@ export default function PractitionerDashboardMain() {
   const filteredRows = useMemo(() => {
     if (!data) return []
     return data.taskRows.filter((row) => {
-      if (statusFilter !== 'all' && row.status !== statusFilter) return false
+      if (statusFilter !== 'all' && taskFilterStageForStatus[row.status] !== statusFilter) return false
       if (assigneeFilter !== 'all' && row.assignee !== assigneeFilter) return false
       if (monthFilter !== 'all' && row.createdAt.slice(0, 7) !== monthFilter) return false
       return true
@@ -252,7 +258,7 @@ export default function PractitionerDashboardMain() {
                 </SortChip>
                 {openFilter === 'status' && (
                   <FilterMenu role="menu" aria-label="단계별 상태 필터">
-                    {(['all', ...TASK_STATUSES] as const).map((status) => (
+                    {(['all', ...TASK_FILTER_STAGES] as const).map((status) => (
                       <FilterOption key={status} type="button" role="menuitemradio" aria-checked={statusFilter === status} $selected={statusFilter === status} onClick={() => selectFilter(() => setStatusFilter(status))}>
                         {status === 'all' ? '전체 상태' : status}
                       </FilterOption>
