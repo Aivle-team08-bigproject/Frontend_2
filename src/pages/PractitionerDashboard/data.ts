@@ -36,13 +36,28 @@ export type SupplementItem = {
   tagColor: string
 }
 
-export type TaskStatus = '요구사항 분석' | '진행중' | '가공중' | '완료'
+export const TASK_STATUSES = [
+  '요구사항 분석',
+  '요구사항 분석 진행',
+  '요구사항 완료 피드백',
+  '데이터 선별 진행',
+  '샘플데이터 및 피드백',
+  '데이터 가공 진행',
+  '최종 산출물 및 피드백',
+  '작업완료',
+] as const
+
+export type TaskStatus = (typeof TASK_STATUSES)[number]
 
 export const taskStatusColors: Record<TaskStatus, { bg: string; color: string }> = {
   '요구사항 분석': { bg: '#e6f0ff', color: '#0066ff' },
-  진행중: { bg: '#fef3c7', color: '#d97706' },
-  가공중: { bg: '#ffedd5', color: '#ea580c' },
-  완료: { bg: '#dcfce7', color: '#22c55e' },
+  '요구사항 분석 진행': { bg: '#dbeafe', color: '#2563eb' },
+  '요구사항 완료 피드백': { bg: '#ede9fe', color: '#7c3aed' },
+  '데이터 선별 진행': { bg: '#fef3c7', color: '#d97706' },
+  '샘플데이터 및 피드백': { bg: '#ffedd5', color: '#ea580c' },
+  '데이터 가공 진행': { bg: '#fce7f3', color: '#db2777' },
+  '최종 산출물 및 피드백': { bg: '#fee2e2', color: '#dc2626' },
+  작업완료: { bg: '#dcfce7', color: '#22c55e' },
 }
 
 export type TaskRow = {
