@@ -16,6 +16,8 @@ import TaskComplete from './pages/TaskFlow/TaskComplete'
 import LoginPage from './pages/SystemPages/LoginPage'
 import { NotFoundPage, ServerErrorPage } from './pages/SystemPages/ErrorPage'
 import ProtectedRoute from './shared/ProtectedRoute'
+import TestDashboard from './pages/TestDashboard/TestDashboard'
+import TestTaskList from './pages/TestDashboard/TestTaskList'
 
 function protectedPage(page: ReactNode) {
   return <ProtectedRoute>{page}</ProtectedRoute>
@@ -32,6 +34,8 @@ function App() {
         <Route path="/dashboard" element={protectedPage(<PractitionerDashboardMain />)} />
         <Route path="/dashboard/my-tasks" element={protectedPage(<MyTaskStatus />)} />
         <Route path="/dashboard/task-lookup" element={protectedPage(<TaskLookup />)} />
+        <Route path="/test/dashboard" element={protectedPage(<TestDashboard />)} />
+        <Route path="/test/tasks" element={protectedPage(<TestTaskList />)} />
         <Route path="/dev-dashboard" element={protectedPage(<DeveloperDashboardMain />)} />
         <Route path="/dev-dashboard/members" element={protectedPage(<MemberManagement />)} />
         <Route path="/tasks/register" element={protectedPage(<RequirementAnalysisRegister />)} />
