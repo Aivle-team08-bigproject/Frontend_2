@@ -50,13 +50,22 @@ type MyTaskStatusApiResponse = {
 }
 
 function progressFor(row: TaskRow): number {
-  return { '요구사항 분석': 15, 진행중: 40, 가공중: 65, 완료: 100 }[row.status]
+  return {
+    '요구사항 분석': 15,
+    '요구사항 분석 진행': 25,
+    '요구사항 완료 피드백': 35,
+    '데이터 선별 진행': 50,
+    '샘플데이터 및 피드백': 60,
+    '데이터 가공 진행': 75,
+    '최종 산출물 및 피드백': 90,
+    작업완료: 100,
+  }[row.status]
 }
 
 export async function fetchMyTaskStatusData(): Promise<MyTaskStatusData> {
   const response = await fetchDashboardMyTasks<MyTaskStatusApiResponse>()
   const assigned: TaskRow[] = response.tasks
-    .filter((row) => row.status !== '완료')
+    .filter((row) => row.status !== '작업완료')
     .map((row) => ({
       reqId: row.request_no,
       client: row.client,
@@ -75,9 +84,18 @@ export async function fetchMyTaskStatusData(): Promise<MyTaskStatusData> {
     completedCount: response.completed_count,
     completionRate: `${response.completion_rate.toFixed(1)}%`,
     cards: assigned.slice(0, 3).map((row, index) => {
-      const urgent = row.status === '요구사항 분석' && index === 0
+      const urgent = ['요구사항 분석', '요구사항 분석 진행', '요구사항 완료 피드백'].includes(row.status) && index === 0
       const progress = progressFor(row)
-      const route = { '요구사항 분석': '/tasks/review', 진행중: '/tasks/selection', 가공중: '/tasks/processing', 완료: '/tasks/complete' }[row.status]
+      const route = {
+        '요구사항 분석': '/tasks/review',
+        '요구사항 분석 진행': '/tasks/review',
+        '요구사항 완료 피드백': '/tasks/review',
+        '데이터 선별 진행': '/tasks/selection',
+        '샘플데이터 및 피드백': '/tasks/sample-feedback',
+        '데이터 가공 진행': '/tasks/processing',
+        '최종 산출물 및 피드백': '/tasks/final-feedback',
+        작업완료: '/tasks/complete',
+      }[row.status]
       return {
         reqId: row.reqId,
         client: row.client,

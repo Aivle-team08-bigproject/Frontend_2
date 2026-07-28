@@ -25,7 +25,7 @@ import {
   TableHeaderRow,
   TableRowEl,
 } from '../../shared/Table.styles'
-import { fetchPractitionerDashboardData, taskStatusColors, type TaskStatus } from './data'
+import { fetchPractitionerDashboardData, TASK_STATUSES, taskStatusColors, type TaskStatus } from './data'
 import {
   ActionLink,
   AlertBadge,
@@ -79,9 +79,13 @@ export default function PractitionerDashboardMain() {
 
   const taskDetailRoute = {
     '요구사항 분석': '/tasks/review',
-    진행중: '/tasks/selection',
-    가공중: '/tasks/processing',
-    완료: '/tasks/complete',
+    '요구사항 분석 진행': '/tasks/review',
+    '요구사항 완료 피드백': '/tasks/review',
+    '데이터 선별 진행': '/tasks/selection',
+    '샘플데이터 및 피드백': '/tasks/sample-feedback',
+    '데이터 가공 진행': '/tasks/processing',
+    '최종 산출물 및 피드백': '/tasks/final-feedback',
+    작업완료: '/tasks/complete',
   } as const
 
   const assigneeOptions = useMemo(
@@ -248,7 +252,7 @@ export default function PractitionerDashboardMain() {
                 </SortChip>
                 {openFilter === 'status' && (
                   <FilterMenu role="menu" aria-label="단계별 상태 필터">
-                    {(['all', '요구사항 분석', '진행중', '가공중', '완료'] as const).map((status) => (
+                    {(['all', ...TASK_STATUSES] as const).map((status) => (
                       <FilterOption key={status} type="button" role="menuitemradio" aria-checked={statusFilter === status} $selected={statusFilter === status} onClick={() => selectFilter(() => setStatusFilter(status))}>
                         {status === 'all' ? '전체 상태' : status}
                       </FilterOption>
