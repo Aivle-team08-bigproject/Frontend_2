@@ -63,6 +63,77 @@ export type PipelineRunResponse = {
   events: PipelineEvent[]
 }
 
+export type PriorityCode = 'REQUIREMENT' | 'SAMPLE' | 'FINAL'
+
+export type StageGroupCode =
+  | 'REQUIREMENT_ANALYSIS'
+  | 'SAMPLE_DATA'
+  | 'FINAL_OUTPUT'
+  | 'COMPLETED'
+  | 'UNKNOWN'
+
+export type DecisionStatus = 'pending' | 'approved' | 'changes_requested' | 'not_required'
+
+export type StatusGroupCode = 'waiting_review' | 'in_progress' | 'completed' | 'failed' | 'unknown'
+
+export type DashboardTaskItem = {
+  request_no: string
+  client: string
+  title: string
+  assignee_code: string | null
+  assignee_name: string
+  stage_code: string | null
+  stage_group_code: StageGroupCode
+  stage_label: string
+  status_code: string | null
+  status_group_code: StatusGroupCode
+  priority_code: PriorityCode | null
+  decision_status: DecisionStatus
+  requires_action: boolean
+  detail_route: string
+  created_at: string
+  updated_at: string
+}
+
+export type DashboardPriorityCard = {
+  priority_code: PriorityCode
+  label: string
+  count: number
+  detail_route: string
+}
+
+export type PopularProduct = {
+  product_code: string
+  product_name: string
+  request_count: number
+}
+
+export type DashboardResponse = {
+  generated_at: string
+  priority_cards: DashboardPriorityCard[]
+  priority_actions: DashboardTaskItem[]
+  popular_products: PopularProduct[]
+  popular_products_unavailable_message: string
+  approval_tasks: DashboardTaskItem[]
+  active_task_count: number
+}
+
+export type DashboardPageSize = 30 | 50 | 100
+
+export type DashboardTasksQuery = {
+  priority?: PriorityCode
+  stage?: StageGroupCode
+  page?: number
+  page_size?: DashboardPageSize
+}
+
+export type DashboardTasksResponse = {
+  items: DashboardTaskItem[]
+  total_count: number
+  page: number
+  page_size: DashboardPageSize
+}
+
 export type TaskViewResponse<T extends object> = {
   request_no: string
   request_title: string
@@ -148,8 +219,18 @@ export function fetchPipelineRun(runId: number): Promise<PipelineRunResponse> {
   return request(`/api/v1/runs/${runId}`)
 }
 
-export function fetchDashboard<T>(): Promise<T> {
-  return request('/api/v1/dashboard')
+export function fetchDashboard(): Promise<DashboardResponse> {
+  return request<DashboardResponse>('/api/v1/dashboard')
+}
+
+export function fetchDashboardTasks(query: DashboardTasksQuery): Promise<DashboardTasksResponse> {
+  const params = new URLSearchParams()
+  if (query.priority !== undefined) params.set('priority', query.priority)
+  if (query.stage !== undefined) params.set('stage', query.stage)
+  if (query.page !== undefined) params.set('page', String(query.page))
+  if (query.page_size !== undefined) params.set('page_size', String(query.page_size))
+  const queryString = params.toString()
+  return request<DashboardTasksResponse>(`/api/v1/dashboard/tasks${queryString ? `?${queryString}` : ''}`)
 }
 
 export function fetchDashboardMyTasks<T>(): Promise<T> {
