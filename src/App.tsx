@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
-import PractitionerDashboardMain from './pages/PractitionerDashboard/PractitionerDashboardMain'
 import MyTaskStatus from './pages/PractitionerDashboard/MyTaskStatus'
 import TaskLookup from './pages/PractitionerDashboard/TaskLookup'
 import DeveloperDashboardMain from './pages/DeveloperDashboard/DeveloperDashboardMain'
@@ -31,7 +30,8 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/404" element={<NotFoundPage />} />
         <Route path="/500" element={<ServerErrorPage />} />
-        <Route path="/dashboard" element={protectedPage(<PractitionerDashboardMain />)} />
+        <Route path="/dashboard" element={protectedPage(<TestDashboard />)} />
+        <Route path="/dashboard/tasks" element={protectedPage(<TestTaskList />)} />
         <Route path="/dashboard/my-tasks" element={protectedPage(<MyTaskStatus />)} />
         <Route path="/dashboard/task-lookup" element={protectedPage(<TaskLookup />)} />
         <Route path="/test/dashboard" element={protectedPage(<TestDashboard />)} />
