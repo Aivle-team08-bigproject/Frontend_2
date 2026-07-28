@@ -53,8 +53,9 @@ export default function MyTaskStatus() {
       <SubNav
         activeTo="/dashboard/my-tasks"
         items={[
-          { label: '전체 작업', to: '/dashboard' },
+          { label: '대시보드', to: '/dashboard' },
           { label: '내 작업 현황', to: '/dashboard/my-tasks' },
+          { label: '전체 작업 관리 리스트', to: '/dashboard/tasks' },
         ]}
       />
       <MainContent>

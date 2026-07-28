@@ -5,9 +5,9 @@ export const Bar = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 0;
   width: 100%;
-  padding: 24px 280px;
+  padding: 24px 56px;
   border-radius: 12px;
   border: 1px solid ${colors.border};
   background: ${colors.white};
@@ -18,7 +18,7 @@ export const StepItem = styled.div`
   flex: 1 0 0;
   min-width: 0;
   align-items: center;
-  gap: 6px;
+  gap: 10px;
 `
 
 export const StepCircle = styled.div<{ $state: 'done' | 'active' | 'pending' }>`
@@ -43,16 +43,17 @@ export const CheckIcon = styled.img`
 export const StepLabel = styled.p<{ $state: 'done' | 'active' | 'pending' }>`
   margin: 0;
   flex-shrink: 0;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: ${({ $state }) => ($state === 'active' ? 700 : 500)};
   color: ${({ $state }) =>
     $state === 'active' ? colors.flowPrimary : $state === 'done' ? colors.text : colors.textMuted};
   white-space: nowrap;
 `
 
-export const StepLine = styled.div`
+export const StepLine = styled.div<{ $done: boolean }>`
   flex: 1 0 0;
-  min-width: 0;
-  height: 2px;
-  background: ${colors.border};
+  min-width: 32px;
+  height: 1px;
+  margin: 0 4px;
+  background: ${({ $done }) => ($done ? colors.flowPrimary : colors.border)};
 `
