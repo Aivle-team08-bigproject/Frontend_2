@@ -27,7 +27,8 @@ function taskFromApi(item: DashboardTaskItem, index: number) {
     status: item.stage_label || detailStatuses[safeStage],
     group: item.stage_group_code === 'REQUIREMENT_ANALYSIS' ? '요구사항 분석' : item.stage_group_code === 'SAMPLE_DATA' ? '샘플 데이터' : item.stage_group_code === 'FINAL_OUTPUT' ? '최종 산출물' : '완료',
     tone: tones[safeStage],
-    priority: item.priority_code === 'REQUIREMENT' ? 'requirement' : item.priority_code === 'SAMPLE' ? 'sample' : 'final',
+    priority: item.priority_code === 'REQUIREMENT' ? 'requirement' : item.priority_code === 'SAMPLE' ? 'sample' : item.priority_code === 'FINAL' ? 'final' : null,
+    requiresAction: item.requires_action,
     date: item.created_at.slice(0, 10),
     route: item.detail_route,
   }
@@ -44,7 +45,7 @@ export default function TestTaskList() {
   const { data: apiData } = useAsyncData(loadTasks)
   const liveTasks = useMemo(() => apiData?.items.map(taskFromApi) ?? [], [apiData])
   const visibleTasks = liveTasks
-  const filtered = useMemo(() => visibleTasks.filter((task) => (priorityFilter === 'all' || task.priority === priorityFilter) && (filter === '전체 단계' || task.group === filter)), [filter, priorityFilter, visibleTasks])
+  const filtered = useMemo(() => visibleTasks.filter((task) => (priorityFilter === 'all' || (task.priority === priorityFilter && task.requiresAction)) && (filter === '전체 단계' || task.group === filter)), [filter, priorityFilter, visibleTasks])
   function updatePriorityFilter(value: PriorityFilter | 'all') {
     setPriorityFilter(value)
     const next = new URLSearchParams(searchParams)
