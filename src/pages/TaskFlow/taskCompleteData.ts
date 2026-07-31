@@ -23,6 +23,17 @@ export type TaskCompleteData = {
   emailSubject: string
 }
 
+export const EMPTY_TASK_COMPLETE: TaskCompleteData = {
+  reqId: '-',
+  requestTitle: '조회된 요청이 없습니다.',
+  milestones: [],
+  files: [],
+  endpointUrl: '-',
+  apiKeyMasked: '-',
+  recipientEmail: '-',
+  emailSubject: '-',
+}
+
 export function fetchTaskCompleteData(): Promise<TaskCompleteData> {
   return fetchTaskView<TaskCompleteData>('complete')
 }

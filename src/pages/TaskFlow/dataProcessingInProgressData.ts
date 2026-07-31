@@ -9,6 +9,13 @@ export type DataProcessingInProgressData = {
   logLines: LiveLogLine[]
 }
 
+export const EMPTY_DATA_PROCESSING_IN_PROGRESS: DataProcessingInProgressData = {
+  reqId: '-',
+  requestTitle: '조회된 요청이 없습니다.',
+  timelineItems: [],
+  logLines: [],
+}
+
 export function fetchDataProcessingInProgressData(): Promise<DataProcessingInProgressData> {
   return fetchTaskView<DataProcessingInProgressData>('processing')
 }

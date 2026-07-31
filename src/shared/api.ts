@@ -3,18 +3,25 @@ import { clearAccessToken, getAccessToken, remembersLogin, saveAccessToken } fro
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000').replace(/\/$/, '')
 let refreshPromise: Promise<string> | null = null
 
+/** `GET /api/auth/me`와 `POST /api/auth/login`이 공유하는 EmployeeSummary 스키마. */
+export type EmployeeSummary = {
+  employee_code: string
+  name: string
+  email: string
+  department_id: number | null
+  department_name: string | null
+  role: EmployeeRole | null
+  status: string
+  must_change_password: boolean
+  permissions: EmployeePermissionCode[]
+}
+
 export type LoginResponse = {
   access_token: string
+  token_type: string
   expires_in_seconds: number
   expires_at: string
-  employee: {
-    employee_code: string
-    name: string
-    department: string
-    status: string
-    must_change_password: boolean
-    permissions: string[]
-  }
+  employee: EmployeeSummary
 }
 
 export type CreateDataRequestPayload = {
@@ -189,18 +196,22 @@ async function request<T>(path: string, init?: RequestInit, retried = false): Pr
     const message = body?.detail?.message ?? `API 요청에 실패했습니다. (${response.status})`
     throw new Error(message)
   }
-  if (response.status === 204) return undefined as T
+  // 로그아웃/비밀번호 변경처럼 204를 반환하는 엔드포인트가 있고,
+  // 프록시가 빈 200을 돌려줄 수도 있으므로 본문 파싱 전에 JSON 여부를 확인한다.
+  if (response.status === 204 || !response.headers.get('content-type')?.includes('application/json')) {
+    return undefined as T
+  }
   return response.json() as Promise<T>
 }
 
-export function login(employeeCode: string, password: string, rememberMe: boolean): Promise<LoginResponse> {
+export function login(email: string, password: string, rememberMe: boolean): Promise<LoginResponse> {
   return request('/api/auth/login', {
     method: 'POST',
-    body: JSON.stringify({ employee_code: employeeCode, password, remember_me: rememberMe }),
+    body: JSON.stringify({ email, password, remember_me: rememberMe }),
   })
 }
 
-export function fetchCurrentEmployee(): Promise<LoginResponse['employee']> {
+export function fetchCurrentEmployee(): Promise<EmployeeSummary> {
   return request('/api/auth/me')
 }
 
@@ -263,11 +274,17 @@ export type EmployeePermissionCode =
   | 'QUOTE_PROCESS'
   | 'CONTRACT_MANAGE'
 
+export type EmployeeStatusCode = 'PENDING_APPROVAL' | 'ACTIVE' | 'REJECTED' | 'LOCKED' | 'DISABLED'
+
+/** `/api/admin/employees/*`가 반환하는 EmployeeResponse 중 프론트가 사용하는 필드. */
 export type AdminEmployee = {
   employee_code: string
   name: string
-  department: string
-  status: 'ACTIVE' | 'LOCKED' | 'DISABLED'
+  email: string | null
+  department_id: number | null
+  department_name: string | null
+  role: EmployeeRole | null
+  status: EmployeeStatusCode
   must_change_password: boolean
   permissions: EmployeePermissionCode[]
 }
