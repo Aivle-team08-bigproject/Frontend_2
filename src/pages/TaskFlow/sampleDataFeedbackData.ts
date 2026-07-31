@@ -22,6 +22,14 @@ export type SampleDataFeedbackData = {
   feedbackPlaceholder: string
 }
 
+export const EMPTY_SAMPLE_DATA_FEEDBACK: SampleDataFeedbackData = {
+  reqId: '-',
+  requestTitle: '조회된 요청이 없습니다.',
+  sampleRows: [],
+  columnInfo: [],
+  feedbackPlaceholder: '',
+}
+
 export function fetchSampleDataFeedbackData(): Promise<SampleDataFeedbackData> {
   return fetchTaskView<SampleDataFeedbackData>('sample-feedback')
 }

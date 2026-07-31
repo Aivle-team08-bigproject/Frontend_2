@@ -1,11 +1,13 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import GNB from '../../shared/GNB'
 import SubNav from '../../shared/SubNav'
 import { statusDotGreenSrc, statusDotOrangeSrc, statusDotRedSrc } from '../../shared/icons'
 import { useAsyncData } from '../../shared/hooks'
+import DataStateNotice from '../../shared/DataStateNotice'
+import { formatTime } from '../../shared/datetime'
 import { MainContent, PageWrapper } from '../../shared/layout.styles'
 import type { AgentStatus, DashboardPeriod, TokenUsagePoint } from './dashboardData'
-import { fetchDeveloperDashboardData } from './dashboardData'
+import { emptyDeveloperDashboard, fetchDeveloperDashboardData } from './dashboardData'
 import {
   AgentCardEl,
   AgentCardsRow,
@@ -30,7 +32,6 @@ import {
   ChartLegendDot,
   ChartSvg,
   ContentRow,
-  DashboardState,
   FailureChartCard,
   FailureSection,
   LogAgentCell,
@@ -102,16 +103,6 @@ function formatLatency(status: AgentStatus, latencyMs: number | null): string {
   return `${integerFormatter.format(latencyMs)}ms (양호)`
 }
 
-function formatTime(value: string): string {
-  const normalized = /(?:Z|[+-]\d{2}:\d{2})$/.test(value) ? value : `${value}Z`
-  return new Intl.DateTimeFormat('ko-KR', {
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false,
-  }).format(new Date(normalized))
-}
-
 function sampledLabels(points: TokenUsagePoint[]): string[] {
   if (points.length <= 7) return points.map((point) => point.label)
   const step = Math.ceil((points.length - 1) / 6)
@@ -170,6 +161,7 @@ export default function DeveloperDashboardMain() {
   const [period, setPeriod] = useState<DashboardPeriod>('daily')
   const fetcher = useCallback(() => fetchDeveloperDashboardData(period), [period])
   const { data, loading, error } = useAsyncData(fetcher, { intervalMs: 30_000 })
+  const view = useMemo(() => data ?? emptyDeveloperDashboard(period), [data, period])
 
   const navigation = (
     <>
@@ -184,26 +176,13 @@ export default function DeveloperDashboardMain() {
     </>
   )
 
-  if (!data) {
-    return (
-      <PageWrapper>
-        {navigation}
-        <MainContent>
-          <DashboardState $error={Boolean(error)}>
-            {loading ? '개발자 대시보드 데이터를 불러오는 중입니다.' : `데이터를 불러오지 못했습니다. ${error instanceof Error ? error.message : ''}`}
-          </DashboardState>
-        </MainContent>
-      </PageWrapper>
-    )
-  }
-
   const summaryCards = [
-    { label: '금월 누적 토큰 사용량', value: integerFormatter.format(data.summary.monthTokens), unit: 'tokens' },
-    { label: '금일 토큰 사용량', value: integerFormatter.format(data.summary.todayTokens), unit: 'tokens', highlight: true },
+    { label: '금월 누적 토큰 사용량', value: integerFormatter.format(view.summary.monthTokens), unit: 'tokens' },
+    { label: '금일 토큰 사용량', value: integerFormatter.format(view.summary.todayTokens), unit: 'tokens', highlight: true },
     {
       label: '예상 비용 (USD)',
-      value: `$${usdFormatter.format(data.summary.estimatedCostUsd)}`,
-      unit: `≈ ${integerFormatter.format(data.summary.estimatedCostKrw)} 원`,
+      value: `$${usdFormatter.format(view.summary.estimatedCostUsd)}`,
+      unit: `≈ ${integerFormatter.format(view.summary.estimatedCostKrw)} 원`,
     },
   ]
 
@@ -211,12 +190,13 @@ export default function DeveloperDashboardMain() {
     <PageWrapper>
       {navigation}
       <MainContent>
+        <DataStateNotice loading={loading && !data} error={error} subject="개발자 대시보드 데이터" />
         <TokenSection>
           <SectionHeaderRow>
             <TitleGroup>
               <SectionTitle>LLM Token Usage (토큰 사용량 모니터링)</SectionTitle>
               <Tag>30초 자동 갱신</Tag>
-              <UpdatedAt>기준 {formatTime(data.generatedAt)}</UpdatedAt>
+              <UpdatedAt>기준 {formatTime(view.generatedAt)}</UpdatedAt>
             </TitleGroup>
             <PeriodSelector>
               {periodOptions.map((option) => (
@@ -244,7 +224,7 @@ export default function DeveloperDashboardMain() {
               ))}
             </SummaryGrid>
             <ChartContainer>
-              <TokenUsageChart points={data.tokenSeries} />
+              <TokenUsageChart points={view.tokenSeries} />
             </ChartContainer>
           </ContentRow>
         </TokenSection>
@@ -252,7 +232,7 @@ export default function DeveloperDashboardMain() {
         <AgentSection>
           <SectionTitle>AI Agent Pipeline Status (에이전트 최근 실행 상태)</SectionTitle>
           <AgentCardsRow>
-            {data.agents.map((agent) => {
+            {view.agents.map((agent) => {
               const meta = statusMeta[agent.status]
               return (
                 <AgentCardEl key={agent.agentKey}>
@@ -286,7 +266,7 @@ export default function DeveloperDashboardMain() {
               <CardHeaderMeta>최근 24시간</CardHeaderMeta>
             </CardHeaderRow>
             <BarChart>
-              {data.failureRates.map((bar) => {
+              {view.failureRates.map((bar) => {
                 const color = failureColors[bar.agentKey] ?? '#6b7280'
                 return (
                   <BarRow key={bar.agentKey}>
@@ -315,10 +295,10 @@ export default function DeveloperDashboardMain() {
                 <LogCell $width={100}>심각도</LogCell>
               </LogTableHeader>
               <LogTableBody>
-                {data.errorLogs.length === 0 ? (
+                {view.errorLogs.length === 0 ? (
                   <LogEmpty>최근 24시간 동안 기록된 오류가 없습니다.</LogEmpty>
                 ) : (
-                  data.errorLogs.map((log) => {
+                  view.errorLogs.map((log) => {
                     const severity = severityMeta[log.severity]
                     return (
                       <LogRow key={`${log.occurredAt}-${log.agent}`}>

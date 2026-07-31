@@ -4,9 +4,8 @@ import GNB from '../../shared/GNB'
 import FlowPageHeader from '../../shared/FlowPageHeader'
 import RequestHeaderCard from '../../shared/RequestHeaderCard'
 import StepProgressBar from '../../shared/StepProgressBar'
-import { useAsyncData } from '../../shared/hooks'
 import { PageWrapper } from '../../shared/layout.styles'
-import { fetchRequirementRegisterData } from './requirementRegisterData'
+import { REQUIREMENT_REGISTER_FORM } from './requirementRegisterData'
 import { createDataRequest } from '../../shared/api'
 import {
   ActionsRow,
@@ -21,7 +20,6 @@ import {
 } from './RequirementAnalysisRegister.styles'
 
 export default function RequirementAnalysisRegister() {
-  const { data } = useAsyncData(fetchRequirementRegisterData)
   const [value, setValue] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
@@ -41,14 +39,12 @@ export default function RequirementAnalysisRegister() {
     }
   }
 
-  if (!data) return null
-
   return (
     <PageWrapper>
       <GNB />
       <FlowPageHeader title="요구사항 분석 가공 등록" badgeLabel="요구사항 등록" />
       <ContentArea>
-        <RequestHeaderCard reqId={data.reqId} title={data.requestTitle} />
+        <RequestHeaderCard reqId={REQUIREMENT_REGISTER_FORM.reqId} title={REQUIREMENT_REGISTER_FORM.requestTitle} />
         <StepProgressBar currentStep={1} />
         <InputSection>
           <InputHeader>
@@ -58,7 +54,7 @@ export default function RequirementAnalysisRegister() {
           <Textarea
             value={value}
             onChange={(e) => setValue(e.target.value)}
-            placeholder={data.placeholder}
+            placeholder={REQUIREMENT_REGISTER_FORM.placeholder}
           />
           <ActionsRow>
             {submitError && <ErrorMessage role="alert">{submitError}</ErrorMessage>}

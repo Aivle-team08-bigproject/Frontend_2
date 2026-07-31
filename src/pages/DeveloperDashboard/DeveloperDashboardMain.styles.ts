@@ -186,18 +186,6 @@ export const UpdatedAt = styled.span`
   font-size: 11px;
 `
 
-export const DashboardState = styled.div<{ $error: boolean }>`
-  display: flex;
-  min-height: 320px;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid ${({ $error }) => ($error ? '#fecaca' : colors.border)};
-  border-radius: 16px;
-  background: ${({ $error }) => ($error ? '#fff7f7' : colors.white)};
-  color: ${({ $error }) => ($error ? '#dc2626' : colors.textSecondary)};
-  font-size: 14px;
-`
-
 export const AgentSection = styled.section`
   display: flex;
   flex-direction: column;

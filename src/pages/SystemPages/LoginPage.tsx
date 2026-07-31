@@ -35,7 +35,7 @@ function LockIcon() {
 export default function LoginPage() {
   const navigate = useNavigate()
   const location = useLocation()
-  const [employeeCode, setEmployeeCode] = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [rememberMe, setRememberMe] = useState(true)
   const [submitting, setSubmitting] = useState(false)
@@ -44,11 +44,11 @@ export default function LoginPage() {
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (!employeeCode.trim() || !password || submitting) return
+    if (!email.trim() || !password || submitting) return
     setSubmitting(true)
     setError(null)
     try {
-      const response = await login(employeeCode.trim(), password, rememberMe)
+      const response = await login(email.trim().toLowerCase(), password, rememberMe)
       saveAccessToken(response.access_token, rememberMe)
       navigate(destination, { replace: true })
     } catch (reason) {
@@ -67,8 +67,8 @@ export default function LoginPage() {
         </Brand>
         <Form onSubmit={handleSubmit}>
           <Field>
-            직원 ID
-            <InputWrap><Icon><UserIcon /></Icon><Input value={employeeCode} onChange={(event) => setEmployeeCode(event.target.value)} placeholder="HANA-2024-089" autoComplete="username" /></InputWrap>
+            회사 이메일
+            <InputWrap><Icon><UserIcon /></Icon><Input type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="name@hanacard.co.kr" autoComplete="username" /></InputWrap>
           </Field>
           <Field>
             비밀번호
@@ -79,7 +79,7 @@ export default function LoginPage() {
             <TextButton type="button" onClick={() => setError('비밀번호 초기화는 관리자에게 문의해주세요.')}>비밀번호를 잊으셨나요?</TextButton>
           </FormMeta>
           {error && <ErrorText role="alert">{error}</ErrorText>}
-          <LoginButton type="submit" disabled={submitting || !employeeCode.trim() || !password}>{submitting ? '로그인 중...' : '로그인'}</LoginButton>
+          <LoginButton type="submit" disabled={submitting || !email.trim() || !password}>{submitting ? '로그인 중...' : '로그인'}</LoginButton>
           <HelperText>계정이 없으신가요? <strong>관리자에게 문의하세요</strong></HelperText>
         </Form>
         <SecurityFooter>♢ JWT 보안 인증 활성화됨</SecurityFooter>

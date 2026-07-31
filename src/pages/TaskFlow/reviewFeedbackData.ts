@@ -18,6 +18,18 @@ export type ReviewFeedbackData = {
   feedbackPlaceholder: string
 }
 
+export const EMPTY_REVIEW_FEEDBACK: ReviewFeedbackData = {
+  reqId: '-',
+  requestTitle: '조회된 요청이 없습니다.',
+  usagePurpose: '-',
+  dataDescription: '-',
+  columns: [],
+  estimatedCount: '-',
+  deliveryMedium: '-',
+  outputFormat: '-',
+  feedbackPlaceholder: '',
+}
+
 export function fetchReviewFeedbackData(): Promise<ReviewFeedbackData> {
   return fetchTaskView<ReviewFeedbackData>('review')
 }

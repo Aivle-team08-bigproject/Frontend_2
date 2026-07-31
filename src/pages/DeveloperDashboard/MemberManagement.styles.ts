@@ -398,18 +398,6 @@ export const ToggleActiveButton = styled.button<{ $active: boolean }>`
   }
 `
 
-export const PageState = styled.div<{ $error?: boolean }>`
-  display: flex;
-  min-height: 260px;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid ${({ $error }) => ($error ? '#fecaca' : colors.border)};
-  border-radius: 12px;
-  background: ${({ $error }) => ($error ? '#fff7f7' : colors.white)};
-  color: ${({ $error }) => ($error ? colors.danger : colors.textSecondary)};
-  font-size: 14px;
-`
-
 export const ActionNotice = styled.p<{ $error?: boolean }>`
   margin: 12px 0 0;
   color: ${({ $error }) => ($error ? colors.danger : colors.primary)};

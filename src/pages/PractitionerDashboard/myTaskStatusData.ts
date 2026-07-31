@@ -50,12 +50,13 @@ type MyTaskStatusApiResponse = {
 }
 
 function normalizeTaskStatus(status: MyTaskStatusApiResponse['tasks'][number]['status']): TaskStatus {
-  return {
+  const legacyStatusMap: Record<string, TaskStatus> = {
     진행중: '샘플데이터 및 피드백',
     가공중: '데이터 가공 진행',
     완료: '작업완료',
     '상태 확인 필요': '요구사항 분석',
-  }[status as '진행중' | '가공중' | '완료' | '상태 확인 필요'] ?? status
+  }
+  return legacyStatusMap[status] ?? status
 }
 
 function progressFor(row: TaskRow): number {
@@ -69,6 +70,16 @@ function progressFor(row: TaskRow): number {
     '최종 산출물 및 피드백': 90,
     작업완료: 100,
   }[row.status]
+}
+
+export const EMPTY_MY_TASK_STATUS: MyTaskStatusData = {
+  userName: '-',
+  roleBadge: '-',
+  activeCount: 0,
+  urgentCount: 0,
+  completedCount: 0,
+  completionRate: '0.0%',
+  cards: [],
 }
 
 export async function fetchMyTaskStatusData(): Promise<MyTaskStatusData> {

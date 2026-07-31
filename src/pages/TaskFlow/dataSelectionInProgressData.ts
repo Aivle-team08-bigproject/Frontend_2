@@ -9,6 +9,13 @@ export type DataSelectionInProgressData = {
   logLines: LiveLogLine[]
 }
 
+export const EMPTY_DATA_SELECTION_IN_PROGRESS: DataSelectionInProgressData = {
+  reqId: '-',
+  requestTitle: '조회된 요청이 없습니다.',
+  timelineItems: [],
+  logLines: [],
+}
+
 export function fetchDataSelectionInProgressData(): Promise<DataSelectionInProgressData> {
   return fetchTaskView<DataSelectionInProgressData>('selection')
 }
