@@ -1,7 +1,5 @@
 import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { login } from '../../shared/api'
-import { saveAccessToken } from '../../shared/auth'
 import {
   Brand,
   BrandMark,
@@ -18,8 +16,10 @@ import {
   LoginCard,
   LoginScreen,
   RememberLabel,
-  SecurityFooter,
+  SignupLink,
+  LegalLink,
   Subtitle,
+  SuccessText,
   TextButton,
   Title,
 } from './LoginPage.styles'
@@ -40,6 +40,7 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
   const destination = (location.state as { from?: string } | null)?.from ?? '/dashboard'
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -48,9 +49,9 @@ export default function LoginPage() {
     setSubmitting(true)
     setError(null)
     try {
-      const response = await login(email.trim().toLowerCase(), password, rememberMe)
-      saveAccessToken(response.access_token, rememberMe)
-      navigate(destination, { replace: true })
+      await new Promise((resolve) => window.setTimeout(resolve, 350))
+      setSuccess(`목업 로그인에 성공했습니다. 다음 단계에서 ${destination}으로 이동합니다.`)
+      setSubmitting(false)
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : '로그인에 실패했습니다.')
       setSubmitting(false)
@@ -68,21 +69,22 @@ export default function LoginPage() {
         <Form onSubmit={handleSubmit}>
           <Field>
             회사 이메일
-            <InputWrap><Icon><UserIcon /></Icon><Input type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="name@example.com" autoComplete="username" /></InputWrap>
+            <InputWrap><Icon><UserIcon /></Icon><Input type="email" value={email} onChange={(event) => { setEmail(event.target.value); setSuccess(null) }} placeholder="name@example.com" autoComplete="username" /></InputWrap>
           </Field>
           <Field>
             비밀번호
-            <InputWrap><Icon><LockIcon /></Icon><Input type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="••••••••••••" autoComplete="current-password" /></InputWrap>
+            <InputWrap><Icon><LockIcon /></Icon><Input type="password" value={password} onChange={(event) => { setPassword(event.target.value); setSuccess(null) }} placeholder="••••••••••••" autoComplete="current-password" /></InputWrap>
           </Field>
           <FormMeta>
             <RememberLabel><input type="checkbox" checked={rememberMe} onChange={(event) => setRememberMe(event.target.checked)} />로그인 상태 유지</RememberLabel>
-            <TextButton type="button" onClick={() => setError('비밀번호 초기화는 관리자에게 문의해주세요.')}>비밀번호를 잊으셨나요?</TextButton>
+            <TextButton type="button" onClick={() => setError('비밀번호 재설정은 관리자에게 문의해주세요.')}>비밀번호를 잊으셨나요?</TextButton>
           </FormMeta>
           {error && <ErrorText role="alert">{error}</ErrorText>}
+          {success && <SuccessText role="status">{success}</SuccessText>}
           <LoginButton type="submit" disabled={submitting || !email.trim() || !password}>{submitting ? '로그인 중...' : '로그인'}</LoginButton>
-          <HelperText>계정이 없으신가요? <strong>관리자에게 문의하세요</strong></HelperText>
+          <SignupLink type="button" onClick={() => navigate('/signup')}>회원가입 신청</SignupLink>
+          <HelperText><LegalLink to="/legal/terms">서비스 이용약관</LegalLink> · <LegalLink to="/legal/privacy">개인정보 처리방침</LegalLink></HelperText>
         </Form>
-        <SecurityFooter>♢ JWT 보안 인증 활성화됨</SecurityFooter>
       </LoginCard>
     </LoginScreen>
   )
