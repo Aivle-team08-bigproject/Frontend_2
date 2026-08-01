@@ -14,6 +14,8 @@ import DataProcessingInProgress from './pages/TaskFlow/DataProcessingInProgress'
 import FinalOutputFeedback from './pages/TaskFlow/FinalOutputFeedback'
 import TaskComplete from './pages/TaskFlow/TaskComplete'
 import LoginPage from './pages/SystemPages/LoginPage'
+import SignupPage from './pages/SystemPages/SignupPage'
+import LegalPage from './pages/SystemPages/LegalPage'
 import { NotFoundPage, ServerErrorPage } from './pages/SystemPages/ErrorPage'
 import ProtectedRoute from './shared/ProtectedRoute'
 
@@ -27,6 +29,9 @@ function App() {
       <Routes>
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignupPage />} />
+        <Route path="/legal/terms" element={<LegalPage type="terms" />} />
+        <Route path="/legal/privacy" element={<LegalPage type="privacy" />} />
         <Route path="/404" element={<NotFoundPage />} />
         <Route path="/500" element={<ServerErrorPage />} />
         <Route path="/dashboard" element={protectedPage(<PractitionerDashboardMain />)} />
