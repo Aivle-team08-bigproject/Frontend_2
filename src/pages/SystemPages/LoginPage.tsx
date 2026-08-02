@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { ApiError, login } from '../../shared/api'
+import { saveAccessToken } from '../../shared/auth'
 import {
   Brand,
   BrandMark,
@@ -19,7 +21,6 @@ import {
   SignupLink,
   LegalLink,
   Subtitle,
-  SuccessText,
   TextButton,
   Title,
 } from './LoginPage.styles'
@@ -40,7 +41,6 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState<string | null>(null)
   const destination = (location.state as { from?: string } | null)?.from ?? '/dashboard'
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -49,11 +49,22 @@ export default function LoginPage() {
     setSubmitting(true)
     setError(null)
     try {
-      await new Promise((resolve) => window.setTimeout(resolve, 350))
-      setSuccess(`목업 로그인에 성공했습니다. 다음 단계에서 ${destination}으로 이동합니다.`)
-      setSubmitting(false)
+      const response = await login(email.trim().toLowerCase(), password, rememberMe)
+      saveAccessToken(response.access_token, rememberMe)
+      navigate(destination, { replace: true })
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : '로그인에 실패했습니다.')
+      if (reason instanceof ApiError) {
+        const messages: Record<string, string> = {
+          SIGNUP_PENDING_APPROVAL: '가입 신청이 관리자 승인 대기 중입니다.',
+          SIGNUP_REJECTED: '가입 신청이 거절되었습니다. 관리자에게 문의해주세요.',
+          ACCOUNT_LOCKED: '계정이 잠겼습니다. 관리자에게 문의해주세요.',
+          ACCOUNT_DISABLED: '사용할 수 없는 계정입니다. 관리자에게 문의해주세요.',
+          INVALID_CREDENTIALS: '회사 이메일 또는 비밀번호를 확인해주세요.',
+        }
+        setError((reason.code && messages[reason.code]) || reason.message)
+      } else {
+        setError(reason instanceof Error ? reason.message : '로그인에 실패했습니다.')
+      }
       setSubmitting(false)
     }
   }
@@ -69,18 +80,17 @@ export default function LoginPage() {
         <Form onSubmit={handleSubmit}>
           <Field>
             회사 이메일
-            <InputWrap><Icon><UserIcon /></Icon><Input type="email" value={email} onChange={(event) => { setEmail(event.target.value); setSuccess(null) }} placeholder="name@hanacard.co.kr" autoComplete="username" /></InputWrap>
+            <InputWrap><Icon><UserIcon /></Icon><Input type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="name@hanacard.co.kr" autoComplete="username" /></InputWrap>
           </Field>
           <Field>
             비밀번호
-            <InputWrap><Icon><LockIcon /></Icon><Input type="password" value={password} onChange={(event) => { setPassword(event.target.value); setSuccess(null) }} placeholder="••••••••••••" autoComplete="current-password" /></InputWrap>
+            <InputWrap><Icon><LockIcon /></Icon><Input type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="••••••••••••" autoComplete="current-password" /></InputWrap>
           </Field>
           <FormMeta>
             <RememberLabel><input type="checkbox" checked={rememberMe} onChange={(event) => setRememberMe(event.target.checked)} />로그인 상태 유지</RememberLabel>
             <TextButton type="button" onClick={() => setError('비밀번호 재설정은 관리자에게 문의해주세요.')}>비밀번호를 잊으셨나요?</TextButton>
           </FormMeta>
           {error && <ErrorText role="alert">{error}</ErrorText>}
-          {success && <SuccessText role="status">{success}</SuccessText>}
           <LoginButton type="submit" disabled={submitting || !email.trim() || !password}>{submitting ? '로그인 중...' : '로그인'}</LoginButton>
           <SignupLink type="button" onClick={() => navigate('/signup')}>회원가입 신청</SignupLink>
           <HelperText><LegalLink to="/legal/terms">서비스 이용약관</LegalLink> · <LegalLink to="/legal/privacy">개인정보 처리방침</LegalLink></HelperText>

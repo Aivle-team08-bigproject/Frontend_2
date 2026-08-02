@@ -24,6 +24,44 @@ export type LoginResponse = {
   employee: EmployeeSummary
 }
 
+export type Department = {
+  id: number
+  name: string
+  code: string
+}
+
+export type SignupPosition = 'STAFF' | 'ASSISTANT_MANAGER' | 'MANAGER' | 'DEPUTY_GENERAL_MANAGER' | 'GENERAL_MANAGER'
+
+export type SignupPayload = {
+  name: string
+  email: string
+  phone: string
+  department_id: number
+  position: SignupPosition
+  password: string
+  terms_agreed: boolean
+  privacy_agreed: boolean
+}
+
+export type SignupResponse = {
+  employee_code: string
+  email: string
+  status: 'PENDING_APPROVAL' | string
+  message: string
+}
+
+export class ApiError extends Error {
+  readonly status: number
+  readonly code?: string
+
+  constructor(message: string, status: number, code?: string) {
+    super(message)
+    this.name = 'ApiError'
+    this.status = status
+    this.code = code
+  }
+}
+
 export type CreateDataRequestPayload = {
   raw_requirement: string
   title?: string
@@ -194,7 +232,7 @@ async function request<T>(path: string, init?: RequestInit, retried = false): Pr
   if (!response.ok) {
     const body = await response.json().catch(() => null)
     const message = body?.detail?.message ?? `API 요청에 실패했습니다. (${response.status})`
-    throw new Error(message)
+    throw new ApiError(message, response.status, body?.detail?.code)
   }
   // 로그아웃/비밀번호 변경처럼 204를 반환하는 엔드포인트가 있고,
   // 프록시가 빈 200을 돌려줄 수도 있으므로 본문 파싱 전에 JSON 여부를 확인한다.
@@ -208,6 +246,17 @@ export function login(email: string, password: string, rememberMe: boolean): Pro
   return request('/api/auth/login', {
     method: 'POST',
     body: JSON.stringify({ email, password, remember_me: rememberMe }),
+  })
+}
+
+export function fetchPublicDepartments(): Promise<Department[]> {
+  return request<Department[]>('/api/public/departments')
+}
+
+export function signup(payload: SignupPayload): Promise<SignupResponse> {
+  return request<SignupResponse>('/api/auth/signup', {
+    method: 'POST',
+    body: JSON.stringify(payload),
   })
 }
 
