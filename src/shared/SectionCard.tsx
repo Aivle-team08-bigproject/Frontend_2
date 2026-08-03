@@ -17,6 +17,8 @@ const Header = styled.div`
   display: flex;
   align-items: center;
   gap: 10px;
+  min-width: 0;
+  flex-wrap: wrap;
 `
 
 const AccentBar = styled.div<{ $color: string }>`
@@ -31,6 +33,9 @@ const Title = styled.p`
   font-size: 16px;
   font-weight: 800;
   color: ${colors.text};
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 `
 

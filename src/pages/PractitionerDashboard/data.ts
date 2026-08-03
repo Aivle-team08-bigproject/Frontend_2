@@ -1,3 +1,7 @@
+import { fetchDashboard, type DashboardResponse, type DashboardTaskItem, type StageGroupCode } from '../../shared/api'
+import { formatDate } from '../../shared/datetime'
+import { colors } from '../../shared/theme'
+
 export type StatCard = {
   label: string
   value: number
@@ -13,6 +17,7 @@ export type WarningCard = {
   countColor: string
   description: string
   footNote: string
+  actionTo: string
 }
 
 export type RankedItem = {
@@ -33,13 +38,42 @@ export type SupplementItem = {
   tagColor: string
 }
 
-export type TaskStatus = '요구사항 분석' | '진행중' | '가공중' | '완료'
+export const TASK_STATUSES = [
+  '요구사항 분석',
+  '요구사항 분석 진행',
+  '요구사항 완료 피드백',
+  '데이터 선별 진행',
+  '샘플데이터 및 피드백',
+  '데이터 가공 진행',
+  '최종 산출물 및 피드백',
+  '작업완료',
+] as const
+
+export type TaskStatus = (typeof TASK_STATUSES)[number]
+
+export const TASK_FILTER_STAGES = ['요구사항 분석', '샘플 데이터', '최종 산출물', '완료'] as const
+export type TaskFilterStage = (typeof TASK_FILTER_STAGES)[number]
+
+export const taskFilterStageForStatus: Record<TaskStatus, TaskFilterStage> = {
+  '요구사항 분석': '요구사항 분석',
+  '요구사항 분석 진행': '요구사항 분석',
+  '요구사항 완료 피드백': '요구사항 분석',
+  '데이터 선별 진행': '샘플 데이터',
+  '샘플데이터 및 피드백': '샘플 데이터',
+  '데이터 가공 진행': '최종 산출물',
+  '최종 산출물 및 피드백': '최종 산출물',
+  작업완료: '완료',
+}
 
 export const taskStatusColors: Record<TaskStatus, { bg: string; color: string }> = {
   '요구사항 분석': { bg: '#e6f0ff', color: '#0066ff' },
-  진행중: { bg: '#fef3c7', color: '#d97706' },
-  가공중: { bg: '#ffedd5', color: '#ea580c' },
-  완료: { bg: '#dcfce7', color: '#22c55e' },
+  '요구사항 분석 진행': { bg: '#dbeafe', color: '#2563eb' },
+  '요구사항 완료 피드백': { bg: '#ede9fe', color: '#7c3aed' },
+  '데이터 선별 진행': { bg: '#fef3c7', color: '#d97706' },
+  '샘플데이터 및 피드백': { bg: '#ffedd5', color: '#ea580c' },
+  '데이터 가공 진행': { bg: '#fce7f3', color: '#db2777' },
+  '최종 산출물 및 피드백': { bg: '#fee2e2', color: '#dc2626' },
+  작업완료: { bg: '#dcfce7', color: '#22c55e' },
 }
 
 export type TaskRow = {
@@ -63,89 +97,108 @@ export type PractitionerDashboardData = {
   pageSize: number
 }
 
-const mockData: PractitionerDashboardData = {
-  statCards: [
-    { label: '전체 활성 작업', value: 24, unit: '건', caption: '대기 5 / 진행 13 / 완료 6', highlight: true },
-    { label: '요구사항 분석 단계', value: 5, unit: '건', caption: '평균 소요 1.2일' },
-    { label: '데이터 선별 단계', value: 3, unit: '건', caption: '평균 소요 2.4일' },
-    { label: '데이터 가공 단계', value: 10, unit: '건', caption: '평균 소요 3.5일' },
-  ],
-  alertBannerCount: 6,
-  warningCards: [
-    {
-      title: '요구사항 가이드 미확정',
-      countLabel: '2건',
-      countBg: '#fde8e8',
-      countColor: '#dc2626',
-      description: 'ABC마케팅 가이드 미달성 오류 피드백 지연',
-      footNote: '대기 3일 경과',
-    },
-    {
-      title: '데이터 포맷 불일치 오류',
-      countLabel: '1건',
-      countBg: '#fef3c7',
-      countColor: '#d97706',
-      description: '스타벅스 코리아 위치 데이터 위경도 누락건',
-      footNote: '조치 필요',
-    },
-    {
-      title: '가공 품질 신뢰도 임계치 미달',
-      countLabel: '3건',
-      countBg: '#fef3c7',
-      countColor: '#d97706',
-      description: '넷마블 게임데이터 머징 결측치 발생률 12% 초과',
-      footNote: '재작업 권장',
-    },
-  ],
-  preferredItems: [
-    { rank: 1, title: '2030대 소비 구매 인덱스', subtitle: '카드 결제', tag: '인기', tagBg: '#dcfce7', tagColor: '#22c55e' },
-    { rank: 2, title: '전국 스타벅스 상권 유동인구', subtitle: '위치정보', tag: '상승', tagBg: '#e6f0ff', tagColor: '#0066ff' },
-    { rank: 3, title: '모바일 게임 주간 리텐션 통계', subtitle: '가공데이터', tag: '인기', tagBg: '#dcfce7', tagColor: '#22c55e' },
-    { rank: 4, title: '수도권 아파트 대출 신용 평가 데이터', subtitle: '금융 통계', tag: '유지', tagBg: '#e6f0ff', tagColor: '#0066ff' },
-  ],
-  supplementItems: [
-    {
-      title: '골프장 법인카드 정밀 소비 데이터',
-      note: '상세 분석 가이드 부재',
-      noteColor: '#d97706',
-      tag: '가이드 보완 필요',
-      tagBg: '#fde8e8',
-      tagColor: '#dc2626',
-    },
-    {
-      title: '전국 공항 항공편 지연 시간 예측 세트',
-      note: '최신성 결여 (2024년 6월 이후 중단)',
-      noteColor: '#d97706',
-      tag: '업데이트 필요',
-      tagBg: '#fde8e8',
-      tagColor: '#dc2626',
-    },
-    {
-      title: '온라인 유통 장바구니 카테고리 매핑',
-      note: '소분류 정확도 저하 (임계치 85% 미만)',
-      noteColor: '#d97706',
-      tag: '품질 보완 필요',
-      tagBg: '#fde8e8',
-      tagColor: '#dc2626',
-    },
-  ],
-  pageSize: 4,
-  taskRows: [
-    { reqId: 'REQ-2024-0847', client: '(주)ABC마케팅', dataType: '소비 트렌드 분석', detail: '가공 완료 - 배포 대기', assignee: '홍길동 책임', createdAt: '2024.11.12', updatedAt: '2024.11.12', status: '요구사항 분석' },
-    { reqId: 'REQ-2024-0846', client: '하나은행 미래금융팀', dataType: '부동산 신용 대출 흐름', detail: '데이터 이관 검토 중', assignee: '김민수 선임', createdAt: '2024.11.11', updatedAt: '2024.11.12', status: '진행중' },
-    { reqId: 'REQ-2024-0845', client: '스타벅스 코리아', dataType: '상권 활성화 점수 산출', detail: 'GIS 지오코딩 작업 완료', assignee: '이지은 선임', createdAt: '2024.11.10', updatedAt: '2024.11.11', status: '가공중' },
-    { reqId: 'REQ-2024-0844', client: 'SK텔레콤 AI혁신본부', dataType: '유동인구 기반 매출 분석', detail: '고객사 최종 승인 대기', assignee: '박준영 책임', createdAt: '2024.11.08', updatedAt: '2024.11.10', status: '완료' },
-    { reqId: 'REQ-2024-0843', client: '올리브영 신상품파트', dataType: '화장품 구매 선호도 조사', detail: '요구사항 정의서 작성 중', assignee: '홍길동 책임', createdAt: '2024.11.08', updatedAt: '2024.11.08', status: '요구사항 분석' },
-    { reqId: 'REQ-2024-0842', client: '넷마블 신작기획팀', dataType: '모바일 게임 리텐션 분석', detail: '데이터셋 매칭 진행 중', assignee: '김민수 선임', createdAt: '2024.11.07', updatedAt: '2024.11.08', status: '진행중' },
-    { reqId: 'REQ-2024-0841', client: '대한항공 종합전략부', dataType: '항공편 수요 예측 통계', detail: '집계/가공 단계 진행', assignee: '이지은 선임', createdAt: '2024.11.05', updatedAt: '2024.11.07', status: '가공중' },
-    { reqId: 'REQ-2024-0840', client: '네이버 쇼핑전략팀', dataType: '온라인 소비 장바구니 매핑', detail: '최종 산출물 배포 완료', assignee: '박준영 책임', createdAt: '2024.11.04', updatedAt: '2024.11.05', status: '완료' },
-    { reqId: 'REQ-2024-0839', client: '현대카드 마케팅팀', dataType: '신용카드 소비패턴 분석', detail: '요건 파싱 대기', assignee: '홍길동 책임', createdAt: '2024.11.03', updatedAt: '2024.11.04', status: '요구사항 분석' },
-    { reqId: 'REQ-2024-0838', client: '쿠팡 물류기획부', dataType: '물류센터 배송동선 최적화', detail: '실현가능성 검증 중', assignee: '김민수 선임', createdAt: '2024.11.02', updatedAt: '2024.11.03', status: '진행중' },
-    { reqId: 'REQ-2024-0837', client: 'CJ제일제당 브랜드전략팀', dataType: '식품 구매 트렌드 분석', detail: '데이터 정제 진행 중', assignee: '이지은 선임', createdAt: '2024.11.01', updatedAt: '2024.11.01', status: '가공중' },
-    { reqId: 'REQ-2024-0836', client: '롯데마트 상품기획팀', dataType: '유통채널별 매출 비교', detail: 'QA 검증 완료', assignee: '박준영 책임', createdAt: '2024.10.31', updatedAt: '2024.11.02', status: '완료' },
-  ],
+const legacyStatusForStageGroup: Record<StageGroupCode, TaskStatus> = {
+  REQUIREMENT_ANALYSIS: '요구사항 분석 진행',
+  SAMPLE_DATA: '샘플데이터 및 피드백',
+  FINAL_OUTPUT: '최종 산출물 및 피드백',
+  COMPLETED: '작업완료',
+  UNKNOWN: '요구사항 분석',
 }
 
-export function fetchPractitionerDashboardData(): Promise<PractitionerDashboardData> {
-  return Promise.resolve(mockData)
+const priorityColors = {
+  REQUIREMENT: { bg: colors.dangerBg, color: colors.danger },
+  SAMPLE: { bg: colors.warningBgAlt, color: colors.warningAlt },
+  FINAL: { bg: colors.warningBg, color: colors.warning },
+} as const
+
+function taskRowFromDashboardItem(item: DashboardTaskItem): TaskRow {
+  return {
+    reqId: item.request_no,
+    client: item.client,
+    dataType: item.stage_label,
+    detail: item.title,
+    assignee: item.assignee_name,
+    createdAt: formatDate(item.created_at),
+    updatedAt: formatDate(item.updated_at),
+    status: legacyStatusForStageGroup[item.stage_group_code],
+  }
+}
+
+function dashboardTasks(data: DashboardResponse): DashboardTaskItem[] {
+  const uniqueItems = new Map<string, DashboardTaskItem>()
+  for (const item of [...data.priority_actions, ...data.approval_tasks]) {
+    uniqueItems.set(item.request_no, item)
+  }
+  return [...uniqueItems.values()]
+}
+
+function warningCardFromPriority(
+  card: DashboardResponse['priority_cards'][number],
+  actions: DashboardTaskItem[],
+): WarningCard {
+  const palette = priorityColors[card.priority_code]
+  const action = actions.find((item) => item.priority_code === card.priority_code)
+  return {
+    title: card.label,
+    countLabel: `${card.count}건`,
+    countBg: palette.bg,
+    countColor: palette.color,
+    description: action?.title ?? `${card.count}건의 작업이 조치를 기다리고 있습니다.`,
+    footNote: card.count > 0 ? '상세 조치가 필요합니다.' : '현재 조치 대기 작업이 없습니다.',
+    actionTo: card.detail_route,
+  }
+}
+
+export const EMPTY_PRACTITIONER_DASHBOARD: PractitionerDashboardData = {
+  statCards: [],
+  alertBannerCount: 0,
+  warningCards: [],
+  preferredItems: [],
+  supplementItems: [],
+  taskRows: [],
+  pageSize: 30,
+}
+
+export async function fetchPractitionerDashboardData(): Promise<PractitionerDashboardData> {
+  const data = await fetchDashboard()
+  const actions = dashboardTasks(data)
+  return {
+    statCards: [
+      ...data.priority_cards.map((card, index) => ({
+        label: card.label,
+        value: card.count,
+        unit: '건',
+        caption: `우선순위 ${index + 1}`,
+        highlight: card.count > 0,
+      })),
+      {
+        label: '진행 중인 전체 작업',
+        value: data.active_task_count,
+        unit: '건',
+        caption: '전체 작업 현황',
+      },
+    ],
+    alertBannerCount: actions.length,
+    warningCards: data.priority_cards.map((card) => warningCardFromPriority(card, actions)),
+    preferredItems: data.popular_products.map((item, index) => ({
+      rank: index + 1,
+      title: item.product_name,
+      subtitle: `${item.request_count}건 요청`,
+      tag: item.product_code,
+      tagBg: colors.flowPrimaryBg,
+      tagColor: colors.primary,
+    })),
+    supplementItems: data.popular_products.length === 0
+      ? [{
+          title: '인기 상품 데이터',
+          note: data.popular_products_unavailable_message,
+          noteColor: colors.textMuted,
+          tag: '제공 불가',
+          tagBg: colors.bg,
+          tagColor: colors.textSecondary,
+        }]
+      : [],
+    taskRows: actions.map(taskRowFromDashboardItem),
+    pageSize: 30,
+  }
 }

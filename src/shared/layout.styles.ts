@@ -16,6 +16,16 @@ export const MainContent = styled.main`
   gap: 32px;
   width: 100%;
   padding: 40px;
+
+  @media (max-width: 900px) {
+    gap: 24px;
+    padding: 24px;
+  }
+
+  @media (max-width: 600px) {
+    gap: 20px;
+    padding: 16px;
+  }
 `
 
 export const SectionHeader = styled.div`
@@ -23,6 +33,9 @@ export const SectionHeader = styled.div`
   align-items: center;
   justify-content: space-between;
   width: 100%;
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: 12px;
 `
 
 export const SectionTitleGroup = styled.div`
@@ -110,6 +123,14 @@ export const FlowContentArea = styled.div`
   gap: 24px;
   width: 100%;
   padding: 40px;
+
+  @media (max-width: 900px) {
+    padding: 24px;
+  }
+
+  @media (max-width: 600px) {
+    padding: 16px;
+  }
 `
 
 export const SplitGrid = styled.div`
@@ -117,6 +138,10 @@ export const SplitGrid = styled.div`
   gap: 24px;
   align-items: flex-start;
   width: 100%;
+
+  @media (max-width: 900px) {
+    flex-direction: column;
+  }
 `
 
 export const LeftPanel = styled.div`
@@ -124,6 +149,23 @@ export const LeftPanel = styled.div`
   flex: 1 0 0;
   min-width: 0;
   flex-direction: column;
+`
+
+/**
+ * 조회 실패 또는 데이터 없음을 알리는 배너. 화면 자체는 빈 데이터로 그대로 렌더링하고
+ * 이 배너만 위에 얹어서, 사용자가 백지 대신 원인을 볼 수 있게 한다.
+ */
+export const DataNotice = styled.p<{ $error?: boolean }>`
+  margin: 0;
+  padding: 14px 16px;
+  border-radius: 10px;
+  border: 1px solid ${({ $error }) => ($error ? colors.danger : colors.border)};
+  background: ${({ $error }) => ($error ? colors.dangerBg : colors.white)};
+  color: ${({ $error }) => ($error ? colors.danger : colors.textSecondary)};
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.5;
+  word-break: keep-all;
 `
 
 export const GhostButton = styled.button`
