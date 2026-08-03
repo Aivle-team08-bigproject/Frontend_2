@@ -14,8 +14,9 @@ import {
   plusSmSrc,
 } from '../../shared/icons'
 import { useAsyncData } from '../../shared/hooks'
+import DataStateNotice from '../../shared/DataStateNotice'
 import { FlowContentArea, PageWrapper } from '../../shared/layout.styles'
-import { fetchTaskCompleteData } from './taskCompleteData'
+import { EMPTY_TASK_COMPLETE, fetchTaskCompleteData } from './taskCompleteData'
 import {
   BottomActions,
   Card,
@@ -62,29 +63,30 @@ import {
 const fileIcons = { csv: fileTextSrc, xlsx: fileSpreadsheetSrc }
 
 export default function TaskComplete() {
-  const { data } = useAsyncData(fetchTaskCompleteData)
+  const { data, loading, error } = useAsyncData(fetchTaskCompleteData)
+  const view = data ?? EMPTY_TASK_COMPLETE
   const navigate = useNavigate()
 
-  if (!data) return null
 
   return (
     <PageWrapper>
       <GNB />
       <FlowPageHeader title="작업 완료" badgeLabel="완료" badgeBg="#22c55e" />
       <FlowContentArea>
-        <RequestHeaderCard reqId={data.reqId} title={data.requestTitle} />
+        <DataStateNotice loading={loading} error={error} subject="작업 완료 정보" />
+        <RequestHeaderCard reqId={view.reqId} title={view.requestTitle} />
         <StepProgressBar currentStep={4} />
 
         <Card>
           <CardTitle>프로세스 결과 요약</CardTitle>
           <MilestoneList>
-            {data.milestones.map((item, index) => (
+            {view.milestones.map((item, index) => (
               <MilestoneRow key={item.title}>
                 <IndicatorCol>
                   <Circle>
                     <CheckIcon src={checkSmSrc} alt="완료" />
                   </Circle>
-                  {index < data.milestones.length - 1 && <ConnectorLine />}
+                  {index < view.milestones.length - 1 && <ConnectorLine />}
                 </IndicatorCol>
                 <MilestoneText>
                   <MilestoneTop>
@@ -109,7 +111,7 @@ export default function TaskComplete() {
                 <ColTitle>파일 다운로드</ColTitle>
               </ColHeader>
               <FileList>
-                {data.files.map((file) => (
+                {view.files.map((file) => (
                   <FileRow key={file.name}>
                     <FileInfo>
                       <FileIcon src={fileIcons[file.kind]} alt="" />
@@ -132,13 +134,13 @@ export default function TaskComplete() {
                 <FieldBlock>
                   <FieldLabel>Endpoint URL</FieldLabel>
                   <FieldValueBox>
-                    <FieldValue>{data.endpointUrl}</FieldValue>
+                    <FieldValue>{view.endpointUrl}</FieldValue>
                   </FieldValueBox>
                 </FieldBlock>
                 <FieldBlock>
                   <FieldLabel>API Key (Private)</FieldLabel>
                   <FieldValueBox>
-                    <FieldValue>{data.apiKeyMasked}</FieldValue>
+                    <FieldValue>{view.apiKeyMasked}</FieldValue>
                     <CopyIcon src={copySrc} alt="복사" />
                   </FieldValueBox>
                 </FieldBlock>
@@ -154,8 +156,8 @@ export default function TaskComplete() {
                 <ColTitle>고객 메일 전송</ColTitle>
               </ColHeader>
               <FieldGroup>
-                <InputBox>{data.recipientEmail}</InputBox>
-                <InputBox>{data.emailSubject}</InputBox>
+                <InputBox>{view.recipientEmail}</InputBox>
+                <InputBox>{view.emailSubject}</InputBox>
                 <CustomRow type="button">
                   <CustomRowLabel>메일 커스텀</CustomRowLabel>
                   <PlusIcon src={plusSmSrc} alt="" />

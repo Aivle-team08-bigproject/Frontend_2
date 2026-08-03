@@ -1,5 +1,6 @@
 import type { TaskStatus } from './data'
 import { taskStatusColors } from './data'
+import { fetchDashboardTaskLookup } from '../../shared/api'
 
 export type LookupRow = {
   reqId: string
@@ -18,35 +19,53 @@ export type TaskLookupData = {
   rows: LookupRow[]
 }
 
-const mockData: TaskLookupData = {
-  bannerTitle: '경고: 요구사항 가이드 미확정 관련 작업 (2건)',
-  bannerDescription: '가이드 미달성 및 고객사 피드백이 지연되어 추가 조치 대기 중인 작업 리스트입니다.',
-  rows: [
-    {
-      reqId: 'REQ-2024-0847',
-      client: '(주)ABC마케팅',
-      dataType: '소비 트렌드 분석',
-      detail: 'ABC마케팅 가이드 미달성 오류 피드백 지연',
-      assignee: '홍길동 책임',
-      createdAt: '2024.11.12',
-      updatedAt: '2024.11.12',
-      status: '요구사항 분석',
-    },
-    {
-      reqId: 'REQ-2024-0812',
-      client: '(주)AI산업혁신원',
-      dataType: '의료 영상 분석 가공',
-      detail: '의료 영상 뼈 분할 라벨 가이드라인 누락',
-      assignee: '홍길동 책임',
-      createdAt: '2024.11.08',
-      updatedAt: '2024.11.09',
-      status: '진행중',
-    },
-  ],
+type TaskLookupApiResponse = {
+  banner_title: string
+  banner_description: string
+  rows: Array<{
+    request_no: string
+    client: string
+    data_type: string
+    detail: string
+    assignee: string
+    created_at: string
+    updated_at: string
+    status: TaskStatus | '진행중' | '가공중' | '완료' | '상태 확인 필요'
+  }>
+}
+
+function normalizeTaskStatus(status: TaskLookupApiResponse['rows'][number]['status']): TaskStatus {
+  const legacyStatusMap: Record<string, TaskStatus> = {
+    진행중: '샘플데이터 및 피드백',
+    가공중: '데이터 가공 진행',
+    완료: '작업완료',
+    '상태 확인 필요': '요구사항 분석',
+  }
+  return legacyStatusMap[status] ?? status
 }
 
 export { taskStatusColors }
 
-export function fetchTaskLookupData(): Promise<TaskLookupData> {
-  return Promise.resolve(mockData)
+export const EMPTY_TASK_LOOKUP: TaskLookupData = {
+  bannerTitle: '조회된 작업이 없습니다.',
+  bannerDescription: '표시할 작업 데이터가 없습니다.',
+  rows: [],
+}
+
+export async function fetchTaskLookupData(): Promise<TaskLookupData> {
+  const data = await fetchDashboardTaskLookup<TaskLookupApiResponse>()
+  return {
+    bannerTitle: data.banner_title,
+    bannerDescription: data.banner_description,
+    rows: data.rows.map((row) => ({
+      reqId: row.request_no,
+      client: row.client,
+      dataType: row.data_type,
+      detail: row.detail,
+      assignee: row.assignee,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+      status: normalizeTaskStatus(row.status),
+    })),
+  }
 }

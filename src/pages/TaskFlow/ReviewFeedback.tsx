@@ -7,8 +7,10 @@ import StepProgressBar from '../../shared/StepProgressBar'
 import SectionCard from '../../shared/SectionCard'
 import { radioSelectedSrc } from '../../shared/icons'
 import { useAsyncData } from '../../shared/hooks'
+import DataStateNotice from '../../shared/DataStateNotice'
+import { currentRequestNo } from '../../shared/api'
 import { FlowContentArea, LeftPanel, PageWrapper, SplitGrid } from '../../shared/layout.styles'
-import { fetchReviewFeedbackData } from './reviewFeedbackData'
+import { EMPTY_REVIEW_FEEDBACK, fetchReviewFeedbackData } from './reviewFeedbackData'
 import {
   ApproveButton,
   BackButton,
@@ -40,18 +42,19 @@ import {
 } from './ReviewFeedback.styles'
 
 export default function ReviewFeedback() {
-  const { data } = useAsyncData(fetchReviewFeedbackData)
+  const { data, loading, error } = useAsyncData(fetchReviewFeedbackData)
+  const view = data ?? EMPTY_REVIEW_FEEDBACK
   const [feedback, setFeedback] = useState('')
   const navigate = useNavigate()
 
-  if (!data) return null
 
   return (
     <PageWrapper>
       <GNB />
       <FlowPageHeader title="요구사항 완료 피드백" badgeLabel="피드백 대기" badgeBg="#d97706" />
       <FlowContentArea>
-        <RequestHeaderCard reqId={data.reqId} title={data.requestTitle} />
+        <DataStateNotice loading={loading} error={error} subject="요구사항 분석 결과" />
+        <RequestHeaderCard reqId={view.reqId} title={view.requestTitle} />
         <StepProgressBar currentStep={1} />
         <SplitGrid>
           <LeftPanel>
@@ -59,16 +62,16 @@ export default function ReviewFeedback() {
               <SummaryGrid>
                 <Row>
                   <RowLabel>사용 용도</RowLabel>
-                  <RowValue>{data.usagePurpose}</RowValue>
+                  <RowValue>{view.usagePurpose}</RowValue>
                 </Row>
                 <Row>
                   <RowLabel>요청 데이터 설명</RowLabel>
-                  <RowValue>{data.dataDescription}</RowValue>
+                  <RowValue>{view.dataDescription}</RowValue>
                 </Row>
                 <Row>
                   <RowLabel>AI 판단 데이터 컬럼</RowLabel>
                   <ColumnList>
-                    {data.columns.map((col) => (
+                    {view.columns.map((col) => (
                       <ColumnItem key={col.name}>
                         <ColumnTop>
                           <ColumnName>{col.name}</ColumnName>
@@ -81,7 +84,7 @@ export default function ReviewFeedback() {
                 </Row>
                 <ScaleRow>
                   <ScaleLabel>예상 데이터 건수:</ScaleLabel>
-                  <ScaleValue>{data.estimatedCount}</ScaleValue>
+                  <ScaleValue>{view.estimatedCount}</ScaleValue>
                 </ScaleRow>
               </SummaryGrid>
             </SectionCard>
@@ -94,7 +97,7 @@ export default function ReviewFeedback() {
                 <OptionList>
                   <OptionRow>
                     <RadioIcon src={radioSelectedSrc} alt="" />
-                    <OptionLabel $selected>{data.deliveryMedium}</OptionLabel>
+                    <OptionLabel $selected>{view.deliveryMedium}</OptionLabel>
                   </OptionRow>
                   <OptionRow>
                     <RadioEmpty />
@@ -107,7 +110,7 @@ export default function ReviewFeedback() {
                 <OptionList>
                   <OptionRow>
                     <RadioIcon src={radioSelectedSrc} alt="" />
-                    <OptionLabel $selected>{data.outputFormat}</OptionLabel>
+                    <OptionLabel $selected>{view.outputFormat}</OptionLabel>
                   </OptionRow>
                   <OptionRow>
                     <RadioEmpty />
@@ -121,7 +124,7 @@ export default function ReviewFeedback() {
               </OptionGroup>
               <ReviewActions>
                 <BackButton type="button">이전 단계로</BackButton>
-                <ApproveButton type="button" onClick={() => navigate('/tasks/selection')}>
+                <ApproveButton type="button" onClick={() => navigate(`/tasks/selection?requestNo=${encodeURIComponent(currentRequestNo())}`)}>
                   승인 후 다음 단계
                 </ApproveButton>
               </ReviewActions>
@@ -131,7 +134,7 @@ export default function ReviewFeedback() {
               <FeedbackTextarea
                 value={feedback}
                 onChange={(e) => setFeedback(e.target.value)}
-                placeholder={data.feedbackPlaceholder}
+                placeholder={view.feedbackPlaceholder}
               />
               <FeedbackActions>
                 <ResubmitButton type="button" disabled={!feedback.trim()}>

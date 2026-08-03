@@ -4,12 +4,13 @@ import GNB from '../../shared/GNB'
 import FlowPageHeader from '../../shared/FlowPageHeader'
 import RequestHeaderCard from '../../shared/RequestHeaderCard'
 import StepProgressBar from '../../shared/StepProgressBar'
-import { useAsyncData } from '../../shared/hooks'
 import { PageWrapper } from '../../shared/layout.styles'
-import { fetchRequirementRegisterData } from './requirementRegisterData'
+import { REQUIREMENT_REGISTER_FORM } from './requirementRegisterData'
+import { createDataRequest } from '../../shared/api'
 import {
   ActionsRow,
   ContentArea,
+  ErrorMessage,
   InputHeader,
   InputSection,
   InputSubtitle,
@@ -19,18 +20,31 @@ import {
 } from './RequirementAnalysisRegister.styles'
 
 export default function RequirementAnalysisRegister() {
-  const { data } = useAsyncData(fetchRequirementRegisterData)
   const [value, setValue] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
   const navigate = useNavigate()
 
-  if (!data) return null
+  async function handleSubmit() {
+    const rawRequirement = value.trim()
+    if (!rawRequirement || submitting) return
+    setSubmitting(true)
+    setSubmitError(null)
+    try {
+      const created = await createDataRequest({ raw_requirement: rawRequirement })
+      navigate(`/tasks/${created.request_no}/runs/${created.run_id}/analyzing`)
+    } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : '요청 등록에 실패했습니다.')
+      setSubmitting(false)
+    }
+  }
 
   return (
     <PageWrapper>
       <GNB />
       <FlowPageHeader title="요구사항 분석 가공 등록" badgeLabel="요구사항 등록" />
       <ContentArea>
-        <RequestHeaderCard reqId={data.reqId} title={data.requestTitle} />
+        <RequestHeaderCard reqId={REQUIREMENT_REGISTER_FORM.reqId} title={REQUIREMENT_REGISTER_FORM.requestTitle} />
         <StepProgressBar currentStep={1} />
         <InputSection>
           <InputHeader>
@@ -40,11 +54,12 @@ export default function RequirementAnalysisRegister() {
           <Textarea
             value={value}
             onChange={(e) => setValue(e.target.value)}
-            placeholder={data.placeholder}
+            placeholder={REQUIREMENT_REGISTER_FORM.placeholder}
           />
           <ActionsRow>
-            <SubmitButton type="button" disabled={!value.trim()} onClick={() => navigate('/tasks/analyzing')}>
-              요구사항 제출
+            {submitError && <ErrorMessage role="alert">{submitError}</ErrorMessage>}
+            <SubmitButton type="button" disabled={!value.trim() || submitting} onClick={handleSubmit}>
+              {submitting ? '등록 중...' : '요구사항 제출'}
             </SubmitButton>
           </ActionsRow>
         </InputSection>

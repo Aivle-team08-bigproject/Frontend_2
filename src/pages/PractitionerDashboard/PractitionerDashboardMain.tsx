@@ -1,8 +1,10 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import GNB from '../../shared/GNB'
 import SubNav from '../../shared/SubNav'
 import { chevronDownSrc, chevronLeftSrc, chevronRightSrc } from '../../shared/icons'
 import { useAsyncData } from '../../shared/hooks'
+import DataStateNotice from '../../shared/DataStateNotice'
 import { MainContent, PageWrapper, SectionHeader, SectionTitle, SectionTitleGroup } from '../../shared/layout.styles'
 import {
   Cell,
@@ -24,7 +26,14 @@ import {
   TableHeaderRow,
   TableRowEl,
 } from '../../shared/Table.styles'
-import { fetchPractitionerDashboardData, taskStatusColors } from './data'
+import {
+  EMPTY_PRACTITIONER_DASHBOARD,
+  fetchPractitionerDashboardData,
+  TASK_FILTER_STAGES,
+  taskFilterStageForStatus,
+  taskStatusColors,
+  type TaskFilterStage,
+} from './data'
 import {
   ActionLink,
   AlertBadge,
@@ -37,6 +46,12 @@ import {
   CardTop,
   CountBadge,
   FootNote,
+  ClearFilters,
+  EmptyState,
+  FilterGroup,
+  FilterMenu,
+  FilterOption,
+  FilterSummary,
   InsightCol,
   InsightRow,
   ItemSubtitle,
@@ -61,18 +76,83 @@ import {
 } from './PractitionerDashboardMain.styles'
 
 export default function PractitionerDashboardMain() {
-  const { data } = useAsyncData(fetchPractitionerDashboardData)
+  const { data, loading, error } = useAsyncData(fetchPractitionerDashboardData)
+  const view = data ?? EMPTY_PRACTITIONER_DASHBOARD
   const [page, setPage] = useState(1)
+  const [statusFilter, setStatusFilter] = useState<TaskFilterStage | 'all'>('all')
+  const [assigneeFilter, setAssigneeFilter] = useState('all')
+  const [monthFilter, setMonthFilter] = useState('all')
+  const [openFilter, setOpenFilter] = useState<'status' | 'assignee' | 'month' | null>(null)
+  const filterBarRef = useRef<HTMLDivElement>(null)
+  const navigate = useNavigate()
 
-  const pageSize = data?.pageSize ?? 4
-  const totalPages = data ? Math.max(1, Math.ceil(data.taskRows.length / pageSize)) : 1
+  const taskDetailRoute = {
+    '요구사항 분석': '/tasks/review',
+    '요구사항 분석 진행': '/tasks/review',
+    '요구사항 완료 피드백': '/tasks/review',
+    '데이터 선별 진행': '/tasks/selection',
+    '샘플데이터 및 피드백': '/tasks/sample-feedback',
+    '데이터 가공 진행': '/tasks/processing',
+    '최종 산출물 및 피드백': '/tasks/final-feedback',
+    작업완료: '/tasks/complete',
+  } as const
+
+  const assigneeOptions = useMemo(
+    () => [...new Set(view.taskRows.map((row) => row.assignee))].sort((a, b) => a.localeCompare(b, 'ko')),
+    [view],
+  )
+  const monthOptions = useMemo(
+    () => [...new Set(view.taskRows.map((row) => row.createdAt.slice(0, 7)))].sort().reverse(),
+    [view],
+  )
+  const filteredRows = useMemo(
+    () =>
+      view.taskRows.filter((row) => {
+        if (statusFilter !== 'all' && taskFilterStageForStatus[row.status] !== statusFilter) return false
+        if (assigneeFilter !== 'all' && row.assignee !== assigneeFilter) return false
+        if (monthFilter !== 'all' && row.createdAt.slice(0, 7) !== monthFilter) return false
+        return true
+      }),
+    [assigneeFilter, monthFilter, statusFilter, view],
+  )
+
+  const pageSize = view.pageSize
+  const totalPages = Math.max(1, Math.ceil(filteredRows.length / pageSize))
   const pagedRows = useMemo(() => {
-    if (!data) return []
     const start = (page - 1) * pageSize
-    return data.taskRows.slice(start, start + pageSize)
-  }, [data, page, pageSize])
+    return filteredRows.slice(start, start + pageSize)
+  }, [filteredRows, page, pageSize])
 
-  if (!data) return null
+  useEffect(() => {
+    function closeOnOutsideClick(event: MouseEvent) {
+      if (!filterBarRef.current?.contains(event.target as Node)) setOpenFilter(null)
+    }
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === 'Escape') setOpenFilter(null)
+    }
+    document.addEventListener('mousedown', closeOnOutsideClick)
+    document.addEventListener('keydown', closeOnEscape)
+    return () => {
+      document.removeEventListener('mousedown', closeOnOutsideClick)
+      document.removeEventListener('keydown', closeOnEscape)
+    }
+  }, [])
+
+  const hasActiveFilter = statusFilter !== 'all' || assigneeFilter !== 'all' || monthFilter !== 'all'
+
+  function selectFilter(update: () => void) {
+    update()
+    setPage(1)
+    setOpenFilter(null)
+  }
+
+  function clearFilters() {
+    setStatusFilter('all')
+    setAssigneeFilter('all')
+    setMonthFilter('all')
+    setPage(1)
+    setOpenFilter(null)
+  }
 
   return (
     <PageWrapper>
@@ -85,8 +165,9 @@ export default function PractitionerDashboardMain() {
         ]}
       />
       <MainContent>
+        <DataStateNotice loading={loading} error={error} empty={!loading && !error && view.taskRows.length === 0} subject="대시보드 데이터" />
         <StatsRow>
-          {data.statCards.map((stat) => (
+          {view.statCards.map((stat) => (
             <StatCardEl key={stat.label} $highlight={stat.highlight}>
               <StatLabel $highlight={stat.highlight}>{stat.label}</StatLabel>
               <StatNumbers>
@@ -102,11 +183,11 @@ export default function PractitionerDashboardMain() {
           <SectionHeader>
             <SectionTitleGroup>
               <SectionTitle>단계별 조치 대기 작업 (Human Intervention Required)</SectionTitle>
-              <AlertBadge>{data.alertBannerCount}건 지속 관리 필요</AlertBadge>
+              <AlertBadge>{view.alertBannerCount}건 지속 관리 필요</AlertBadge>
             </SectionTitleGroup>
           </SectionHeader>
           <AlertsRow>
-            {data.warningCards.map((card, index) => (
+            {view.warningCards.map((card, index) => (
               <WarningCardEl key={card.title} $urgent={index === 0}>
                 <CardTop>
                   <WarningTitle>{card.title}</WarningTitle>
@@ -117,7 +198,9 @@ export default function PractitionerDashboardMain() {
                 <WarningDesc>{card.description}</WarningDesc>
                 <CardBottom>
                   <FootNote>{card.footNote}</FootNote>
-                  <ActionLink>상세 조치 &gt;</ActionLink>
+                  <ActionLink type="button" onClick={() => navigate(card.actionTo)}>
+                    상세 조치 &gt;
+                  </ActionLink>
                 </CardBottom>
               </WarningCardEl>
             ))}
@@ -131,7 +214,7 @@ export default function PractitionerDashboardMain() {
               <ColHeaderMeta>최근 7일 기준</ColHeaderMeta>
             </ColHeader>
             <ListCol>
-              {data.preferredItems.map((item) => (
+              {view.preferredItems.map((item) => (
                 <RankedRow key={item.rank}>
                   <RankNumber>{item.rank}</RankNumber>
                   <ItemTexts>
@@ -152,7 +235,7 @@ export default function PractitionerDashboardMain() {
               <ColHeaderMeta $danger>우선 보완대상</ColHeaderMeta>
             </ColHeader>
             <ListCol>
-              {data.supplementItems.map((item) => (
+              {view.supplementItems.map((item) => (
                 <SupplementRow key={item.title}>
                   <ItemTexts>
                     <ItemTitle>{item.title}</ItemTitle>
@@ -170,19 +253,52 @@ export default function PractitionerDashboardMain() {
         <TableSection>
           <SectionHeader>
             <SectionTitle>전체 작업 관리 리스트</SectionTitle>
-            <SortBar>
-              <SortChip type="button">
-                단계별 상태
-                <SortChipIcon src={chevronDownSrc} alt="" />
-              </SortChip>
-              <SortChip type="button">
-                담당자
-                <SortChipIcon src={chevronDownSrc} alt="" />
-              </SortChip>
-              <SortChip type="button">
-                날짜
-                <SortChipIcon src={chevronDownSrc} alt="" />
-              </SortChip>
+            <SortBar ref={filterBarRef}>
+              <FilterGroup>
+                <SortChip type="button" aria-haspopup="menu" aria-expanded={openFilter === 'status'} onClick={() => setOpenFilter((current) => current === 'status' ? null : 'status')}>
+                  {statusFilter === 'all' ? '단계별 상태' : `단계: ${statusFilter}`}
+                  <SortChipIcon src={chevronDownSrc} alt="" />
+                </SortChip>
+                {openFilter === 'status' && (
+                  <FilterMenu role="menu" aria-label="단계별 상태 필터">
+                    {(['all', ...TASK_FILTER_STAGES] as const).map((status) => (
+                      <FilterOption key={status} type="button" role="menuitemradio" aria-checked={statusFilter === status} $selected={statusFilter === status} onClick={() => selectFilter(() => setStatusFilter(status))}>
+                        {status === 'all' ? '전체 상태' : status}
+                      </FilterOption>
+                    ))}
+                  </FilterMenu>
+                )}
+              </FilterGroup>
+              <FilterGroup>
+                <SortChip type="button" aria-haspopup="menu" aria-expanded={openFilter === 'assignee'} onClick={() => setOpenFilter((current) => current === 'assignee' ? null : 'assignee')}>
+                  {assigneeFilter === 'all' ? '담당자' : assigneeFilter}
+                  <SortChipIcon src={chevronDownSrc} alt="" />
+                </SortChip>
+                {openFilter === 'assignee' && (
+                  <FilterMenu role="menu" aria-label="담당자 필터">
+                    <FilterOption type="button" role="menuitemradio" aria-checked={assigneeFilter === 'all'} $selected={assigneeFilter === 'all'} onClick={() => selectFilter(() => setAssigneeFilter('all'))}>전체 담당자</FilterOption>
+                    {assigneeOptions.map((assignee) => (
+                      <FilterOption key={assignee} type="button" role="menuitemradio" aria-checked={assigneeFilter === assignee} $selected={assigneeFilter === assignee} onClick={() => selectFilter(() => setAssigneeFilter(assignee))}>{assignee}</FilterOption>
+                    ))}
+                  </FilterMenu>
+                )}
+              </FilterGroup>
+              <FilterGroup>
+                <SortChip type="button" aria-haspopup="menu" aria-expanded={openFilter === 'month'} onClick={() => setOpenFilter((current) => current === 'month' ? null : 'month')}>
+                  {monthFilter === 'all' ? '날짜' : monthFilter.replace('.', '년 ') + '월'}
+                  <SortChipIcon src={chevronDownSrc} alt="" />
+                </SortChip>
+                {openFilter === 'month' && (
+                  <FilterMenu role="menu" aria-label="등록 월 필터">
+                    <FilterOption type="button" role="menuitemradio" aria-checked={monthFilter === 'all'} $selected={monthFilter === 'all'} onClick={() => selectFilter(() => setMonthFilter('all'))}>전체 날짜</FilterOption>
+                    {monthOptions.map((month) => (
+                      <FilterOption key={month} type="button" role="menuitemradio" aria-checked={monthFilter === month} $selected={monthFilter === month} onClick={() => selectFilter(() => setMonthFilter(month))}>{month.replace('.', '년 ')}월</FilterOption>
+                    ))}
+                  </FilterMenu>
+                )}
+              </FilterGroup>
+              <FilterSummary>{view.taskRows.length}건 중 {filteredRows.length}건</FilterSummary>
+              {hasActiveFilter && <ClearFilters type="button" onClick={clearFilters}>필터 초기화</ClearFilters>}
             </SortBar>
           </SectionHeader>
 
@@ -198,8 +314,22 @@ export default function PractitionerDashboardMain() {
               <Cell $width={120}>상태</Cell>
             </TableHeaderRow>
             <TableBody>
+              {pagedRows.length === 0 && <EmptyState>선택한 조건에 해당하는 작업이 없습니다.</EmptyState>}
               {pagedRows.map((row) => (
-                <TableRowEl key={row.reqId}>
+                <TableRowEl
+                  key={row.reqId}
+                  role="link"
+                  tabIndex={0}
+                  onClick={() => navigate(`${taskDetailRoute[row.status]}?requestNo=${encodeURIComponent(row.reqId)}`)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault()
+                      navigate(`${taskDetailRoute[row.status]}?requestNo=${encodeURIComponent(row.reqId)}`)
+                    }
+                  }}
+                  style={{ cursor: 'pointer' }}
+                  aria-label={`${row.reqId} 작업 상세 보기`}
+                >
                   <ReqIdCell $width={140}>{row.reqId}</ReqIdCell>
                   <ClientCell $width={180}>{row.client}</ClientCell>
                   <Cell $width={160} style={{ color: '#495057' }}>

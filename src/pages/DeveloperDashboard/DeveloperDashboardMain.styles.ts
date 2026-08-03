@@ -10,6 +10,10 @@ export const TokenSection = styled.section`
   border-radius: 16px;
   border: 1px solid ${colors.border};
   background: ${colors.white};
+
+  @media (max-width: 600px) {
+    padding: 20px 16px;
+  }
 `
 
 export const SectionHeaderRow = styled.div`
@@ -17,6 +21,9 @@ export const SectionHeaderRow = styled.div`
   align-items: center;
   justify-content: space-between;
   width: 100%;
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: 12px;
 `
 
 export const TitleGroup = styled.div`
@@ -125,11 +132,29 @@ export const ChartContainer = styled.div`
   gap: 12px;
 `
 
-export const ChartImage = styled.img`
+export const ChartCanvas = styled.div`
   width: 100%;
   height: 240px;
-  object-fit: contain;
-  object-position: left;
+  display: flex;
+  align-items: center;
+`
+
+export const ChartSvg = styled.svg`
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+`
+
+export const ChartEmpty = styled.div`
+  display: flex;
+  width: 100%;
+  height: 240px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: ${colors.bg};
+  color: ${colors.textMuted};
+  font-size: 13px;
 `
 
 export const XAxisLabels = styled.div`
@@ -138,6 +163,27 @@ export const XAxisLabels = styled.div`
   width: 100%;
   font-size: 12px;
   color: ${colors.textMuted};
+`
+
+export const ChartLegend = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  color: ${colors.textMuted};
+  font-size: 11px;
+`
+
+export const ChartLegendDot = styled.span`
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: ${colors.primary};
+`
+
+export const UpdatedAt = styled.span`
+  color: ${colors.textMuted};
+  font-size: 11px;
 `
 
 export const AgentSection = styled.section`
@@ -334,7 +380,8 @@ export const LogTableContainer = styled.div`
   width: 100%;
   border-radius: 12px;
   border: 1px solid ${colors.border};
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
 `
 
 export const LogTableHeader = styled.div`
@@ -346,6 +393,8 @@ export const LogTableHeader = styled.div`
   font-size: 13px;
   font-weight: 700;
   color: ${colors.textSecondary};
+  min-width: 560px;
+  white-space: nowrap;
 `
 
 export const LogTableBody = styled.div`
@@ -354,12 +403,20 @@ export const LogTableBody = styled.div`
   width: 100%;
 `
 
+export const LogEmpty = styled.div`
+  padding: 28px 16px;
+  text-align: center;
+  color: ${colors.textMuted};
+  font-size: 13px;
+`
+
 export const LogRow = styled.div`
   display: flex;
   align-items: center;
   width: 100%;
   padding: 12px;
   border-bottom: 1px solid ${colors.border};
+  min-width: 560px;
 
   &:last-child {
     border-bottom: none;

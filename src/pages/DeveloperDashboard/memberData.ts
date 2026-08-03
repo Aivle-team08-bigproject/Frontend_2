@@ -1,3 +1,5 @@
+import { fetchDashboardMembers, replaceEmployeeRole, updateEmployeeStatus, type EmployeeRole } from '../../shared/api'
+
 export type MemberStatus = '활성' | '비활성'
 
 export type Member = {
@@ -18,19 +20,63 @@ export type MemberManagementData = {
   members: Member[]
 }
 
-const mockData: MemberManagementData = {
-  totalCount: 8,
-  activeCount: 7,
-  inactiveCount: 1,
-  members: [
-    { name: '홍길동', userId: 'kdhong_manager', role: '관리자', roleBg: '#e6f3f3', roleColor: '#0f5a52', part: '시스템 관리 파트', lastLoginAt: '2024.11.12 14:10', status: '활성' },
-    { name: '김민수', userId: 'mskim_senior', role: '책임자', roleBg: '#e6f0ff', roleColor: '#0066ff', part: '데이터 가공 파트', lastLoginAt: '2024.11.12 13:50', status: '활성' },
-    { name: '이지은', userId: 'jelee_operator', role: '선임', roleBg: '#f3e8ff', roleColor: '#8b5cf6', part: '요구사항 분석 파트', lastLoginAt: '2024.11.12 11:22', status: '활성' },
-    { name: '박준영', userId: 'jypark_member', role: '일반', roleBg: '#f8f9fa', roleColor: '#6b7280', part: '데이터 선별 파트', lastLoginAt: '2024.11.11 18:02', status: '활성' },
-    { name: '최수민', userId: 'smchoi_temp', role: '일반', roleBg: '#f8f9fa', roleColor: '#6b7280', part: '외부 협력 파트', lastLoginAt: '2024.11.02 09:12', status: '비활성' },
-  ],
+export const ROLE_OPTIONS = [
+  { label: '관리자', value: 'ADMIN' as EmployeeRole },
+  { label: '책임자', value: 'MANAGER' as EmployeeRole },
+  { label: '선임', value: 'SENIOR' as EmployeeRole },
+  { label: '일반', value: 'GENERAL' as EmployeeRole },
+]
+
+export const ROLE_VALUE_BY_LABEL = Object.fromEntries(ROLE_OPTIONS.map((role) => [role.label, role.value])) as Record<string, EmployeeRole>
+
+export function updateMemberRole(userId: string, role: string) {
+  const roleValue = ROLE_VALUE_BY_LABEL[role]
+  if (!roleValue) throw new Error('지원하지 않는 역할입니다.')
+  return replaceEmployeeRole(userId, roleValue)
 }
 
-export function fetchMemberManagementData(): Promise<MemberManagementData> {
-  return Promise.resolve(mockData)
+export function updateMemberActiveState(userId: string, active: boolean) {
+  return updateEmployeeStatus(userId, active ? 'DISABLED' : 'ACTIVE')
+}
+
+type MemberManagementApiResponse = {
+  total_count: number
+  active_count: number
+  inactive_count: number
+  members: Array<{
+    name: string
+    user_id: string
+    role: string
+    role_bg: string
+    role_color: string
+    part: string
+    last_login_at: string
+    status: MemberStatus
+  }>
+}
+
+export const EMPTY_MEMBER_MANAGEMENT: MemberManagementData = {
+  totalCount: 0,
+  activeCount: 0,
+  inactiveCount: 0,
+  members: [],
+}
+
+export async function fetchMemberManagementData(): Promise<MemberManagementData> {
+  const data = await fetchDashboardMembers<MemberManagementApiResponse>()
+  return {
+    totalCount: data.total_count,
+    activeCount: data.active_count,
+    inactiveCount: data.inactive_count,
+    members: data.members.map((member) => ({
+      name: member.name,
+      userId: member.user_id,
+      role: member.role,
+      roleBg: member.role_bg,
+      roleColor: member.role_color,
+      part: member.part,
+      lastLoginAt: member.last_login_at,
+      status: member.status,
+    })),
+  }
 }

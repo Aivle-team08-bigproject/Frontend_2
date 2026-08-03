@@ -10,12 +10,16 @@ export const ProfileHeader = styled.div`
   border-radius: 16px;
   background: ${colors.bgTint};
   border: 1px solid ${colors.primary};
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: 20px;
 `
 
 export const ProfileLeft = styled.div`
   display: flex;
   align-items: center;
   gap: 20px;
+  min-width: 0;
 `
 
 export const AvatarLg = styled.img`
@@ -28,6 +32,7 @@ export const UserDetails = styled.div`
   display: flex;
   flex-direction: column;
   gap: 6px;
+  min-width: 0;
 `
 
 export const TitleRow = styled.div`
@@ -48,8 +53,9 @@ export const RoleBadge = styled.span`
   display: inline-flex;
   padding: 2px 8px;
   border-radius: 100px;
-  background: ${colors.primary};
-  color: #000;
+  border: 1px solid ${colors.primary};
+  background: transparent;
+  color: ${colors.primary};
   font-size: 11px;
   font-weight: 700;
   white-space: nowrap;
@@ -69,6 +75,7 @@ export const UserMeta = styled.p`
 export const QuickStats = styled.div`
   display: flex;
   gap: 32px;
+  flex-wrap: wrap;
 `
 
 export const StatItem = styled.div`
@@ -126,6 +133,9 @@ export const CardHeader = styled.div`
   align-items: center;
   justify-content: space-between;
   width: 100%;
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: 12px;
 `
 
 export const HeaderLeft = styled.div`
@@ -133,6 +143,8 @@ export const HeaderLeft = styled.div`
   align-items: center;
   gap: 12px;
   white-space: nowrap;
+  min-width: 0;
+  flex-wrap: wrap;
 `
 
 export const ReqIdText = styled.p`
@@ -224,12 +236,17 @@ export const CardFooter = styled.div`
   align-items: center;
   justify-content: space-between;
   width: 100%;
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: 12px;
 `
 
 export const FooterLeft = styled.div`
   display: flex;
   gap: 16px;
   white-space: nowrap;
+  min-width: 0;
+  flex-wrap: wrap;
 `
 
 export const FooterDate = styled.p`
@@ -248,12 +265,18 @@ export const FooterDue = styled.p<{ $color: string }>`
 export const ActionButton = styled.button`
   display: flex;
   padding: 8px 16px;
-  border: none;
+  border: 1.5px solid ${colors.primary};
   border-radius: 6px;
-  background: ${colors.primary};
-  color: #000;
+  background: ${colors.white};
+  color: ${colors.primary};
   font-size: 13px;
   font-weight: 700;
   white-space: nowrap;
   cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    background: ${colors.bgTint};
+    outline: none;
+  }
 `
