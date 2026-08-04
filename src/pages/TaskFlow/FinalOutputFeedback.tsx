@@ -29,6 +29,7 @@ import {
   InfoGrid,
   InfoLabel,
   InfoRowEl,
+  InfoStructuredValue,
   InfoValue,
   LeftCol,
   MiniChart,
@@ -177,7 +178,11 @@ export default function FinalOutputFeedback() {
                 {qualityRows.map(([label, value], index) => (
                   <InfoRowEl key={label} $last={index === qualityRows.length - 1}>
                     <InfoLabel>{label}</InfoLabel>
-                    <InfoValue>{typeof value === 'object' ? JSON.stringify(value) : String(value)}</InfoValue>
+                    {typeof value === 'object' && value !== null ? (
+                      <InfoStructuredValue>{JSON.stringify(value, null, 2)}</InfoStructuredValue>
+                    ) : (
+                      <InfoValue>{String(value)}</InfoValue>
+                    )}
                   </InfoRowEl>
                 ))}
               </InfoGrid>
