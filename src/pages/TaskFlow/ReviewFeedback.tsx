@@ -56,7 +56,24 @@ export default function ReviewFeedback() {
 
   const runFetcher = useCallback(() => fetchPipelineRun(numericRunId), [numericRunId])
   const { data: run, loading: runLoading, error: runError } = useAsyncData(runFetcher)
-  const view = { ...EMPTY_REVIEW_FEEDBACK, reqId: run?.request_no ?? EMPTY_REVIEW_FEEDBACK.reqId, requestTitle: run?.request_title ?? EMPTY_REVIEW_FEEDBACK.requestTitle }
+  const analysis = run?.requirement_analysis
+  const analysisColumns = analysis
+    ? Object.entries(analysis.categories).map(([name, value]) => ({
+      name,
+      type: '요청 조건',
+      description: Array.isArray(value) ? value.join(', ') : String(value),
+    }))
+    : []
+  const view = {
+    ...EMPTY_REVIEW_FEEDBACK,
+    reqId: run?.request_no ?? EMPTY_REVIEW_FEEDBACK.reqId,
+    requestTitle: run?.request_title ?? EMPTY_REVIEW_FEEDBACK.requestTitle,
+    usagePurpose: analysis?.usage_purpose ?? EMPTY_REVIEW_FEEDBACK.usagePurpose,
+    dataDescription: analysis?.requested_data_sentence ?? EMPTY_REVIEW_FEEDBACK.dataDescription,
+    columns: analysisColumns,
+    deliveryMedium: analysis?.delivery_channel ?? EMPTY_REVIEW_FEEDBACK.deliveryMedium,
+    outputFormat: analysis?.output_formats.join(', ') ?? EMPTY_REVIEW_FEEDBACK.outputFormat,
+  }
   const runNotReady = !runLoading && run !== null && run.run_status !== 'WAITING_REQUIREMENT_REVIEW'
 
   const [feedback, setFeedback] = useState('')
