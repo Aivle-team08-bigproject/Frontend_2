@@ -36,3 +36,30 @@ export const ProgressModalMessage = styled.p`
   line-height: 1.6;
   word-break: keep-all;
 `
+
+export const ProgressModalActions = styled.div`
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 24px;
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+  }
+`
+
+export const ProgressModalButton = styled.button`
+  padding: 10px 16px;
+  border: 1px solid ${colors.border};
+  border-radius: 8px;
+  background: ${colors.white};
+  color: ${colors.textSecondary};
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:hover {
+    border-color: ${colors.flowPrimary};
+    color: ${colors.flowPrimary};
+  }
+`
