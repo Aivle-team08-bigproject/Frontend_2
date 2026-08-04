@@ -53,6 +53,18 @@ export type DeveloperDashboardData = {
   errorLogs: ErrorLogRow[]
 }
 
+export function emptyDeveloperDashboard(period: DashboardPeriod): DeveloperDashboardData {
+  return {
+    period,
+    generatedAt: new Date().toISOString(),
+    summary: { monthTokens: 0, todayTokens: 0, estimatedCostUsd: 0, estimatedCostKrw: 0 },
+    tokenSeries: [],
+    agents: [],
+    failureRates: [],
+    errorLogs: [],
+  }
+}
+
 export function fetchDeveloperDashboardData(period: DashboardPeriod): Promise<DeveloperDashboardData> {
   return fetchDeveloperDashboard<DeveloperDashboardData>(period)
 }

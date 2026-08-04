@@ -23,13 +23,13 @@ npm run build
 
 | 경로 | 화면 | 데이터 상태 |
 | --- | --- | --- |
-| `/login` | 로그인 | `POST /api/auth/login` |
+| `/login` | 로그인 | `POST /api/auth/login` (회사 이메일 + 비밀번호) |
 | `/dashboard` | 전체 작업 대시보드 | `GET /api/v1/dashboard` + 클라이언트 필터/페이지네이션 |
 | `/dashboard/my-tasks` | 내 작업 현황 | `GET /api/v1/dashboard/my-tasks` |
 | `/dashboard/task-lookup` | 작업 조회 | `GET /api/v1/dashboard/task-lookup` |
 | `/dev-dashboard` | 개발자 대시보드 | `GET /api/v1/dashboard/developer?period=daily\|weekly\|monthly` |
 | `/dev-dashboard/members` | 회원 관리 | `GET /api/v1/dashboard/members` 및 관리자 변경 API |
-| `/tasks/register` | 요구사항 등록 | `GET /api/v1/tasks/{requestNo}/views/register`, 등록 시 `POST /api/v1/data-requests` |
+| `/tasks/register` | 요구사항 등록 | 화면 문구는 고정 상수, 등록 시 `POST /api/v1/data-requests` |
 | `/tasks/{requestNo}/runs/{runId}/analyzing` | 분석 실행 상태 | `GET /api/v1/runs/{runId}` 3초 폴링 |
 | `/tasks/review`, `/tasks/selection`, `/tasks/sample-feedback` | 검토·데이터 선택·샘플 피드백 | `GET /api/v1/tasks/{requestNo}/views/{viewCode}` |
 | `/tasks/processing`, `/tasks/final-feedback`, `/tasks/complete` | 가공·최종 산출물·완료 | 동일한 task view API |
@@ -42,11 +42,18 @@ npm run build
 공통 요청 래퍼는 [`src/shared/api.ts`](src/shared/api.ts)에서 관리합니다.
 
 - 모든 요청은 `Authorization: Bearer <access_token>`과 `credentials: include`를 사용합니다.
+- 로그인 ID는 회사 이메일입니다. 백엔드 `LoginRequest`가 `email` 필드를 받고, 리프레시 토큰은 `path=/api/auth`의 httpOnly 쿠키로 내려옵니다.
 - `401` 응답이면 `/api/auth/refresh`를 한 번 호출해 새 토큰으로 원 요청을 재시도합니다. 갱신에 실패하면 토큰을 지우고 `/login`으로 이동합니다.
-- 로그인 토큰은 `기억하기` 선택에 따라 `localStorage` 또는 `sessionStorage`의 `lumen.*` 키에 저장됩니다.
+- 액세스 토큰은 `기억하기` 선택에 따라 `localStorage` 또는 `sessionStorage`의 `lumen.*` 키에 저장됩니다(백엔드가 응답 본문으로 내려주는 방식에 맞춘 구성).
+- `204`이거나 `Content-Type`이 JSON이 아니면 본문을 파싱하지 않습니다. 로그아웃(`POST /api/auth/logout`)이 204를 반환합니다.
 - 백엔드 오류 응답의 `detail.message`를 사용자 알림에 표시합니다.
+- 백엔드는 모든 시각을 timezone-aware UTC(ISO 8601 + 오프셋)로 직렬화하므로, 프론트는 [`src/shared/datetime.ts`](src/shared/datetime.ts)에서 문자열을 그대로 `Date`에 넘겨 표시합니다.
 
 현재 실행 진행 화면은 SSE가 아니라 `GET /api/v1/runs/{runId}`를 3초마다 폴링합니다. SSE로 전환할 경우 API 래퍼와 `AnalysisInProgress`의 상태 수신부를 함께 변경해야 합니다.
+
+## 조회 실패 처리
+
+조회에 실패해도 화면을 비우지 않습니다. 각 `*Data.ts`가 `EMPTY_*` 상수를 내보내고, 페이지는 `data ?? EMPTY_*`로 빈 데이터를 렌더링한 뒤 [`DataStateNotice`](src/shared/DataStateNotice.tsx) 배너로 로딩·실패·빈 결과를 알립니다.
 
 ## 권한 기반 UI
 
@@ -66,6 +73,8 @@ src/
 ├── shared/api.ts          # 인증·대시보드·작업·관리자 API
 ├── shared/auth.ts         # 토큰 저장/삭제
 ├── shared/hooks.ts        # 비동기 조회 및 폴링
+├── shared/datetime.ts     # 백엔드 UTC 시각 표시 포맷
+├── shared/DataStateNotice.tsx  # 로딩·실패·빈 결과 배너
 ├── shared/ProtectedRoute.tsx
 └── shared/*.styles.ts     # 공통 레이아웃 및 반응형 스타일
 ```
@@ -74,7 +83,7 @@ src/
 
 ## 로컬 테스트 계정
 
-백엔드 데모 시드 기준 관리자 계정은 `DEMO-001` / `@x!Df96@Q4&H#axh`입니다. 계정과 데이터는 백엔드의 시드 스크립트와 로컬 DB 상태에 의존하므로 공유 환경에서는 각 개발자가 백엔드 README의 시드 절차를 먼저 실행해야 합니다.
+로그인 계정과 데이터는 백엔드 시드 스크립트와 로컬 DB 상태에 의존합니다. 각 개발자가 백엔드 README의 시드 절차를 먼저 실행하고, 그때 생성된 계정 정보를 사용하세요. 계정과 비밀번호는 저장소에 커밋하지 않습니다.
 
 ## 현재 범위와 다음 연동 지점
 

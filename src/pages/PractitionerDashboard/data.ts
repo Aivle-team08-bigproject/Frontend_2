@@ -1,4 +1,5 @@
 import { fetchDashboard, type DashboardResponse, type DashboardTaskItem, type StageGroupCode } from '../../shared/api'
+import { formatDate } from '../../shared/datetime'
 import { colors } from '../../shared/theme'
 
 export type StatCard = {
@@ -110,12 +111,6 @@ const priorityColors = {
   FINAL: { bg: colors.warningBg, color: colors.warning },
 } as const
 
-function formatDate(value: string): string {
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return value
-  return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`
-}
-
 function taskRowFromDashboardItem(item: DashboardTaskItem): TaskRow {
   return {
     reqId: item.request_no,
@@ -152,6 +147,16 @@ function warningCardFromPriority(
     footNote: card.count > 0 ? '상세 조치가 필요합니다.' : '현재 조치 대기 작업이 없습니다.',
     actionTo: card.detail_route,
   }
+}
+
+export const EMPTY_PRACTITIONER_DASHBOARD: PractitionerDashboardData = {
+  statCards: [],
+  alertBannerCount: 0,
+  warningCards: [],
+  preferredItems: [],
+  supplementItems: [],
+  taskRows: [],
+  pageSize: 30,
 }
 
 export async function fetchPractitionerDashboardData(): Promise<PractitionerDashboardData> {

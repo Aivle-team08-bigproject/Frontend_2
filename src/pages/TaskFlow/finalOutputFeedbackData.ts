@@ -32,6 +32,18 @@ export type FinalOutputFeedbackData = {
   feedbackPlaceholder: string
 }
 
+export const EMPTY_FINAL_OUTPUT_FEEDBACK: FinalOutputFeedbackData = {
+  reqId: '-',
+  requestTitle: '조회된 요청이 없습니다.',
+  outputRows: [],
+  reportTitle: '-',
+  reportMeta: '-',
+  insightSummary: [],
+  chartBars: [],
+  infoRows: [],
+  feedbackPlaceholder: '',
+}
+
 export function fetchFinalOutputFeedbackData(): Promise<FinalOutputFeedbackData> {
   return fetchTaskView<FinalOutputFeedbackData>('final-feedback')
 }

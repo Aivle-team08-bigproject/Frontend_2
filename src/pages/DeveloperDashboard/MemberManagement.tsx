@@ -3,10 +3,11 @@ import GNB from '../../shared/GNB'
 import SubNav from '../../shared/SubNav'
 import { chevronLeftSrc, chevronRightSrc, memberAvatarPlaceholderSrc, plusIconSrc, searchIconSrc } from '../../shared/icons'
 import { useAsyncData } from '../../shared/hooks'
+import DataStateNotice from '../../shared/DataStateNotice'
 import { MainContent, PageWrapper } from '../../shared/layout.styles'
 import { NavIcon, PageNav, PageNumber, PageNumbers, Pagination, TableContainer } from '../../shared/Table.styles'
 import { fetchCurrentEmployee } from '../../shared/api'
-import { fetchMemberManagementData, ROLE_OPTIONS, updateMemberActiveState, updateMemberRole } from './memberData'
+import { EMPTY_MEMBER_MANAGEMENT, fetchMemberManagementData, ROLE_OPTIONS, updateMemberActiveState, updateMemberRole } from './memberData'
 import {
   ActionNotice,
   ActionsCell,
@@ -23,7 +24,6 @@ import {
   MemberTableRow,
   NameCell,
   NameText,
-  PageState,
   PlusIcon,
   RegisterButton,
   RoleChangeButton,
@@ -62,6 +62,7 @@ export default function MemberManagement() {
     return fetchMemberManagementData()
   }, [reloadKey])
   const { data, loading, error } = useAsyncData(loadMembers)
+  const view = data ?? EMPTY_MEMBER_MANAGEMENT
   const { data: currentEmployee } = useAsyncData(fetchCurrentEmployee)
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
   const [searchTerm, setSearchTerm] = useState('')
@@ -69,12 +70,12 @@ export default function MemberManagement() {
   const [partFilter, setPartFilter] = useState('all')
   const [page, setPage] = useState(1)
 
-  const roles = useMemo(() => [...new Set(data?.members.map((member) => member.role) ?? [])].sort(), [data?.members])
-  const parts = useMemo(() => [...new Set(data?.members.map((member) => member.part) ?? [])].sort(), [data?.members])
+  const roles = useMemo(() => [...new Set(view.members.map((member) => member.role))].sort(), [view.members])
+  const parts = useMemo(() => [...new Set(view.members.map((member) => member.part))].sort(), [view.members])
 
   const filteredMembers = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase()
-    return (data?.members ?? []).filter((member) => {
+    return view.members.filter((member) => {
       const matchesStatus =
         statusFilter === 'all' || (statusFilter === 'active' ? member.status === '활성' : member.status === '비활성')
       const matchesRole = roleFilter === 'all' || member.role === roleFilter
@@ -84,7 +85,7 @@ export default function MemberManagement() {
         [member.name, member.userId, member.part, member.role].some((value) => value.toLowerCase().includes(normalizedSearch))
       return matchesStatus && matchesRole && matchesPart && matchesSearch
     })
-  }, [data?.members, partFilter, roleFilter, searchTerm, statusFilter])
+  }, [partFilter, roleFilter, searchTerm, statusFilter, view.members])
 
   const totalPages = Math.max(1, Math.ceil(filteredMembers.length / PAGE_SIZE))
   const pagedMembers = filteredMembers.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
@@ -140,23 +141,11 @@ export default function MemberManagement() {
     </>
   )
 
-  if (!data) {
-    return (
-      <PageWrapper>
-        {navigation}
-        <MainContent>
-          <PageState $error={Boolean(error)}>
-            {loading ? '구성원 데이터를 불러오는 중입니다.' : `구성원 데이터를 불러오지 못했습니다. ${error instanceof Error ? error.message : ''}`}
-          </PageState>
-        </MainContent>
-      </PageWrapper>
-    )
-  }
-
   return (
     <PageWrapper>
       {navigation}
       <MainContent>
+        <DataStateNotice loading={loading} error={error} subject="구성원 데이터" />
         <BodyHeader>
           <HeaderTitleGroup>
             <HeaderTitle>회원 관리</HeaderTitle>
@@ -200,13 +189,13 @@ export default function MemberManagement() {
           <Spacer />
           <StatusToggleTabs>
             <StatusTab type="button" $active={statusFilter === 'all'} onClick={() => setStatusFilter('all')}>
-              전체 ({data.totalCount}명)
+              전체 ({view.totalCount}명)
             </StatusTab>
             <StatusTab type="button" $active={statusFilter === 'active'} onClick={() => setStatusFilter('active')}>
-              활성 ({data.activeCount}명)
+              활성 ({view.activeCount}명)
             </StatusTab>
             <StatusTab type="button" $active={statusFilter === 'inactive'} onClick={() => setStatusFilter('inactive')}>
-              비활성 ({data.inactiveCount}명)
+              비활성 ({view.inactiveCount}명)
             </StatusTab>
           </StatusToggleTabs>
         </FilterBar>

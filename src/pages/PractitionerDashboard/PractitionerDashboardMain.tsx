@@ -4,6 +4,7 @@ import GNB from '../../shared/GNB'
 import SubNav from '../../shared/SubNav'
 import { chevronDownSrc, chevronLeftSrc, chevronRightSrc } from '../../shared/icons'
 import { useAsyncData } from '../../shared/hooks'
+import DataStateNotice from '../../shared/DataStateNotice'
 import { MainContent, PageWrapper, SectionHeader, SectionTitle, SectionTitleGroup } from '../../shared/layout.styles'
 import {
   Cell,
@@ -26,6 +27,7 @@ import {
   TableRowEl,
 } from '../../shared/Table.styles'
 import {
+  EMPTY_PRACTITIONER_DASHBOARD,
   fetchPractitionerDashboardData,
   TASK_FILTER_STAGES,
   taskFilterStageForStatus,
@@ -74,7 +76,8 @@ import {
 } from './PractitionerDashboardMain.styles'
 
 export default function PractitionerDashboardMain() {
-  const { data } = useAsyncData(fetchPractitionerDashboardData)
+  const { data, loading, error } = useAsyncData(fetchPractitionerDashboardData)
+  const view = data ?? EMPTY_PRACTITIONER_DASHBOARD
   const [page, setPage] = useState(1)
   const [statusFilter, setStatusFilter] = useState<TaskFilterStage | 'all'>('all')
   const [assigneeFilter, setAssigneeFilter] = useState('all')
@@ -95,24 +98,25 @@ export default function PractitionerDashboardMain() {
   } as const
 
   const assigneeOptions = useMemo(
-    () => [...new Set(data?.taskRows.map((row) => row.assignee) ?? [])].sort((a, b) => a.localeCompare(b, 'ko')),
-    [data],
+    () => [...new Set(view.taskRows.map((row) => row.assignee))].sort((a, b) => a.localeCompare(b, 'ko')),
+    [view],
   )
   const monthOptions = useMemo(
-    () => [...new Set(data?.taskRows.map((row) => row.createdAt.slice(0, 7)) ?? [])].sort().reverse(),
-    [data],
+    () => [...new Set(view.taskRows.map((row) => row.createdAt.slice(0, 7)))].sort().reverse(),
+    [view],
   )
-  const filteredRows = useMemo(() => {
-    if (!data) return []
-    return data.taskRows.filter((row) => {
-      if (statusFilter !== 'all' && taskFilterStageForStatus[row.status] !== statusFilter) return false
-      if (assigneeFilter !== 'all' && row.assignee !== assigneeFilter) return false
-      if (monthFilter !== 'all' && row.createdAt.slice(0, 7) !== monthFilter) return false
-      return true
-    })
-  }, [assigneeFilter, data, monthFilter, statusFilter])
+  const filteredRows = useMemo(
+    () =>
+      view.taskRows.filter((row) => {
+        if (statusFilter !== 'all' && taskFilterStageForStatus[row.status] !== statusFilter) return false
+        if (assigneeFilter !== 'all' && row.assignee !== assigneeFilter) return false
+        if (monthFilter !== 'all' && row.createdAt.slice(0, 7) !== monthFilter) return false
+        return true
+      }),
+    [assigneeFilter, monthFilter, statusFilter, view],
+  )
 
-  const pageSize = data?.pageSize ?? 4
+  const pageSize = view.pageSize
   const totalPages = Math.max(1, Math.ceil(filteredRows.length / pageSize))
   const pagedRows = useMemo(() => {
     const start = (page - 1) * pageSize
@@ -150,8 +154,6 @@ export default function PractitionerDashboardMain() {
     setOpenFilter(null)
   }
 
-  if (!data) return null
-
   return (
     <PageWrapper>
       <GNB />
@@ -163,8 +165,9 @@ export default function PractitionerDashboardMain() {
         ]}
       />
       <MainContent>
+        <DataStateNotice loading={loading} error={error} empty={!loading && !error && view.taskRows.length === 0} subject="대시보드 데이터" />
         <StatsRow>
-          {data.statCards.map((stat) => (
+          {view.statCards.map((stat) => (
             <StatCardEl key={stat.label} $highlight={stat.highlight}>
               <StatLabel $highlight={stat.highlight}>{stat.label}</StatLabel>
               <StatNumbers>
@@ -180,11 +183,11 @@ export default function PractitionerDashboardMain() {
           <SectionHeader>
             <SectionTitleGroup>
               <SectionTitle>단계별 조치 대기 작업 (Human Intervention Required)</SectionTitle>
-              <AlertBadge>{data.alertBannerCount}건 지속 관리 필요</AlertBadge>
+              <AlertBadge>{view.alertBannerCount}건 지속 관리 필요</AlertBadge>
             </SectionTitleGroup>
           </SectionHeader>
           <AlertsRow>
-            {data.warningCards.map((card, index) => (
+            {view.warningCards.map((card, index) => (
               <WarningCardEl key={card.title} $urgent={index === 0}>
                 <CardTop>
                   <WarningTitle>{card.title}</WarningTitle>
@@ -211,7 +214,7 @@ export default function PractitionerDashboardMain() {
               <ColHeaderMeta>최근 7일 기준</ColHeaderMeta>
             </ColHeader>
             <ListCol>
-              {data.preferredItems.map((item) => (
+              {view.preferredItems.map((item) => (
                 <RankedRow key={item.rank}>
                   <RankNumber>{item.rank}</RankNumber>
                   <ItemTexts>
@@ -232,7 +235,7 @@ export default function PractitionerDashboardMain() {
               <ColHeaderMeta $danger>우선 보완대상</ColHeaderMeta>
             </ColHeader>
             <ListCol>
-              {data.supplementItems.map((item) => (
+              {view.supplementItems.map((item) => (
                 <SupplementRow key={item.title}>
                   <ItemTexts>
                     <ItemTitle>{item.title}</ItemTitle>
@@ -294,7 +297,7 @@ export default function PractitionerDashboardMain() {
                   </FilterMenu>
                 )}
               </FilterGroup>
-              <FilterSummary>{data.taskRows.length}건 중 {filteredRows.length}건</FilterSummary>
+              <FilterSummary>{view.taskRows.length}건 중 {filteredRows.length}건</FilterSummary>
               {hasActiveFilter && <ClearFilters type="button" onClick={clearFilters}>필터 초기화</ClearFilters>}
             </SortBar>
           </SectionHeader>

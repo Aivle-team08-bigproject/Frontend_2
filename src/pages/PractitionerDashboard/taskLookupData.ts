@@ -30,11 +30,27 @@ type TaskLookupApiResponse = {
     assignee: string
     created_at: string
     updated_at: string
-    status: TaskStatus
+    status: TaskStatus | '진행중' | '가공중' | '완료' | '상태 확인 필요'
   }>
 }
 
+function normalizeTaskStatus(status: TaskLookupApiResponse['rows'][number]['status']): TaskStatus {
+  const legacyStatusMap: Record<string, TaskStatus> = {
+    진행중: '샘플데이터 및 피드백',
+    가공중: '데이터 가공 진행',
+    완료: '작업완료',
+    '상태 확인 필요': '요구사항 분석',
+  }
+  return legacyStatusMap[status] ?? status
+}
+
 export { taskStatusColors }
+
+export const EMPTY_TASK_LOOKUP: TaskLookupData = {
+  bannerTitle: '조회된 작업이 없습니다.',
+  bannerDescription: '표시할 작업 데이터가 없습니다.',
+  rows: [],
+}
 
 export async function fetchTaskLookupData(): Promise<TaskLookupData> {
   const data = await fetchDashboardTaskLookup<TaskLookupApiResponse>()
@@ -49,7 +65,7 @@ export async function fetchTaskLookupData(): Promise<TaskLookupData> {
       assignee: row.assignee,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
-      status: row.status,
+      status: normalizeTaskStatus(row.status),
     })),
   }
 }

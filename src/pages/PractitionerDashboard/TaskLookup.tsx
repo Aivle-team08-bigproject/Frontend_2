@@ -1,6 +1,7 @@
 import GNB from '../../shared/GNB'
 import { alertCircleSrc, chevronDownSrc, chevronLeftSrc, chevronRightSrc, xCircleSrc } from '../../shared/icons'
 import { useAsyncData } from '../../shared/hooks'
+import DataStateNotice from '../../shared/DataStateNotice'
 import { MainContent, PageWrapper } from '../../shared/layout.styles'
 import {
   Cell,
@@ -22,7 +23,7 @@ import {
   TableHeaderRow,
   TableRowEl,
 } from '../../shared/Table.styles'
-import { fetchTaskLookupData, taskStatusColors } from './taskLookupData'
+import { EMPTY_TASK_LOOKUP, fetchTaskLookupData, taskStatusColors } from './taskLookupData'
 import {
   BannerDescription,
   BannerLeft,
@@ -41,21 +42,22 @@ import {
 } from './TaskLookup.styles'
 
 export default function TaskLookup() {
-  const { data } = useAsyncData(fetchTaskLookupData)
-  if (!data) return null
+  const { data, loading, error } = useAsyncData(fetchTaskLookupData)
+  const view = data ?? EMPTY_TASK_LOOKUP
 
   return (
     <PageWrapper>
       <GNB />
       <MainContent>
+        <DataStateNotice loading={loading} error={error} subject="작업 목록" />
         <ContextBanner>
           <BannerLeft>
             <ErrorIconCircle>
               <ErrorIcon src={alertCircleSrc} alt="" />
             </ErrorIconCircle>
             <BannerTexts>
-              <BannerTitle>{data.bannerTitle}</BannerTitle>
-              <BannerDescription>{data.bannerDescription}</BannerDescription>
+              <BannerTitle>{view.bannerTitle}</BannerTitle>
+              <BannerDescription>{view.bannerDescription}</BannerDescription>
             </BannerTexts>
           </BannerLeft>
           <ClearButton type="button" aria-label="닫기">
@@ -66,7 +68,7 @@ export default function TaskLookup() {
         <ResultsCountHeader>
           <TitleGroup>
             <ResultsTitle>검색 결과 목록</ResultsTitle>
-            <CountBadge>{data.rows.length}건</CountBadge>
+            <CountBadge>{view.rows.length}건</CountBadge>
           </TitleGroup>
         </ResultsCountHeader>
 
@@ -98,7 +100,7 @@ export default function TaskLookup() {
             <Cell $width={120}>상태</Cell>
           </TableHeaderRow>
           <TableBody>
-            {data.rows.map((row) => (
+            {view.rows.map((row) => (
               <TableRowEl key={row.reqId}>
                 <ReqIdCell $width={140}>{row.reqId}</ReqIdCell>
                 <ClientCell $width={180}>{row.client}</ClientCell>
