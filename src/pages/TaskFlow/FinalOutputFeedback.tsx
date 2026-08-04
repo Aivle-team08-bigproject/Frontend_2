@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import GNB from '../../shared/GNB'
 import FlowPageHeader from '../../shared/FlowPageHeader'
 import RequestHeaderCard from '../../shared/RequestHeaderCard'
@@ -8,7 +8,6 @@ import SectionCard from '../../shared/SectionCard'
 import { arrowLeftSrc, arrowRightSrc } from '../../shared/icons'
 import { useAsyncData } from '../../shared/hooks'
 import DataStateNotice from '../../shared/DataStateNotice'
-import { currentRequestNo } from '../../shared/api'
 import { FlowContentArea, PageWrapper } from '../../shared/layout.styles'
 import { EMPTY_FINAL_OUTPUT_FEEDBACK, fetchFinalOutputFeedbackData } from './finalOutputFeedbackData'
 import {
@@ -52,6 +51,7 @@ import {
 } from './FinalOutputFeedback.styles'
 
 export default function FinalOutputFeedback() {
+  const { requestNo, runId } = useParams()
   const { data, loading, error } = useAsyncData(fetchFinalOutputFeedbackData)
   const view = data ?? EMPTY_FINAL_OUTPUT_FEEDBACK
   const [feedback, setFeedback] = useState('')
@@ -161,7 +161,7 @@ export default function FinalOutputFeedback() {
           </BackLink>
           <RightActions>
             <RecutButton type="button">수정 후 재생성</RecutButton>
-            <ApproveButton type="button" onClick={() => navigate(`/tasks/complete?requestNo=${encodeURIComponent(currentRequestNo())}`)}>
+            <ApproveButton type="button" onClick={() => navigate(`/tasks/${requestNo}/runs/${runId}/complete`)}>
               최종 승인
             </ApproveButton>
           </RightActions>

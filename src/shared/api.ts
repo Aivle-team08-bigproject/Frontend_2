@@ -108,6 +108,40 @@ export type PipelineRunResponse = {
   events: PipelineEvent[]
 }
 
+export type FailureCode =
+  | 'SCHEMA_INVALID'
+  | 'REQUIRED_KEY_MISSING'
+  | 'FORMAT_INVALID'
+  | 'LOGICAL_CONTRADICTION'
+  | 'MISINTERPRETED_REQUIREMENT'
+  | 'INSUFFICIENT_DATA'
+  | 'LOW_SIMILARITY_MATCH'
+  | 'DUPLICATED_DATA'
+  | 'OUTLIER_DETECTED'
+  | 'PROCESSING_RULE_INVALID'
+  | 'PRIVACY_THRESHOLD_NOT_MET'
+  | 'HUMAN_REJECTED'
+
+export type ReviewDecision = 'APPROVED' | 'CHANGES_REQUESTED'
+
+/** POST /api/v1/runs/{run_id}/review 요청 바디. */
+export type StageReviewPayload = {
+  approved: boolean
+  feedback?: string | null
+  failure_code?: FailureCode | null
+}
+
+export type StageReviewResponse = {
+  run_id: number
+  reviewed_stage: string
+  decision: ReviewDecision
+  run_status: string
+  /** 승인 후 이어서 진행할 단계. 최종 승인이면 null. */
+  next_stage: string | null
+  rollback_to_stage: string | null
+  celery_task_id: string | null
+}
+
 export type PriorityCode = 'REQUIREMENT' | 'SAMPLE' | 'FINAL'
 
 export type StageGroupCode =
@@ -288,6 +322,14 @@ export function createDataRequest(payload: CreateDataRequestPayload): Promise<Cr
 
 export function fetchPipelineRun(runId: number): Promise<PipelineRunResponse> {
   return request(`/api/v1/runs/${runId}`)
+}
+
+/** 단계 산출물 검토(HITL). 승인 시 다음 단계로, 반려 시 해당 단계로 되돌린다. */
+export function submitReview(runId: number, payload: StageReviewPayload): Promise<StageReviewResponse> {
+  return request(`/api/v1/runs/${runId}/review`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
 }
 
 export function fetchDashboard(): Promise<DashboardResponse> {
