@@ -6,9 +6,10 @@ import RequestHeaderCard from '../../shared/RequestHeaderCard'
 import StepProgressBar from '../../shared/StepProgressBar'
 import { infoSrc } from '../../shared/icons'
 import { useAsyncData } from '../../shared/hooks'
+import DataStateNotice from '../../shared/DataStateNotice'
 import { currentRequestNo } from '../../shared/api'
 import { FlowContentArea, PageWrapper } from '../../shared/layout.styles'
-import { fetchSampleDataFeedbackData } from './sampleDataFeedbackData'
+import { EMPTY_SAMPLE_DATA_FEEDBACK, fetchSampleDataFeedbackData } from './sampleDataFeedbackData'
 import {
   AccordionCard,
   AccordionContent,
@@ -44,19 +45,20 @@ import {
 } from './SampleDataFeedback.styles'
 
 export default function SampleDataFeedback() {
-  const { data } = useAsyncData(fetchSampleDataFeedbackData)
+  const { data, loading, error } = useAsyncData(fetchSampleDataFeedbackData)
+  const view = data ?? EMPTY_SAMPLE_DATA_FEEDBACK
   const [accordionOpen, setAccordionOpen] = useState(true)
   const [prompt, setPrompt] = useState('')
   const navigate = useNavigate()
 
-  if (!data) return null
 
   return (
     <PageWrapper>
       <GNB />
       <FlowPageHeader title="샘플데이터 및 피드백" badgeLabel="샘플 검토" />
       <FlowContentArea>
-        <RequestHeaderCard reqId={data.reqId} title={data.requestTitle} />
+        <DataStateNotice loading={loading} error={error} subject="샘플 데이터" />
+        <RequestHeaderCard reqId={view.reqId} title={view.requestTitle} />
         <StepProgressBar currentStep={2} />
 
         <PreviewCard>
@@ -79,7 +81,7 @@ export default function SampleDataFeedback() {
               <SampleCell $strong>결제월</SampleCell>
               <SampleCell $strong>매출지수</SampleCell>
             </SampleHeaderRow>
-            {data.sampleRows.map((row, index) => (
+            {view.sampleRows.map((row, index) => (
               <SampleRowEl key={index}>
                 <SampleCell>{row.district}</SampleCell>
                 <SampleCell>{row.neighborhood}</SampleCell>
@@ -101,7 +103,7 @@ export default function SampleDataFeedback() {
             <>
               <AccordionDivider />
               <AccordionContent>
-                {data.columnInfo.map((info) => (
+                {view.columnInfo.map((info) => (
                   <InfoBlock key={info.title}>
                     <InfoTitle>{info.title}</InfoTitle>
                     <InfoDescription>{info.description}</InfoDescription>
@@ -119,7 +121,7 @@ export default function SampleDataFeedback() {
             <PromptTextarea
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
-              placeholder={data.feedbackPlaceholder}
+              placeholder={view.feedbackPlaceholder}
             />
           </PromptGroup>
           <NoticeBanner>

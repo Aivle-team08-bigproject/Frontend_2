@@ -55,6 +55,13 @@ type MemberManagementApiResponse = {
   }>
 }
 
+export const EMPTY_MEMBER_MANAGEMENT: MemberManagementData = {
+  totalCount: 0,
+  activeCount: 0,
+  inactiveCount: 0,
+  members: [],
+}
+
 export async function fetchMemberManagementData(): Promise<MemberManagementData> {
   const data = await fetchDashboardMembers<MemberManagementApiResponse>()
   return {

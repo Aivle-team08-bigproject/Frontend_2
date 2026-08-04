@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { login } from '../../shared/api'
+import { ApiError, login } from '../../shared/api'
 import { saveAccessToken } from '../../shared/auth'
 import {
   Brand,
@@ -18,7 +18,8 @@ import {
   LoginCard,
   LoginScreen,
   RememberLabel,
-  SecurityFooter,
+  SignupLink,
+  LegalLink,
   Subtitle,
   TextButton,
   Title,
@@ -35,7 +36,7 @@ function LockIcon() {
 export default function LoginPage() {
   const navigate = useNavigate()
   const location = useLocation()
-  const [employeeCode, setEmployeeCode] = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [rememberMe, setRememberMe] = useState(true)
   const [submitting, setSubmitting] = useState(false)
@@ -44,15 +45,26 @@ export default function LoginPage() {
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (!employeeCode.trim() || !password || submitting) return
+    if (!email.trim() || !password || submitting) return
     setSubmitting(true)
     setError(null)
     try {
-      const response = await login(employeeCode.trim(), password, rememberMe)
+      const response = await login(email.trim().toLowerCase(), password, rememberMe)
       saveAccessToken(response.access_token, rememberMe)
       navigate(destination, { replace: true })
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : '로그인에 실패했습니다.')
+      if (reason instanceof ApiError) {
+        const messages: Record<string, string> = {
+          SIGNUP_PENDING_APPROVAL: '가입 신청이 관리자 승인 대기 중입니다.',
+          SIGNUP_REJECTED: '가입 신청이 거절되었습니다. 관리자에게 문의해주세요.',
+          ACCOUNT_LOCKED: '계정이 잠겼습니다. 관리자에게 문의해주세요.',
+          ACCOUNT_DISABLED: '사용할 수 없는 계정입니다. 관리자에게 문의해주세요.',
+          INVALID_CREDENTIALS: '회사 이메일 또는 비밀번호를 확인해주세요.',
+        }
+        setError((reason.code && messages[reason.code]) || reason.message)
+      } else {
+        setError(reason instanceof Error ? reason.message : '로그인에 실패했습니다.')
+      }
       setSubmitting(false)
     }
   }
@@ -67,8 +79,8 @@ export default function LoginPage() {
         </Brand>
         <Form onSubmit={handleSubmit}>
           <Field>
-            직원 ID
-            <InputWrap><Icon><UserIcon /></Icon><Input value={employeeCode} onChange={(event) => setEmployeeCode(event.target.value)} placeholder="HANA-2024-089" autoComplete="username" /></InputWrap>
+            회사 이메일
+            <InputWrap><Icon><UserIcon /></Icon><Input type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="name@hanacard.co.kr" autoComplete="username" /></InputWrap>
           </Field>
           <Field>
             비밀번호
@@ -76,13 +88,13 @@ export default function LoginPage() {
           </Field>
           <FormMeta>
             <RememberLabel><input type="checkbox" checked={rememberMe} onChange={(event) => setRememberMe(event.target.checked)} />로그인 상태 유지</RememberLabel>
-            <TextButton type="button" onClick={() => setError('비밀번호 초기화는 관리자에게 문의해주세요.')}>비밀번호를 잊으셨나요?</TextButton>
+            <TextButton type="button" onClick={() => setError('비밀번호 재설정은 관리자에게 문의해주세요.')}>비밀번호를 잊으셨나요?</TextButton>
           </FormMeta>
           {error && <ErrorText role="alert">{error}</ErrorText>}
-          <LoginButton type="submit" disabled={submitting || !employeeCode.trim() || !password}>{submitting ? '로그인 중...' : '로그인'}</LoginButton>
-          <HelperText>계정이 없으신가요? <strong>관리자에게 문의하세요</strong></HelperText>
+          <LoginButton type="submit" disabled={submitting || !email.trim() || !password}>{submitting ? '로그인 중...' : '로그인'}</LoginButton>
+          <SignupLink type="button" onClick={() => navigate('/signup')}>회원가입 신청</SignupLink>
+          <HelperText><LegalLink to="/legal/terms">서비스 이용약관</LegalLink> · <LegalLink to="/legal/privacy">개인정보 처리방침</LegalLink></HelperText>
         </Form>
-        <SecurityFooter>♢ JWT 보안 인증 활성화됨</SecurityFooter>
       </LoginCard>
     </LoginScreen>
   )

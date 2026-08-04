@@ -7,9 +7,10 @@ import StepProgressBar from '../../shared/StepProgressBar'
 import SectionCard from '../../shared/SectionCard'
 import { arrowLeftSrc, arrowRightSrc } from '../../shared/icons'
 import { useAsyncData } from '../../shared/hooks'
+import DataStateNotice from '../../shared/DataStateNotice'
 import { currentRequestNo } from '../../shared/api'
 import { FlowContentArea, PageWrapper } from '../../shared/layout.styles'
-import { fetchFinalOutputFeedbackData } from './finalOutputFeedbackData'
+import { EMPTY_FINAL_OUTPUT_FEEDBACK, fetchFinalOutputFeedbackData } from './finalOutputFeedbackData'
 import {
   ApproveButton,
   ArrowIcon,
@@ -51,18 +52,19 @@ import {
 } from './FinalOutputFeedback.styles'
 
 export default function FinalOutputFeedback() {
-  const { data } = useAsyncData(fetchFinalOutputFeedbackData)
+  const { data, loading, error } = useAsyncData(fetchFinalOutputFeedbackData)
+  const view = data ?? EMPTY_FINAL_OUTPUT_FEEDBACK
   const [feedback, setFeedback] = useState('')
   const navigate = useNavigate()
 
-  if (!data) return null
 
   return (
     <PageWrapper>
       <GNB />
       <FlowPageHeader title="최종 산출물 및 피드백" badgeLabel="산출물 검토" />
       <FlowContentArea>
-        <RequestHeaderCard reqId={data.reqId} title={data.requestTitle} />
+        <DataStateNotice loading={loading} error={error} subject="최종 산출물" />
+        <RequestHeaderCard reqId={view.reqId} title={view.requestTitle} />
         <StepProgressBar currentStep={3} />
         <SplitGrid>
           <LeftCol>
@@ -80,7 +82,7 @@ export default function FinalOutputFeedback() {
                   <TCell $strong>결제월</TCell>
                   <TCell $strong>매출지수</TCell>
                 </THead>
-                {data.outputRows.map((row, index) => (
+                {view.outputRows.map((row, index) => (
                   <TRow key={index}>
                     <TCell>{row.district}</TCell>
                     <TCell>{row.neighborhood}</TCell>
@@ -97,18 +99,18 @@ export default function FinalOutputFeedback() {
               <CardTitle>보고서 미리보기</CardTitle>
               <ReportViewer>
                 <ReportHeader>
-                  <ReportTitle>{data.reportTitle}</ReportTitle>
-                  <ReportMeta>{data.reportMeta}</ReportMeta>
+                  <ReportTitle>{view.reportTitle}</ReportTitle>
+                  <ReportMeta>{view.reportMeta}</ReportMeta>
                 </ReportHeader>
                 <ReportBody>
                   <SummaryText>
                     <SummaryHeading>주요 트렌드 발견 (Insight Summary)</SummaryHeading>
-                    {data.insightSummary.map((line) => (
+                    {view.insightSummary.map((line) => (
                       <SummaryLine key={line}>{line}</SummaryLine>
                     ))}
                   </SummaryText>
                   <MiniChart>
-                    {data.chartBars.map((bar) => (
+                    {view.chartBars.map((bar) => (
                       <BarColumn key={bar.label}>
                         <Bar $height={bar.height} $highlight={bar.highlight} />
                         <BarLabel>{bar.label}</BarLabel>
@@ -128,8 +130,8 @@ export default function FinalOutputFeedback() {
             <Card>
               <CardTitle>산출물 정보</CardTitle>
               <InfoGrid>
-                {data.infoRows.map((row, index) => (
-                  <InfoRowEl key={row.label} $last={index === data.infoRows.length - 1}>
+                {view.infoRows.map((row, index) => (
+                  <InfoRowEl key={row.label} $last={index === view.infoRows.length - 1}>
                     <InfoLabel>{row.label}</InfoLabel>
                     <InfoValue>{row.value}</InfoValue>
                   </InfoRowEl>
@@ -141,7 +143,7 @@ export default function FinalOutputFeedback() {
               <FeedbackTextarea
                 value={feedback}
                 onChange={(e) => setFeedback(e.target.value)}
-                placeholder={data.feedbackPlaceholder}
+                placeholder={view.feedbackPlaceholder}
               />
               <FeedbackActions>
                 <ResubmitButton type="button" disabled={!feedback.trim()}>

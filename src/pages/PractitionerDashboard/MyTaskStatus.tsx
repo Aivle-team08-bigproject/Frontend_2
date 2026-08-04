@@ -2,8 +2,9 @@ import GNB from '../../shared/GNB'
 import SubNav from '../../shared/SubNav'
 import { avatarLgSrc } from '../../shared/icons'
 import { useAsyncData } from '../../shared/hooks'
+import DataStateNotice from '../../shared/DataStateNotice'
 import { MainContent, PageWrapper, SectionTitle } from '../../shared/layout.styles'
-import { fetchMyTaskStatusData } from './myTaskStatusData'
+import { EMPTY_MY_TASK_STATUS, fetchMyTaskStatusData } from './myTaskStatusData'
 import { useNavigate } from 'react-router-dom'
 import {
   ActionButton,
@@ -43,9 +44,9 @@ import {
 } from './MyTaskStatus.styles'
 
 export default function MyTaskStatus() {
-  const { data } = useAsyncData(fetchMyTaskStatusData)
+  const { data, loading, error } = useAsyncData(fetchMyTaskStatusData)
+  const view = data ?? EMPTY_MY_TASK_STATUS
   const navigate = useNavigate()
-  if (!data) return null
 
   return (
     <PageWrapper>
@@ -53,34 +54,34 @@ export default function MyTaskStatus() {
       <SubNav
         activeTo="/dashboard/my-tasks"
         items={[
-          { label: '대시보드', to: '/dashboard' },
+          { label: '전체 작업', to: '/dashboard' },
           { label: '내 작업 현황', to: '/dashboard/my-tasks' },
-          { label: '전체 작업 관리 리스트', to: '/dashboard/tasks' },
         ]}
       />
       <MainContent>
+        <DataStateNotice loading={loading} error={error} empty={!loading && !error && view.cards.length === 0} subject="내 작업" />
         <ProfileHeader>
           <ProfileLeft>
             <AvatarLg src={avatarLgSrc} alt="" />
             <UserDetails>
               <TitleRow>
-                <UserNameText>{data.userName}</UserNameText>
-                <RoleBadge>{data.roleBadge}</RoleBadge>
+                <UserNameText>{view.userName}</UserNameText>
+                <RoleBadge>{view.roleBadge}</RoleBadge>
               </TitleRow>
               <UserMeta>
-                진행 중인 전담 작업 <strong style={{ color: '#0f5a52' }}>{data.activeCount}건</strong> | 대기 긴급 작업{' '}
-                <strong style={{ color: '#dc2626' }}>{data.urgentCount}건</strong>
+                진행 중인 전담 작업 <strong style={{ color: '#0f5a52' }}>{view.activeCount}건</strong> | 대기 긴급 작업{' '}
+                <strong style={{ color: '#dc2626' }}>{view.urgentCount}건</strong>
               </UserMeta>
             </UserDetails>
           </ProfileLeft>
           <QuickStats>
             <StatItem>
               <StatItemLabel>완료 작업</StatItemLabel>
-              <StatItemValue $color="#0f5a52">{data.completedCount}건</StatItemValue>
+              <StatItemValue $color="#0f5a52">{view.completedCount}건</StatItemValue>
             </StatItem>
             <StatItem>
               <StatItemLabel>완료율</StatItemLabel>
-              <StatItemValue $color="#22c55e">{data.completionRate}</StatItemValue>
+              <StatItemValue $color="#22c55e">{view.completionRate}</StatItemValue>
             </StatItem>
           </QuickStats>
         </ProfileHeader>
@@ -88,7 +89,7 @@ export default function MyTaskStatus() {
         <CardsSection>
           <SectionTitle>담당 작업 현황 리스트 (긴급 및 마감 우선 정렬)</SectionTitle>
           <CardsGrid>
-            {data.cards.map((card) => {
+            {view.cards.map((card) => {
               const urgent = card.status === 'urgent'
               return (
                 <TaskCard key={card.reqId} $urgent={urgent}>

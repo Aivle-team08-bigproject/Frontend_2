@@ -151,6 +151,23 @@ export const LeftPanel = styled.div`
   flex-direction: column;
 `
 
+/**
+ * 조회 실패 또는 데이터 없음을 알리는 배너. 화면 자체는 빈 데이터로 그대로 렌더링하고
+ * 이 배너만 위에 얹어서, 사용자가 백지 대신 원인을 볼 수 있게 한다.
+ */
+export const DataNotice = styled.p<{ $error?: boolean }>`
+  margin: 0;
+  padding: 14px 16px;
+  border-radius: 10px;
+  border: 1px solid ${({ $error }) => ($error ? colors.danger : colors.border)};
+  background: ${({ $error }) => ($error ? colors.dangerBg : colors.white)};
+  color: ${({ $error }) => ($error ? colors.danger : colors.textSecondary)};
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.5;
+  word-break: keep-all;
+`
+
 export const GhostButton = styled.button`
   display: flex;
   align-items: center;

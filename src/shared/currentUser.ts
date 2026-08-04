@@ -5,7 +5,12 @@ export type CurrentUser = {
   role: string
 }
 
+export const EMPTY_CURRENT_USER: CurrentUser = {
+  name: '사용자 정보 없음',
+  role: '-',
+}
+
 export async function fetchCurrentUser(): Promise<CurrentUser> {
   const employee = await fetchCurrentEmployee()
-  return { name: employee.name, role: employee.department }
+  return { name: employee.name, role: employee.department_name ?? '소속 미지정' }
 }

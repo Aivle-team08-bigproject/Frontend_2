@@ -45,8 +45,18 @@ type MyTaskStatusApiResponse = {
     assignee: string
     created_at: string
     updated_at: string
-    status: TaskStatus
+    status: TaskStatus | '진행중' | '가공중' | '완료' | '상태 확인 필요'
   }>
+}
+
+function normalizeTaskStatus(status: MyTaskStatusApiResponse['tasks'][number]['status']): TaskStatus {
+  const legacyStatusMap: Record<string, TaskStatus> = {
+    진행중: '샘플데이터 및 피드백',
+    가공중: '데이터 가공 진행',
+    완료: '작업완료',
+    '상태 확인 필요': '요구사항 분석',
+  }
+  return legacyStatusMap[status] ?? status
 }
 
 function progressFor(row: TaskRow): number {
@@ -62,9 +72,20 @@ function progressFor(row: TaskRow): number {
   }[row.status]
 }
 
+export const EMPTY_MY_TASK_STATUS: MyTaskStatusData = {
+  userName: '-',
+  roleBadge: '-',
+  activeCount: 0,
+  urgentCount: 0,
+  completedCount: 0,
+  completionRate: '0.0%',
+  cards: [],
+}
+
 export async function fetchMyTaskStatusData(): Promise<MyTaskStatusData> {
   const response = await fetchDashboardMyTasks<MyTaskStatusApiResponse>()
   const assigned: TaskRow[] = response.tasks
+    .map((row) => ({ ...row, status: normalizeTaskStatus(row.status) }))
     .filter((row) => row.status !== '작업완료')
     .map((row) => ({
       reqId: row.request_no,
