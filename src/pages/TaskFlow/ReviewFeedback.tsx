@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useCallback, useState } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import GNB from '../../shared/GNB'
 import FlowPageHeader from '../../shared/FlowPageHeader'
 import RequestHeaderCard from '../../shared/RequestHeaderCard'
@@ -8,8 +8,8 @@ import SectionCard from '../../shared/SectionCard'
 import { radioSelectedSrc } from '../../shared/icons'
 import { useAsyncData } from '../../shared/hooks'
 import DataStateNotice from '../../shared/DataStateNotice'
-import { currentRequestNo } from '../../shared/api'
-import { FlowContentArea, LeftPanel, PageWrapper, SplitGrid } from '../../shared/layout.styles'
+import { fetchPipelineRun, submitReview } from '../../shared/api'
+import { DataNotice, FlowContentArea, LeftPanel, PageWrapper, SplitGrid } from '../../shared/layout.styles'
 import { EMPTY_REVIEW_FEEDBACK, fetchReviewFeedbackData } from './reviewFeedbackData'
 import {
   ApproveButton,
@@ -41,19 +41,73 @@ import {
   SummaryGrid,
 } from './ReviewFeedback.styles'
 
+/** 승인/반려 응답의 next_stage 또는 rollback_to_stage를 진행 화면 경로로 매핑한다. */
+const STAGE_PROGRESS_ROUTE: Record<string, string> = {
+  REQUIREMENT_ANALYSIS: 'analyzing',
+  DATA_SELECTION: 'selection',
+  DATA_PROCESSING: 'processing',
+}
+
 export default function ReviewFeedback() {
-  const { data, loading, error } = useAsyncData(fetchReviewFeedbackData)
-  const view = data ?? EMPTY_REVIEW_FEEDBACK
-  const [feedback, setFeedback] = useState('')
+  const { requestNo, runId } = useParams()
+  const numericRunId = Number(runId)
+  const invalidRoute = !requestNo || !Number.isInteger(numericRunId)
   const navigate = useNavigate()
 
+  const viewFetcher = useCallback(() => fetchReviewFeedbackData(requestNo!), [requestNo])
+  const { data, loading, error } = useAsyncData(viewFetcher)
+  const view = data ?? EMPTY_REVIEW_FEEDBACK
+
+  const runFetcher = useCallback(() => fetchPipelineRun(numericRunId), [numericRunId])
+  const { data: run, loading: runLoading } = useAsyncData(runFetcher)
+  const runNotReady = !runLoading && run !== null && run.run_status !== 'WAITING_REQUIREMENT_REVIEW'
+
+  const [feedback, setFeedback] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
+
+  async function handleDecision(approved: boolean) {
+    if (invalidRoute || submitting) return
+    if (!approved && !feedback.trim()) return
+    setSubmitting(true)
+    setSubmitError(null)
+    try {
+      const result = await submitReview(numericRunId, {
+        approved,
+        feedback: approved ? null : feedback.trim(),
+      })
+      const targetStage = result.next_stage ?? result.rollback_to_stage
+      if (result.run_status === 'COMPLETED') {
+        navigate(`/tasks/${requestNo}/runs/${runId}/complete`)
+      } else if (targetStage && STAGE_PROGRESS_ROUTE[targetStage]) {
+        navigate(`/tasks/${requestNo}/runs/${runId}/${STAGE_PROGRESS_ROUTE[targetStage]}`)
+      } else {
+        navigate(`/tasks/${requestNo}/runs/${runId}/analyzing`)
+      }
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : '제출에 실패했습니다.')
+      setSubmitting(false)
+    }
+  }
 
   return (
     <PageWrapper>
       <GNB />
       <FlowPageHeader title="요구사항 완료 피드백" badgeLabel="피드백 대기" badgeBg="#d97706" />
       <FlowContentArea>
-        <DataStateNotice loading={loading} error={error} subject="요구사항 분석 결과" />
+        {invalidRoute ? (
+          <DataNotice $error role="alert">잘못된 실행 경로입니다. 요청번호와 실행 ID를 확인해주세요.</DataNotice>
+        ) : (
+          <>
+            <DataStateNotice loading={loading} error={error} subject="요구사항 분석 결과" />
+            {runNotReady && (
+              <DataNotice $error role="alert">
+                이 작업은 더 이상 요구사항 검토 대기 상태가 아닙니다 (현재 상태: {run?.run_status}). 최신 화면으로 이동해주세요.
+              </DataNotice>
+            )}
+            {submitError && <DataNotice $error role="alert">{submitError}</DataNotice>}
+          </>
+        )}
         <RequestHeaderCard reqId={view.reqId} title={view.requestTitle} />
         <StepProgressBar currentStep={1} />
         <SplitGrid>
@@ -123,9 +177,9 @@ export default function ReviewFeedback() {
                 </OptionList>
               </OptionGroup>
               <ReviewActions>
-                <BackButton type="button">이전 단계로</BackButton>
-                <ApproveButton type="button" onClick={() => navigate(`/tasks/selection?requestNo=${encodeURIComponent(currentRequestNo())}`)}>
-                  승인 후 다음 단계
+                <BackButton type="button" disabled={submitting}>이전 단계로</BackButton>
+                <ApproveButton type="button" disabled={invalidRoute || submitting || runNotReady} onClick={() => handleDecision(true)}>
+                  {submitting ? '제출 중...' : '승인 후 다음 단계'}
                 </ApproveButton>
               </ReviewActions>
             </SectionCard>
@@ -137,8 +191,12 @@ export default function ReviewFeedback() {
                 placeholder={view.feedbackPlaceholder}
               />
               <FeedbackActions>
-                <ResubmitButton type="button" disabled={!feedback.trim()}>
-                  재가공 요청
+                <ResubmitButton
+                  type="button"
+                  disabled={!feedback.trim() || invalidRoute || submitting || runNotReady}
+                  onClick={() => handleDecision(false)}
+                >
+                  {submitting ? '제출 중...' : '재가공 요청'}
                 </ResubmitButton>
               </FeedbackActions>
             </SectionCard>

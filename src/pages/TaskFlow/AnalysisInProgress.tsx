@@ -1,5 +1,5 @@
-import { useCallback } from 'react'
-import { useParams } from 'react-router-dom'
+import { useCallback, useEffect } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import GNB from '../../shared/GNB'
 import FlowPageHeader from '../../shared/FlowPageHeader'
 import RequestHeaderCard from '../../shared/RequestHeaderCard'
@@ -26,6 +26,13 @@ export default function AnalysisInProgress() {
   const fetcher = useCallback(() => fetchPipelineRun(numericRunId), [numericRunId])
   const { data, loading, error } = useAsyncData(fetcher, { intervalMs: 3000 })
   const invalidRoute = !requestNo || !Number.isInteger(numericRunId)
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    if (data?.run_status === 'WAITING_REQUIREMENT_REVIEW') {
+      navigate(`/tasks/${requestNo}/runs/${runId}/review`, { replace: true })
+    }
+  }, [data?.run_status, navigate, requestNo, runId])
 
   const timelineItems: TimelineItem[] = (data?.stages ?? []).map((stage) => ({
     title: STAGE_LABELS[stage.stage_code] ?? stage.stage_code,

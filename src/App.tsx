@@ -44,12 +44,12 @@ function App() {
         <Route path="/tasks/register" element={protectedPage(<RequirementAnalysisRegister />)} />
         <Route path="/tasks/analyzing" element={<Navigate to="/tasks/register" replace />} />
         <Route path="/tasks/:requestNo/runs/:runId/analyzing" element={protectedPage(<AnalysisInProgress />)} />
-        <Route path="/tasks/review" element={protectedPage(<ReviewFeedback />)} />
-        <Route path="/tasks/selection" element={protectedPage(<DataSelectionInProgress />)} />
-        <Route path="/tasks/sample-feedback" element={protectedPage(<SampleDataFeedback />)} />
-        <Route path="/tasks/processing" element={protectedPage(<DataProcessingInProgress />)} />
-        <Route path="/tasks/final-feedback" element={protectedPage(<FinalOutputFeedback />)} />
-        <Route path="/tasks/complete" element={protectedPage(<TaskComplete />)} />
+        <Route path="/tasks/:requestNo/runs/:runId/review" element={protectedPage(<ReviewFeedback />)} />
+        <Route path="/tasks/:requestNo/runs/:runId/selection" element={protectedPage(<DataSelectionInProgress />)} />
+        <Route path="/tasks/:requestNo/runs/:runId/sample-feedback" element={protectedPage(<SampleDataFeedback />)} />
+        <Route path="/tasks/:requestNo/runs/:runId/processing" element={protectedPage(<DataProcessingInProgress />)} />
+        <Route path="/tasks/:requestNo/runs/:runId/final-feedback" element={protectedPage(<FinalOutputFeedback />)} />
+        <Route path="/tasks/:requestNo/runs/:runId/complete" element={protectedPage(<TaskComplete />)} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </BrowserRouter>

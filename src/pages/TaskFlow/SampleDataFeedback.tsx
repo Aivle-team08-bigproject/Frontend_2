@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import GNB from '../../shared/GNB'
 import FlowPageHeader from '../../shared/FlowPageHeader'
 import RequestHeaderCard from '../../shared/RequestHeaderCard'
@@ -7,7 +7,6 @@ import StepProgressBar from '../../shared/StepProgressBar'
 import { infoSrc } from '../../shared/icons'
 import { useAsyncData } from '../../shared/hooks'
 import DataStateNotice from '../../shared/DataStateNotice'
-import { currentRequestNo } from '../../shared/api'
 import { FlowContentArea, PageWrapper } from '../../shared/layout.styles'
 import { EMPTY_SAMPLE_DATA_FEEDBACK, fetchSampleDataFeedbackData } from './sampleDataFeedbackData'
 import {
@@ -45,6 +44,7 @@ import {
 } from './SampleDataFeedback.styles'
 
 export default function SampleDataFeedback() {
+  const { requestNo, runId } = useParams()
   const { data, loading, error } = useAsyncData(fetchSampleDataFeedbackData)
   const view = data ?? EMPTY_SAMPLE_DATA_FEEDBACK
   const [accordionOpen, setAccordionOpen] = useState(true)
@@ -134,7 +134,7 @@ export default function SampleDataFeedback() {
           <RequestButton type="button" disabled={!prompt.trim()}>
             재가공 요청
           </RequestButton>
-          <ApproveButton type="button" onClick={() => navigate(`/tasks/processing?requestNo=${encodeURIComponent(currentRequestNo())}`)}>
+          <ApproveButton type="button" onClick={() => navigate(`/tasks/${requestNo}/runs/${runId}/processing`)}>
             샘플 승인 → 계약 체결
           </ApproveButton>
           <DisabledButton type="button" disabled>
