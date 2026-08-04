@@ -56,21 +56,21 @@ export default function PractitionerDashboardMain() {
             <StatCardEl
               key={stat.label}
               $highlight={stat.highlight}
-              role={stat.filterCode ? 'link' : undefined}
-              tabIndex={stat.filterCode ? 0 : undefined}
-              onClick={stat.filterCode ? () => navigate(`/dashboard/tasks?filter=${stat.filterCode}`) : undefined}
+              role={stat.linkTo ? 'link' : undefined}
+              tabIndex={stat.linkTo ? 0 : undefined}
+              onClick={stat.linkTo ? () => navigate(stat.linkTo!) : undefined}
               onKeyDown={
-                stat.filterCode
+                stat.linkTo
                   ? (event) => {
                       if (event.key === 'Enter' || event.key === ' ') {
                         event.preventDefault()
-                        navigate(`/dashboard/tasks?filter=${stat.filterCode}`)
+                        navigate(stat.linkTo!)
                       }
                     }
                   : undefined
               }
-              style={stat.filterCode ? { cursor: 'pointer' } : undefined}
-              aria-label={stat.filterCode ? `${stat.label} 작업 리스트로 이동` : undefined}
+              style={stat.linkTo ? { cursor: 'pointer' } : undefined}
+              aria-label={stat.linkTo ? `${stat.label} 작업 리스트로 이동` : undefined}
             >
               <StatLabel $highlight={stat.highlight}>{stat.label}</StatLabel>
               <StatNumbers>

@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import GNB from '../../shared/GNB'
 import SubNav from '../../shared/SubNav'
+import type { PriorityCode } from '../../shared/api'
 import { chevronDownSrc, chevronLeftSrc, chevronRightSrc } from '../../shared/icons'
 import { useAsyncData } from '../../shared/hooks'
 import DataStateNotice from '../../shared/DataStateNotice'
@@ -28,13 +29,14 @@ import {
   TableRowEl,
 } from '../../shared/Table.styles'
 import {
-  EMPTY_PRACTITIONER_DASHBOARD,
-  fetchPractitionerDashboardData,
+  fetchTaskListRows,
   PRACTITIONER_NAV_ITEMS,
+  PRIORITY_LABELS,
   TASK_FILTER_STAGES,
   taskFilterStageForStatus,
   taskStatusColors,
   type TaskFilterStage,
+  type TaskRow,
 } from './data'
 import {
   ClearFilters,
@@ -46,11 +48,8 @@ import {
   TableSection,
 } from './PractitionerDashboardMain.styles'
 
-const filterCodeToStage: Record<string, TaskFilterStage> = {
-  requirement: '요구사항 분석',
-  sample: '샘플 데이터',
-  final: '최종 산출물',
-}
+const VALID_PRIORITIES = new Set<PriorityCode>(['REQUIREMENT', 'SAMPLE', 'FINAL'])
+const EMPTY_ROWS: TaskRow[] = []
 
 const taskDetailRoute = {
   '요구사항 분석': '/tasks/review',
@@ -64,18 +63,24 @@ const taskDetailRoute = {
 } as const
 
 /**
- * /dashboard의 StatCard를 클릭하면 ?filter=requirement|sample|final|all 로 여기 도착한다.
- * 데이터 소스는 /dashboard와 동일한 fetchPractitionerDashboardData() — 별도 API 없음.
+ * /dashboard의 우선순위 StatCard·경고카드는 ?priority=REQUIREMENT|SAMPLE|FINAL 로 여기 도착한다
+ * (백엔드 priority_cards[].detail_route가 이미 이 규격). 여기서 /api/v1/dashboard/tasks를
+ * 직접 호출해 서버사이드로 필터링한다 — /dashboard가 쓰는 priority_actions/approval_tasks는
+ * 백엔드에서 상위 5건으로 캡되어 있어(action_items[:5]) 우선순위 카드 count와 실제 표시 가능한
+ * 행 수가 안 맞았기 때문.
  */
 export default function TaskList() {
-  const { data, loading, error } = useAsyncData(fetchPractitionerDashboardData)
-  const view = data ?? EMPTY_PRACTITIONER_DASHBOARD
   const [searchParams] = useSearchParams()
-  const initialStage = filterCodeToStage[searchParams.get('filter') ?? '']
+  const priorityParam = searchParams.get('priority')
+  const priority = VALID_PRIORITIES.has(priorityParam as PriorityCode) ? (priorityParam as PriorityCode) : undefined
+
+  const fetcher = useCallback(() => fetchTaskListRows(priority), [priority])
+  const { data, loading, error } = useAsyncData(fetcher)
+  const rows = data ?? EMPTY_ROWS
 
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState<30 | 50>(30)
-  const [statusFilter, setStatusFilter] = useState<TaskFilterStage | 'all'>(initialStage ?? 'all')
+  const [statusFilter, setStatusFilter] = useState<TaskFilterStage | 'all'>('all')
   const [assigneeFilter, setAssigneeFilter] = useState('all')
   const [monthFilter, setMonthFilter] = useState('all')
   const [openFilter, setOpenFilter] = useState<'status' | 'assignee' | 'month' | null>(null)
@@ -83,22 +88,22 @@ export default function TaskList() {
   const navigate = useNavigate()
 
   const assigneeOptions = useMemo(
-    () => [...new Set(view.taskRows.map((row) => row.assignee))].sort((a, b) => a.localeCompare(b, 'ko')),
-    [view],
+    () => [...new Set(rows.map((row) => row.assignee))].sort((a, b) => a.localeCompare(b, 'ko')),
+    [rows],
   )
   const monthOptions = useMemo(
-    () => [...new Set(view.taskRows.map((row) => row.createdAt.slice(0, 7)))].sort().reverse(),
-    [view],
+    () => [...new Set(rows.map((row) => row.createdAt.slice(0, 7)))].sort().reverse(),
+    [rows],
   )
   const filteredRows = useMemo(
     () =>
-      view.taskRows.filter((row) => {
+      rows.filter((row) => {
         if (statusFilter !== 'all' && taskFilterStageForStatus[row.status] !== statusFilter) return false
         if (assigneeFilter !== 'all' && row.assignee !== assigneeFilter) return false
         if (monthFilter !== 'all' && row.createdAt.slice(0, 7) !== monthFilter) return false
         return true
       }),
-    [assigneeFilter, monthFilter, statusFilter, view],
+    [assigneeFilter, monthFilter, statusFilter, rows],
   )
 
   const totalPages = Math.max(1, Math.ceil(filteredRows.length / pageSize))
@@ -143,10 +148,12 @@ export default function TaskList() {
       <GNB />
       <SubNav activeTo="/dashboard/tasks" items={PRACTITIONER_NAV_ITEMS} />
       <MainContent>
-        <DataStateNotice loading={loading} error={error} empty={!loading && !error && view.taskRows.length === 0} subject="작업 리스트 데이터" />
+        <DataStateNotice loading={loading} error={error} empty={!loading && !error && rows.length === 0} subject="작업 리스트 데이터" />
         <TableSection>
           <SectionHeader>
-            <SectionTitle>전체 작업 관리 리스트</SectionTitle>
+            <SectionTitle>
+              전체 작업 관리 리스트{priority ? ` · ${PRIORITY_LABELS[priority]} 우선순위만 표시 중` : ''}
+            </SectionTitle>
             <SortBar ref={filterBarRef}>
               <FilterGroup>
                 <SortChip type="button" aria-haspopup="menu" aria-expanded={openFilter === 'status'} onClick={() => setOpenFilter((current) => current === 'status' ? null : 'status')}>
@@ -191,7 +198,7 @@ export default function TaskList() {
                   </FilterMenu>
                 )}
               </FilterGroup>
-              <FilterSummary>{view.taskRows.length}건 중 {filteredRows.length}건</FilterSummary>
+              <FilterSummary>{rows.length}건 중 {filteredRows.length}건</FilterSummary>
               {hasActiveFilter && <ClearFilters type="button" onClick={clearFilters}>필터 초기화</ClearFilters>}
               <GhostButton
                 type="button"
