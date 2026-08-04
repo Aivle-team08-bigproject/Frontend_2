@@ -1,6 +1,14 @@
-import { fetchDashboard, type DashboardResponse, type DashboardTaskItem, type StageGroupCode } from '../../shared/api'
+import type { SubNavItem } from '../../shared/SubNav'
+import { fetchDashboard, type DashboardResponse, type DashboardTaskItem, type PriorityCode, type StageGroupCode } from '../../shared/api'
 import { formatDate } from '../../shared/datetime'
 import { colors } from '../../shared/theme'
+
+/** 전체 작업/작업 리스트/내 작업 현황 세 페이지가 공유하는 SubNav 탭. 페이지마다 따로 하드코딩하면 하나 바꿀 때 나머지가 안 맞음. */
+export const PRACTITIONER_NAV_ITEMS: SubNavItem[] = [
+  { label: '전체 작업', to: '/dashboard' },
+  { label: '작업 리스트', to: '/dashboard/tasks' },
+  { label: '내 작업 현황', to: '/dashboard/my-tasks' },
+]
 
 export type StatCard = {
   label: string
@@ -8,6 +16,8 @@ export type StatCard = {
   unit: string
   caption: string
   highlight?: boolean
+  /** 클릭 시 /dashboard/tasks?filter=이 값 으로 이동한다. 없으면 클릭 불가. */
+  filterCode?: 'requirement' | 'sample' | 'final' | 'all'
 }
 
 export type WarningCard = {
@@ -36,6 +46,16 @@ export type SupplementItem = {
   tag: string
   tagBg: string
   tagColor: string
+}
+
+export type DeadlineItem = {
+  requestNo: string
+  title: string
+  subtitle: string
+  tag: string
+  tagBg: string
+  tagColor: string
+  route: string
 }
 
 export const TASK_STATUSES = [
@@ -93,6 +113,7 @@ export type PractitionerDashboardData = {
   warningCards: WarningCard[]
   preferredItems: RankedItem[]
   supplementItems: SupplementItem[]
+  deadlineItems: DeadlineItem[]
   taskRows: TaskRow[]
   pageSize: number
 }
@@ -110,6 +131,32 @@ const priorityColors = {
   SAMPLE: { bg: colors.warningBgAlt, color: colors.warningAlt },
   FINAL: { bg: colors.warningBg, color: colors.warning },
 } as const
+
+const filterCodeForPriority: Record<PriorityCode, 'requirement' | 'sample' | 'final'> = {
+  REQUIREMENT: 'requirement',
+  SAMPLE: 'sample',
+  FINAL: 'final',
+}
+
+function deadlineUrgency(dueAt: string): { label: string; urgent: boolean } {
+  const remainingHours = Math.ceil((new Date(dueAt).getTime() - Date.now()) / (60 * 60 * 1000))
+  if (remainingHours <= 0) return { label: '마감 지남', urgent: true }
+  if (remainingHours <= 24) return { label: `D-day · ${remainingHours}시간 남음`, urgent: true }
+  return { label: `D-${Math.ceil(remainingHours / 24)}`, urgent: false }
+}
+
+function deadlineItemFromTask(item: DashboardResponse['deadline_tasks'][number]): DeadlineItem {
+  const urgency = deadlineUrgency(item.due_at)
+  return {
+    requestNo: item.request_no,
+    title: item.title,
+    subtitle: `${item.request_no} · ${item.client} · 담당 ${item.assignee_name}`,
+    tag: urgency.label,
+    tagBg: urgency.urgent ? colors.dangerBg : colors.warningBg,
+    tagColor: urgency.urgent ? colors.danger : colors.warning,
+    route: `${item.detail_route}${item.detail_route.includes('?') ? '&' : '?'}requestNo=${encodeURIComponent(item.request_no)}`,
+  }
+}
 
 function taskRowFromDashboardItem(item: DashboardTaskItem): TaskRow {
   return {
@@ -155,6 +202,7 @@ export const EMPTY_PRACTITIONER_DASHBOARD: PractitionerDashboardData = {
   warningCards: [],
   preferredItems: [],
   supplementItems: [],
+  deadlineItems: [],
   taskRows: [],
   pageSize: 30,
 }
@@ -170,12 +218,14 @@ export async function fetchPractitionerDashboardData(): Promise<PractitionerDash
         unit: '건',
         caption: `우선순위 ${index + 1}`,
         highlight: card.count > 0,
+        filterCode: filterCodeForPriority[card.priority_code],
       })),
       {
         label: '진행 중인 전체 작업',
         value: data.active_task_count,
         unit: '건',
         caption: '전체 작업 현황',
+        filterCode: 'all' as const,
       },
     ],
     alertBannerCount: actions.length,
@@ -198,6 +248,7 @@ export async function fetchPractitionerDashboardData(): Promise<PractitionerDash
           tagColor: colors.textSecondary,
         }]
       : [],
+    deadlineItems: data.deadline_tasks.slice(0, 5).map(deadlineItemFromTask),
     taskRows: actions.map(taskRowFromDashboardItem),
     pageSize: 30,
   }

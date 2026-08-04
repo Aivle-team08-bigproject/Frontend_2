@@ -8,6 +8,7 @@ import { MainContent, PageWrapper } from '../../shared/layout.styles'
 import { NavIcon, PageNav, PageNumber, PageNumbers, Pagination, TableContainer } from '../../shared/Table.styles'
 import { fetchCurrentEmployee } from '../../shared/api'
 import { EMPTY_MEMBER_MANAGEMENT, fetchMemberManagementData, ROLE_OPTIONS, updateMemberActiveState, updateMemberRole } from './memberData'
+import { DEVELOPER_NAV_ITEMS } from './dashboardData'
 import {
   ActionNotice,
   ActionsCell,
@@ -131,13 +132,7 @@ export default function MemberManagement() {
   const navigation = (
     <>
       <GNB />
-      <SubNav
-        activeTo="/dev-dashboard/members"
-        items={[
-          { label: '대시보드', to: '/dev-dashboard' },
-          { label: '회원 관리', to: '/dev-dashboard/members' },
-        ]}
-      />
+      <SubNav activeTo="/dev-dashboard/members" items={DEVELOPER_NAV_ITEMS} />
     </>
   )
 
