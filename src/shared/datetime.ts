@@ -26,3 +26,12 @@ export function formatDate(value: string): string {
   if (!date) return value
   return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`
 }
+
+/** `2026.07.31 14:23` 형태. 이력처럼 날짜와 시각을 함께 봐야 할 때 쓴다. */
+export function formatDateTime(value: string): string {
+  const date = parse(value)
+  if (!date) return value
+  const hh = String(date.getHours()).padStart(2, '0')
+  const mm = String(date.getMinutes()).padStart(2, '0')
+  return `${formatDate(value)} ${hh}:${mm}`
+}

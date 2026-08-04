@@ -153,10 +153,18 @@ export type StageGroupCode =
 
 export type DecisionStatus = 'pending' | 'approved' | 'changes_requested' | 'not_required'
 
-export type StatusGroupCode = 'waiting_review' | 'in_progress' | 'completed' | 'failed' | 'unknown'
+export type StatusGroupCode =
+  | 'waiting_review'
+  | 'in_progress'
+  | 'completed'
+  | 'failed'
+  | 'overdue'
+  | 'unknown'
 
 export type DashboardTaskItem = {
   request_no: string
+  /** 파이프라인 실행 식별자. 실행이 아직 없는 요청은 null. */
+  run_id: number | null
   client: string
   title: string
   assignee_code: string | null
@@ -169,6 +177,8 @@ export type DashboardTaskItem = {
   priority_code: PriorityCode | null
   decision_status: DecisionStatus
   requires_action: boolean
+  progress_percent: number
+  due_at: string | null
   detail_route: string
   created_at: string
   updated_at: string
@@ -197,8 +207,34 @@ export type DashboardDeadlineTask = {
   detail_route: string
 }
 
+export type DashboardScope = 'mine' | 'all'
+
+export type PersonalDashboardSummary = {
+  total_count: number
+  active_count: number
+  approval_count: number
+  failed_count: number
+  completion_rate: number
+}
+
+export type DashboardStageProgress = {
+  code: string
+  status: string
+  progress_percent: number
+}
+
+export type DashboardProgress = {
+  percent: number
+  current_stage: string | null
+  stages: DashboardStageProgress[]
+}
+
+/** `GET /api/v1/dashboard` — 항상 현재 로그인 사용자의 개인 작업 범위. */
 export type DashboardResponse = {
+  scope: 'mine'
   generated_at: string
+  summary: PersonalDashboardSummary
+  progress: DashboardProgress
   priority_cards: DashboardPriorityCard[]
   priority_actions: DashboardTaskItem[]
   popular_products: PopularProduct[]
@@ -208,20 +244,109 @@ export type DashboardResponse = {
   active_task_count: number
 }
 
+export type AdminDashboardSummary = {
+  total_count: number
+  active_count: number
+  waiting_review_count: number
+  failed_count: number
+  overdue_count: number
+  deadline_soon_count: number
+}
+
+export type AssigneeProgress = {
+  assignee_code: string | null
+  assignee_name: string
+  total_count: number
+  completed_count: number
+  waiting_review_count: number
+  failed_count: number
+  progress_percent: number
+}
+
+/** `GET /api/v1/dashboard/overview` — CONTRACT_MANAGE 권한 보유자 전용. */
+export type AdminDashboardResponse = {
+  scope: 'all'
+  generated_at: string
+  summary: AdminDashboardSummary
+  assignee_progress: AssigneeProgress[]
+  /** deadline_soon / overdue / repeated_failures / final_outputs_for_review 키를 사용한다. */
+  attention_items: Record<string, DashboardTaskItem[]>
+}
+
 export type DashboardPageSize = 30 | 50 | 100
 
 export type DashboardTasksQuery = {
+  /** 기본값 mine. all은 관리자 권한이 있어야 한다. */
+  scope?: DashboardScope
+  search?: string
   priority?: PriorityCode
   stage?: StageGroupCode
+  status?: StatusGroupCode
+  assignee?: string
+  /** YYYY-MM-DD */
+  created_from?: string
+  created_to?: string
   page?: number
   page_size?: DashboardPageSize
 }
 
 export type DashboardTasksResponse = {
+  scope: DashboardScope
   items: DashboardTaskItem[]
   total_count: number
   page: number
   page_size: DashboardPageSize
+}
+
+export type TaskArtifactDetail = {
+  artifact_id: number
+  artifact_type: string
+  storage_key: string
+  mime_type: string | null
+  size_bytes: number | null
+  pii_scan_status: string
+}
+
+export type TaskStageDetail = {
+  stage_code: string
+  status: string
+  progress_percent: number
+  attempt_no: number
+  executor: string
+  review_status: string | null
+  artifacts: TaskArtifactDetail[]
+  created_at: string
+  started_at: string | null
+  completed_at: string | null
+  error_message: string | null
+}
+
+export type TaskHistoryEntry = {
+  review_type: string
+  decision: string
+  feedback: string | null
+  reviewer_name: string | null
+  created_at: string
+}
+
+export type TaskDetailAction = 'APPROVE' | 'REQUEST_CHANGES' | 'DOWNLOAD'
+
+/** `GET /api/v1/tasks/{request_no}/runs/{run_id}/detail` */
+export type TaskDetailResponse = {
+  request_no: string
+  run_id: number
+  title: string
+  assignee_code: string | null
+  assignee_name: string
+  run_status: string | null
+  current_stage: string | null
+  progress_percent: number
+  attempt_no: number | null
+  rollback_to_stage: string | null
+  error_message: string | null
+  stages: TaskStageDetail[]
+  available_actions: TaskDetailAction[]
+  history: TaskHistoryEntry[]
 }
 
 export type TaskViewResponse<T extends object> = {
@@ -336,14 +461,31 @@ export function fetchDashboard(): Promise<DashboardResponse> {
   return request<DashboardResponse>('/api/v1/dashboard')
 }
 
+/** 관리자 전체 작업 Dashboard. CONTRACT_MANAGE 권한이 없으면 403이 온다. */
+export function fetchAdminDashboard(): Promise<AdminDashboardResponse> {
+  return request<AdminDashboardResponse>('/api/v1/dashboard/overview')
+}
+
 export function fetchDashboardTasks(query: DashboardTasksQuery): Promise<DashboardTasksResponse> {
   const params = new URLSearchParams()
+  if (query.scope !== undefined) params.set('scope', query.scope)
+  if (query.search) params.set('search', query.search)
   if (query.priority !== undefined) params.set('priority', query.priority)
   if (query.stage !== undefined) params.set('stage', query.stage)
+  if (query.status !== undefined) params.set('status', query.status)
+  if (query.assignee) params.set('assignee', query.assignee)
+  if (query.created_from) params.set('created_from', query.created_from)
+  if (query.created_to) params.set('created_to', query.created_to)
   if (query.page !== undefined) params.set('page', String(query.page))
   if (query.page_size !== undefined) params.set('page_size', String(query.page_size))
   const queryString = params.toString()
   return request<DashboardTasksResponse>(`/api/v1/dashboard/tasks${queryString ? `?${queryString}` : ''}`)
+}
+
+export function fetchTaskDetail(requestNo: string, runId: number): Promise<TaskDetailResponse> {
+  return request<TaskDetailResponse>(
+    `/api/v1/tasks/${encodeURIComponent(requestNo)}/runs/${runId}/detail`,
+  )
 }
 
 export function fetchDashboardMyTasks<T>(): Promise<T> {
