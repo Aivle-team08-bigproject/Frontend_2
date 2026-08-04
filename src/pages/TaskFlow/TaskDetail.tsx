@@ -158,6 +158,9 @@ export default function TaskDetail() {
                 {data.stages.length === 0 && <EmptyText>표시할 단계 정보가 없습니다.</EmptyText>}
                 {data.stages.map((stage) => {
                   const stageTone = stageStatusTone(stage.status)
+                  const stagePath = stage.status === 'COMPLETED'
+                    ? stageContentPath(requestNo!, data.run_id, stage.stage_code)
+                    : stageScreenPath(requestNo!, data.run_id, data.run_status, stage.stage_code)
                   return (
                     <StageCard key={`${stage.stage_code}-${stage.attempt_no}`} $current={stage.stage_code === data.current_stage}>
                       <StageTop>
@@ -197,12 +200,7 @@ export default function TaskDetail() {
                       {stage.error_message && <StageErrorText>{stage.error_message}</StageErrorText>}
                       {requestNo && (
                         <StageLink
-                          type="button"
-                          onClick={() => navigate(
-                            stage.status === 'COMPLETED'
-                              ? stageContentPath(requestNo, data.run_id, stage.stage_code)
-                              : stageScreenPath(requestNo, data.run_id, data.run_status, stage.stage_code),
-                          )}
+                          to={stagePath}
                         >
                           단계 화면 열기 &gt;
                         </StageLink>

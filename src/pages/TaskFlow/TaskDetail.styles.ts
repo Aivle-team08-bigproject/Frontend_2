@@ -1,4 +1,5 @@
 import styled from 'styled-components'
+import { Link } from 'react-router-dom'
 import { colors, radius, shadow, spacing } from '../../shared/theme'
 
 export const SummaryCard = styled.div`
@@ -200,7 +201,7 @@ export const ArtifactItem = styled.li`
   color: ${colors.textSecondary};
 `
 
-export const StageLink = styled.button`
+export const StageLink = styled(Link)`
   align-self: flex-start;
   margin: 0;
   padding: 0;
