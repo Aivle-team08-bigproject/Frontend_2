@@ -8,6 +8,7 @@ import DeveloperDashboardMain from './pages/DeveloperDashboard/DeveloperDashboar
 import MemberManagement from './pages/DeveloperDashboard/MemberManagement'
 import RequirementAnalysisRegister from './pages/TaskFlow/RequirementAnalysisRegister'
 import AnalysisInProgress from './pages/TaskFlow/AnalysisInProgress'
+import TaskDetail from './pages/TaskFlow/TaskDetail'
 import ReviewFeedback from './pages/TaskFlow/ReviewFeedback'
 import DataSelectionInProgress from './pages/TaskFlow/DataSelectionInProgress'
 import SampleDataFeedback from './pages/TaskFlow/SampleDataFeedback'
@@ -43,6 +44,7 @@ function App() {
         <Route path="/dev-dashboard/members" element={protectedPage(<MemberManagement />)} />
         <Route path="/tasks/register" element={protectedPage(<RequirementAnalysisRegister />)} />
         <Route path="/tasks/analyzing" element={<Navigate to="/tasks/register" replace />} />
+        <Route path="/tasks/:requestNo/runs/:runId/detail" element={protectedPage(<TaskDetail />)} />
         <Route path="/tasks/:requestNo/runs/:runId/analyzing" element={protectedPage(<AnalysisInProgress />)} />
         <Route path="/tasks/:requestNo/runs/:runId/review" element={protectedPage(<ReviewFeedback />)} />
         <Route path="/tasks/:requestNo/runs/:runId/selection" element={protectedPage(<DataSelectionInProgress />)} />
