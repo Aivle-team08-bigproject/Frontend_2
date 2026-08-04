@@ -153,6 +153,16 @@ export type PopularProduct = {
   request_count: number
 }
 
+export type DashboardDeadlineTask = {
+  request_no: string
+  client: string
+  title: string
+  assignee_name: string
+  stage_label: string
+  due_at: string
+  detail_route: string
+}
+
 export type DashboardResponse = {
   generated_at: string
   priority_cards: DashboardPriorityCard[]
@@ -160,6 +170,7 @@ export type DashboardResponse = {
   popular_products: PopularProduct[]
   popular_products_unavailable_message: string
   approval_tasks: DashboardTaskItem[]
+  deadline_tasks: DashboardDeadlineTask[]
   active_task_count: number
 }
 
