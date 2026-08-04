@@ -79,6 +79,18 @@ const PROGRESS_ROUTE_BY_STAGE: Record<string, string> = {
   DATA_PROCESSING: 'processing',
 }
 
+const CONTENT_ROUTE_BY_STAGE: Record<string, string> = {
+  REQUIREMENT_ANALYSIS: 'review',
+  DATA_SELECTION: 'sample-feedback',
+  DATA_PROCESSING: 'final-feedback',
+}
+
+/** 이미 완료된 이전 단계의 산출물 화면을 다시 여는 경로. */
+export function stageContentPath(requestNo: string, runId: number | string, stageCode: string): string {
+  const base = `/tasks/${encodeURIComponent(requestNo)}/runs/${runId}`
+  return `${base}/${CONTENT_ROUTE_BY_STAGE[stageCode] ?? 'detail'}`
+}
+
 /**
  * run_status와 current_stage로 지금 사용자가 봐야 할 단계별 화면을 정한다.
  * 새로고침·직접 URL 접근에서도 같은 규칙으로 화면을 복원할 수 있다.

@@ -164,6 +164,9 @@ export default function SampleDataFeedback() {
           <RequestButton type="button" disabled={!prompt.trim() || invalidRoute || submitting || runNotReady} onClick={() => handleDecision(false)}>
             재가공 요청
           </RequestButton>
+          <RequestButton type="button" onClick={() => navigate(`/tasks/${requestNo}/runs/${runId}/review`)}>
+            요구사항 분석 다시 보기
+          </RequestButton>
           <ApproveButton type="button" disabled={invalidRoute || submitting || runNotReady} onClick={() => handleDecision(true)}>
             {submitting ? '제출 중...' : '샘플 승인 → 계약 체결'}
           </ApproveButton>
