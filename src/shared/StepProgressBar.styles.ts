@@ -51,14 +51,18 @@ export const StepLabel = styled.p<{ $state: 'done' | 'active' | 'pending' }>`
   font-weight: ${({ $state }) => ($state === 'active' ? 700 : 500)};
   color: ${({ $state }) =>
     $state === 'active' ? colors.flowPrimary : $state === 'done' ? colors.text : colors.textMuted};
-  display: block;
-  width: 1px;
-  height: 1px;
-  margin: -1px;
-  overflow: hidden;
   white-space: nowrap;
-  clip: rect(0, 0, 0, 0);
-  clip-path: inset(50%);
+
+  @media (max-width: 700px) {
+    display: block;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    white-space: nowrap;
+    clip: rect(0, 0, 0, 0);
+    clip-path: inset(50%);
+  }
 `
 
 export const StepLine = styled.div<{ $done: boolean }>`
