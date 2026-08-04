@@ -8,7 +8,7 @@ import SectionCard from '../../shared/SectionCard'
 import { arrowLeftSrc, arrowRightSrc } from '../../shared/icons'
 import { useAsyncData } from '../../shared/hooks'
 import DataStateNotice from '../../shared/DataStateNotice'
-import { fetchPipelineRun, pipelineResultDownloadUrl, submitReview } from '../../shared/api'
+import { fetchPipelineRun, fetchProcessingResult, pipelineResultDownloadUrl, submitReview } from '../../shared/api'
 import { DataNotice, FlowContentArea, PageWrapper } from '../../shared/layout.styles'
 import { EMPTY_FINAL_OUTPUT_FEEDBACK } from './finalOutputFeedbackData'
 import {
@@ -57,8 +57,19 @@ export default function FinalOutputFeedback() {
   const invalidRoute = !requestNo || !Number.isInteger(numericRunId)
   const runFetcher = useCallback(() => fetchPipelineRun(numericRunId), [numericRunId])
   const { data: run, loading: runLoading, error: runError } = useAsyncData(runFetcher)
+  const resultFetcher = useCallback(() => fetchProcessingResult(numericRunId), [numericRunId])
+  const { data: processingResult, loading: resultLoading, error: resultError } = useAsyncData(resultFetcher)
   const runNotReady = !runLoading && run !== null && run.run_status !== 'WAITING_FINAL_REVIEW'
   const view = { ...EMPTY_FINAL_OUTPUT_FEEDBACK, reqId: run?.request_no ?? EMPTY_FINAL_OUTPUT_FEEDBACK.reqId, requestTitle: run?.request_title ?? EMPTY_FINAL_OUTPUT_FEEDBACK.requestTitle }
+  const outputRows = processingResult?.api_result.items ?? []
+  const outputColumns = processingResult?.processed_columns ?? Object.keys(outputRows[0] ?? {})
+  const report = processingResult?.report
+  const reportTitle = typeof report?.title === 'string' ? report.title : '최종 가공 결과'
+  const reportSummary = [
+    typeof report?.summary === 'string' ? report.summary : null,
+    typeof processingResult?.processing_explanation.summary === 'string' ? processingResult.processing_explanation.summary : null,
+  ].filter((summary): summary is string => Boolean(summary))
+  const qualityRows = Object.entries(processingResult?.quality_report ?? {})
   const [feedback, setFeedback] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
@@ -91,7 +102,7 @@ export default function FinalOutputFeedback() {
           <DataNotice $error role="alert">잘못된 실행 경로입니다. 요청번호와 실행 ID를 확인해주세요.</DataNotice>
         ) : (
           <>
-            <DataStateNotice loading={runLoading} error={runError} subject="최종 산출물" />
+            <DataStateNotice loading={runLoading || resultLoading} error={runError ?? resultError} subject="최종 산출물" />
             {runNotReady && <DataNotice $error role="alert">이 작업은 현재 최종 검토 대기 상태가 아닙니다 ({run?.run_status}).</DataNotice>}
             {submitError && <DataNotice $error role="alert">{submitError}</DataNotice>}
           </>
@@ -107,21 +118,11 @@ export default function FinalOutputFeedback() {
               </CardHeaderRow>
               <DataTable>
                 <THead>
-                  <TCell $strong>지역(구)</TCell>
-                  <TCell $strong>지역(동)</TCell>
-                  <TCell $strong>업종</TCell>
-                  <TCell $strong>연령대</TCell>
-                  <TCell $strong>결제월</TCell>
-                  <TCell $strong>매출지수</TCell>
+                  {outputColumns.map((column) => <TCell key={column} $strong>{column}</TCell>)}
                 </THead>
-                {view.outputRows.map((row, index) => (
+                {outputRows.map((row, index) => (
                   <TRow key={index}>
-                    <TCell>{row.district}</TCell>
-                    <TCell>{row.neighborhood}</TCell>
-                    <TCell>{row.category}</TCell>
-                    <TCell>{row.ageGroup}</TCell>
-                    <TCell>{row.paymentMonth}</TCell>
-                    <TCell $strong>{row.salesIndex}</TCell>
+                    {outputColumns.map((column) => <TCell key={column}>{String(row[column] ?? '-')}</TCell>)}
                   </TRow>
                 ))}
               </DataTable>
@@ -131,13 +132,13 @@ export default function FinalOutputFeedback() {
               <CardTitle>보고서 미리보기</CardTitle>
               <ReportViewer>
                 <ReportHeader>
-                  <ReportTitle>{view.reportTitle}</ReportTitle>
-                  <ReportMeta>{view.reportMeta}</ReportMeta>
+                    <ReportTitle>{reportTitle}</ReportTitle>
+                    <ReportMeta>{processingResult ? `${processingResult.quality_report.output_row_count ?? outputRows.length}건 · 시도 ${processingResult.attempt_no}` : view.reportMeta}</ReportMeta>
                 </ReportHeader>
                 <ReportBody>
                   <SummaryText>
                     <SummaryHeading>주요 트렌드 발견 (Insight Summary)</SummaryHeading>
-                    {view.insightSummary.map((line) => (
+                    {reportSummary.map((line) => (
                       <SummaryLine key={line}>{line}</SummaryLine>
                     ))}
                   </SummaryText>
@@ -162,10 +163,10 @@ export default function FinalOutputFeedback() {
             <Card>
               <CardTitle>산출물 정보</CardTitle>
               <InfoGrid>
-                {view.infoRows.map((row, index) => (
-                  <InfoRowEl key={row.label} $last={index === view.infoRows.length - 1}>
-                    <InfoLabel>{row.label}</InfoLabel>
-                    <InfoValue>{row.value}</InfoValue>
+                {qualityRows.map(([label, value], index) => (
+                  <InfoRowEl key={label} $last={index === qualityRows.length - 1}>
+                    <InfoLabel>{label}</InfoLabel>
+                    <InfoValue>{typeof value === 'object' ? JSON.stringify(value) : String(value)}</InfoValue>
                   </InfoRowEl>
                 ))}
               </InfoGrid>
