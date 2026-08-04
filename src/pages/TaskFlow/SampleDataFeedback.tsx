@@ -7,7 +7,7 @@ import StepProgressBar from '../../shared/StepProgressBar'
 import { infoSrc } from '../../shared/icons'
 import { useAsyncData } from '../../shared/hooks'
 import DataStateNotice from '../../shared/DataStateNotice'
-import { fetchPipelineRun, pipelineResultDownloadUrl, submitReview } from '../../shared/api'
+import { fetchPipelineRun, fetchSamplePreview, pipelineResultDownloadUrl, submitReview } from '../../shared/api'
 import { DataNotice, FlowContentArea, PageWrapper } from '../../shared/layout.styles'
 import { EMPTY_SAMPLE_DATA_FEEDBACK } from './sampleDataFeedbackData'
 import {
@@ -50,6 +50,8 @@ export default function SampleDataFeedback() {
   const invalidRoute = !requestNo || !Number.isInteger(numericRunId)
   const runFetcher = useCallback(() => fetchPipelineRun(numericRunId), [numericRunId])
   const { data: run, loading: runLoading, error: runError } = useAsyncData(runFetcher)
+  const previewFetcher = useCallback(() => fetchSamplePreview(numericRunId), [numericRunId])
+  const { data: preview, loading: previewLoading, error: previewError } = useAsyncData(previewFetcher)
   const runNotReady = !runLoading && run !== null && run.run_status !== 'WAITING_SAMPLE_REVIEW'
   const view = { ...EMPTY_SAMPLE_DATA_FEEDBACK, reqId: run?.request_no ?? EMPTY_SAMPLE_DATA_FEEDBACK.reqId, requestTitle: run?.request_title ?? EMPTY_SAMPLE_DATA_FEEDBACK.requestTitle }
   const [accordionOpen, setAccordionOpen] = useState(true)
@@ -85,7 +87,7 @@ export default function SampleDataFeedback() {
           <DataNotice $error role="alert">잘못된 실행 경로입니다. 요청번호와 실행 ID를 확인해주세요.</DataNotice>
         ) : (
           <>
-            <DataStateNotice loading={runLoading} error={runError} subject="샘플 데이터" />
+            <DataStateNotice loading={runLoading || previewLoading} error={runError ?? previewError} subject="샘플 데이터" />
             {runNotReady && <DataNotice $error role="alert">이 작업은 현재 샘플 검토 대기 상태가 아닙니다 ({run?.run_status}).</DataNotice>}
             {submitError && <DataNotice $error role="alert">{submitError}</DataNotice>}
           </>
@@ -108,21 +110,15 @@ export default function SampleDataFeedback() {
           </PreviewHeader>
           <SampleTable>
             <SampleHeaderRow>
-              <SampleCell $strong>지역(구)</SampleCell>
-              <SampleCell $strong>지역(동)</SampleCell>
-              <SampleCell $strong>업종</SampleCell>
-              <SampleCell $strong>연령대</SampleCell>
-              <SampleCell $strong>결제월</SampleCell>
-              <SampleCell $strong>매출지수</SampleCell>
+              {(preview?.columns ?? []).map((column) => (
+                <SampleCell key={column.name} $strong>{column.name}</SampleCell>
+              ))}
             </SampleHeaderRow>
-            {view.sampleRows.map((row, index) => (
+            {(preview?.rows ?? []).map((row, index) => (
               <SampleRowEl key={index}>
-                <SampleCell>{row.district}</SampleCell>
-                <SampleCell>{row.neighborhood}</SampleCell>
-                <SampleCell>{row.category}</SampleCell>
-                <SampleCell>{row.ageGroup}</SampleCell>
-                <SampleCell>{row.paymentMonth}</SampleCell>
-                <SampleCell $strong>{row.salesIndex}</SampleCell>
+                {(preview?.columns ?? []).map((column) => (
+                  <SampleCell key={column.name}>{String(row[column.name] ?? '-')}</SampleCell>
+                ))}
               </SampleRowEl>
             ))}
           </SampleTable>
@@ -137,10 +133,10 @@ export default function SampleDataFeedback() {
             <>
               <AccordionDivider />
               <AccordionContent>
-                {view.columnInfo.map((info) => (
-                  <InfoBlock key={info.title}>
-                    <InfoTitle>{info.title}</InfoTitle>
-                    <InfoDescription>{info.description}</InfoDescription>
+                {(preview?.columns ?? []).map((column) => (
+                  <InfoBlock key={column.name}>
+                    <InfoTitle>{column.name} ({column.data_type})</InfoTitle>
+                    <InfoDescription>{column.description || '선별된 컬럼'}</InfoDescription>
                   </InfoBlock>
                 ))}
               </AccordionContent>

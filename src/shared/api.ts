@@ -106,6 +106,58 @@ export type PipelineRunResponse = {
   updated_at: string
   stages: PipelineStage[]
   events: PipelineEvent[]
+  requirement_analysis: RequirementAnalysisResponse | null
+}
+
+export type RequirementAnalysisResponse = {
+  usage_purpose: string
+  requested_data_sentence: string
+  categories: Record<string, unknown>
+  delivery_channel: string
+  output_formats: string[]
+}
+
+export type SamplePreviewColumn = {
+  name: string
+  data_type: string
+  is_derived: boolean
+  source_columns: string[]
+  description: string
+}
+
+export type SamplePreviewResponse = {
+  run_id: number
+  stage: string
+  attempt_no: number
+  columns: SamplePreviewColumn[]
+  rows: Array<Record<string, unknown>>
+  metadata: { is_synthetic: boolean; sample_count: number; notice: string | null }
+  selected_tables: Array<Record<string, unknown>>
+  source_columns: Array<Record<string, unknown>>
+  derived_columns: Array<Record<string, unknown>>
+  selection_query: Record<string, unknown>
+  interpretations: Array<Record<string, unknown>>
+  catalog_issues: Array<Record<string, unknown>>
+  catalog_matches: Array<Record<string, unknown>>
+  review_summary: {
+    requires_confirmation: boolean
+    confirmation_terms: string[]
+    has_catalog_issues: boolean
+    catalog_issue_count: number
+  }
+}
+
+export type ProcessingResultResponse = {
+  run_id: number
+  stage: string
+  attempt_no: number
+  api_result: { items: Array<Record<string, unknown>>; meta: Record<string, unknown> }
+  processed_columns: string[]
+  quality_report: Record<string, unknown>
+  processing_explanation: Record<string, unknown>
+  visualization: Record<string, unknown> | null
+  report: Record<string, unknown> | null
+  processing_plan: Record<string, unknown> | null
 }
 
 export type FailureCode =
@@ -447,6 +499,14 @@ export function createDataRequest(payload: CreateDataRequestPayload): Promise<Cr
 
 export function fetchPipelineRun(runId: number): Promise<PipelineRunResponse> {
   return request(`/api/v1/runs/${runId}`)
+}
+
+export function fetchSamplePreview(runId: number): Promise<SamplePreviewResponse> {
+  return request(`/api/v1/runs/${runId}/sample-preview`)
+}
+
+export function fetchProcessingResult(runId: number): Promise<ProcessingResultResponse> {
+  return request(`/api/v1/runs/${runId}/processing-result`)
 }
 
 /** 인증 쿠키 기반 결과 파일 다운로드 주소. */
