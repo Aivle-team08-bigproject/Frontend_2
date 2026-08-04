@@ -35,6 +35,21 @@ export function runStatusTone(code: string | null | undefined): Tone {
   return RUN_STATUS_TONES[code] ?? { label: code, bg: colors.bg, color: colors.textSecondary }
 }
 
+/** Dashboard 목록용 집계 상태 코드 → 표시 라벨. `status_code`는 현재 단계 상태이므로 여기와 혼용하지 않는다. */
+const DASHBOARD_STATUS_TONES: Record<string, Tone> = {
+  waiting_review: { label: '검토 대기', bg: colors.warningBg, color: colors.warning },
+  in_progress: { label: '진행 중', bg: colors.infoBg, color: colors.info },
+  completed: { label: '완료', bg: colors.successBg, color: colors.success },
+  failed: { label: '실패', bg: colors.dangerBg, color: colors.danger },
+  overdue: { label: '기한 초과', bg: colors.dangerBg, color: colors.danger },
+  unknown: { label: '상태 없음', bg: colors.bg, color: colors.textMuted },
+}
+
+export function dashboardStatusTone(code: string | null | undefined): Tone {
+  if (!code) return DASHBOARD_STATUS_TONES.unknown
+  return DASHBOARD_STATUS_TONES[code] ?? { label: code, bg: colors.bg, color: colors.textSecondary }
+}
+
 /** StageRunStatus → 표시 라벨. */
 const STAGE_STATUS_TONES: Record<string, Tone> = {
   PENDING: { label: '대기', bg: colors.bg, color: colors.textMuted },

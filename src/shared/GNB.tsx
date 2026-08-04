@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { EMPTY_CURRENT_USER, fetchCurrentUser } from './currentUser'
 import { logout } from './api'
 import { clearAccessToken } from './auth'
@@ -24,7 +24,7 @@ import {
   Right,
   Search,
   SearchIcon,
-  SearchPlaceholder,
+  SearchInput,
   UserInfo,
   UserName,
   UserRole,
@@ -35,6 +35,8 @@ export default function GNB() {
   // 조회에 실패해도 GNB(로그아웃 메뉴 포함)는 계속 노출한다.
   const user = data ?? EMPTY_CURRENT_USER
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const [search, setSearch] = useState(searchParams.get('search') ?? '')
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const profileMenuRef = useRef<HTMLDivElement>(null)
@@ -54,6 +56,10 @@ export default function GNB() {
     }
   }, [])
 
+  useEffect(() => {
+    setSearch(searchParams.get('search') ?? '')
+  }, [searchParams])
+
   async function handleLogout() {
     if (isLoggingOut) return
     setIsLoggingOut(true)
@@ -63,6 +69,16 @@ export default function GNB() {
       clearAccessToken()
       navigate('/login', { replace: true })
     }
+  }
+
+  function submitSearch() {
+    const query = search.trim()
+    // 현재 목록의 권한 범위·필터는 유지하고 검색어만 갱신한다.
+    const next = new URLSearchParams(searchParams)
+    if (query) next.set('search', query)
+    else next.delete('search')
+    next.set('page', '1')
+    navigate(`/dashboard/tasks?${next.toString()}`)
   }
 
   return (
@@ -78,7 +94,15 @@ export default function GNB() {
       </Left>
       <Search>
         <SearchIcon src={searchIconSrc} alt="" />
-        <SearchPlaceholder>사용자 이름, ID 검색...</SearchPlaceholder>
+        <SearchInput
+          aria-label="작업 검색"
+          placeholder="요청번호, 고객사, 작업명, 담당자 검색"
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') submitSearch()
+          }}
+        />
       </Search>
       <Right>
         <AlarmBadge src={alarmBadgeSrc} alt="알림" />
@@ -99,7 +123,10 @@ export default function GNB() {
           {isProfileMenuOpen && (
             <ProfileMenu role="menu" aria-label="사용자 메뉴">
               <ProfileMenuItem to="/tasks/register" role="menuitem">새 작업 생성</ProfileMenuItem>
-              <ProfileMenuItem to="/dev-dashboard" role="menuitem">관리자 페이지</ProfileMenuItem>
+              {user.permissions.includes('CONTRACT_MANAGE') && (
+                <ProfileMenuItem to="/dashboard/overview" role="menuitem">관리자 Dashboard</ProfileMenuItem>
+              )}
+              <ProfileMenuItem to="/dev-dashboard" role="menuitem">개발자 페이지</ProfileMenuItem>
               <ProfileMenuButton
                 type="button"
                 role="menuitem"

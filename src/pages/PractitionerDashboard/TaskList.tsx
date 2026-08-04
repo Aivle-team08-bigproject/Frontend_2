@@ -2,292 +2,173 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import GNB from '../../shared/GNB'
 import SubNav from '../../shared/SubNav'
-import type { PriorityCode } from '../../shared/api'
+import type { DashboardPageSize, DashboardTaskItem, PriorityCode, StageGroupCode, StatusGroupCode } from '../../shared/api'
+import { fetchCurrentUser } from '../../shared/currentUser'
+import { fetchDashboardTasks } from '../../shared/api'
 import { chevronDownSrc, chevronLeftSrc, chevronRightSrc } from '../../shared/icons'
 import { useAsyncData } from '../../shared/hooks'
 import DataStateNotice from '../../shared/DataStateNotice'
+import { formatDate } from '../../shared/datetime'
+import { dashboardStatusTone } from '../../shared/pipelineLabels'
 import { GhostButton, MainContent, PageWrapper, SectionHeader, SectionTitle } from '../../shared/layout.styles'
-import { colors } from '../../shared/theme'
 import {
-  Cell,
-  MutedCell,
-  NavIcon,
-  PageNav,
-  PageNumber,
-  PageNumbers,
-  Pagination,
-  ReqIdCell,
-  SortBar,
-  SortChip,
-  SortChipIcon,
-  StatusCell,
-  StatusPill,
-  StrongCell as ClientCell,
-  TableBody,
-  TableContainer,
-  TableHeaderRow,
-  TableRowEl,
+  Cell, MutedCell, NavIcon, PageNav, PageNumber, PageNumbers, Pagination, ReqIdCell,
+  SortBar, SortChip, SortChipIcon, StatusCell, StatusPill, StrongCell as ClientCell,
+  TableBody, TableContainer, TableHeaderRow, TableRowEl,
 } from '../../shared/Table.styles'
-import {
-  fetchTaskListRows,
-  PRACTITIONER_NAV_ITEMS,
-  PRIORITY_LABELS,
-  TASK_FILTER_STAGES,
-  taskFilterStageForStatus,
-  taskStatusColors,
-  type TaskFilterStage,
-  type TaskRow,
-} from './data'
-import {
-  ClearFilters,
-  EmptyState,
-  FilterGroup,
-  FilterMenu,
-  FilterOption,
-  FilterSummary,
-  TableSection,
-} from './PractitionerDashboardMain.styles'
+import { PRACTITIONER_NAV_ITEMS, PRIORITY_LABELS } from './data'
+import { ClearFilters, EmptyState, FilterGroup, FilterMenu, FilterOption, FilterSummary, TableSection } from './PractitionerDashboardMain.styles'
 
 const VALID_PRIORITIES = new Set<PriorityCode>(['REQUIREMENT', 'SAMPLE', 'FINAL'])
-const EMPTY_ROWS: TaskRow[] = []
+const STAGES: Array<{ value: StageGroupCode; label: string }> = [
+  { value: 'REQUIREMENT_ANALYSIS', label: '요구사항 분석' },
+  { value: 'SAMPLE_DATA', label: '샘플 데이터' },
+  { value: 'FINAL_OUTPUT', label: '최종 산출물' },
+  { value: 'COMPLETED', label: '완료' },
+]
+const STATUSES: Array<{ value: StatusGroupCode; label: string }> = [
+  { value: 'waiting_review', label: '검토 대기' },
+  { value: 'in_progress', label: '진행 중' },
+  { value: 'completed', label: '완료' },
+  { value: 'failed', label: '실패' },
+  { value: 'overdue', label: '기한 초과' },
+]
 
-const taskDetailRoute = {
-  '요구사항 분석': '/tasks/review',
-  '요구사항 분석 진행': '/tasks/review',
-  '요구사항 완료 피드백': '/tasks/review',
-  '데이터 선별 진행': '/tasks/selection',
-  '샘플데이터 및 피드백': '/tasks/sample-feedback',
-  '데이터 가공 진행': '/tasks/processing',
-  '최종 산출물 및 피드백': '/tasks/final-feedback',
-  작업완료: '/tasks/complete',
-} as const
+function priorityFromParams(params: URLSearchParams): PriorityCode | undefined {
+  const priority = params.get('priority')
+  if (VALID_PRIORITIES.has(priority as PriorityCode)) return priority as PriorityCode
+  const legacy = params.get('filter')
+  return legacy === 'requirement' ? 'REQUIREMENT' : legacy === 'sample' ? 'SAMPLE' : legacy === 'final' ? 'FINAL' : undefined
+}
 
-/**
- * /dashboard의 우선순위 StatCard·경고카드는 ?priority=REQUIREMENT|SAMPLE|FINAL 로 여기 도착한다
- * (백엔드 priority_cards[].detail_route가 이미 이 규격). 여기서 /api/v1/dashboard/tasks를
- * 직접 호출해 서버사이드로 필터링한다 — /dashboard가 쓰는 priority_actions/approval_tasks는
- * 백엔드에서 상위 5건으로 캡되어 있어(action_items[:5]) 우선순위 카드 count와 실제 표시 가능한
- * 행 수가 안 맞았기 때문.
- */
+function monthRange(month: string | null): Pick<Parameters<typeof fetchDashboardTasks>[0], 'created_from' | 'created_to'> {
+  if (!month || !/^\d{4}-\d{2}$/.test(month)) return {}
+  const [year, value] = month.split('-').map(Number)
+  const lastDay = new Date(year, value, 0).getDate()
+  return { created_from: `${month}-01`, created_to: `${month}-${String(lastDay).padStart(2, '0')}` }
+}
+
 export default function TaskList() {
-  const [searchParams] = useSearchParams()
-  const priorityParam = searchParams.get('priority')
-  const priority = VALID_PRIORITIES.has(priorityParam as PriorityCode) ? (priorityParam as PriorityCode) : undefined
-
-  const fetcher = useCallback(() => fetchTaskListRows(priority), [priority])
-  const { data, loading, error } = useAsyncData(fetcher)
-  const rows = data ?? EMPTY_ROWS
-
-  const [page, setPage] = useState(1)
-  const [pageSize, setPageSize] = useState<30 | 50>(30)
-  const [statusFilter, setStatusFilter] = useState<TaskFilterStage | 'all'>('all')
-  const [assigneeFilter, setAssigneeFilter] = useState('all')
-  const [monthFilter, setMonthFilter] = useState('all')
-  const [openFilter, setOpenFilter] = useState<'status' | 'assignee' | 'month' | null>(null)
-  const filterBarRef = useRef<HTMLDivElement>(null)
+  const [params, setParams] = useSearchParams()
   const navigate = useNavigate()
+  const filterBarRef = useRef<HTMLDivElement>(null)
+  const [openFilter, setOpenFilter] = useState<'stage' | 'status' | 'assignee' | 'month' | null>(null)
+  const priority = priorityFromParams(params)
+  const scope = params.get('scope') === 'all' ? 'all' : 'mine'
+  const stage = params.get('stage') as StageGroupCode | null
+  const status = params.get('status') as StatusGroupCode | null
+  const assignee = params.get('assignee')
+  const month = params.get('month')
+  const page = Math.max(1, Number(params.get('page') ?? 1) || 1)
+  const pageSize = ([30, 50, 100].includes(Number(params.get('page_size'))) ? Number(params.get('page_size')) : 30) as DashboardPageSize
 
+  const fetcher = useCallback(
+    () => fetchDashboardTasks({
+      scope, search: params.get('search') || undefined, priority, stage: stage || undefined,
+      status: status || undefined, assignee: assignee || undefined, ...monthRange(month), page, page_size: pageSize,
+    }),
+    [assignee, month, page, pageSize, params, priority, scope, stage, status],
+  )
+  const { data, loading, error } = useAsyncData(fetcher)
+  const { data: user } = useAsyncData(fetchCurrentUser)
+  const items = useMemo(() => data?.items ?? [], [data])
+  const canViewAll = user?.permissions.includes('CONTRACT_MANAGE') ?? false
   const assigneeOptions = useMemo(
-    () => [...new Set(rows.map((row) => row.assignee))].sort((a, b) => a.localeCompare(b, 'ko')),
-    [rows],
+    () => [...new Map(items.filter((item) => item.assignee_code).map((item) => [item.assignee_code!, item.assignee_name])).entries()],
+    [items],
   )
-  const monthOptions = useMemo(
-    () => [...new Set(rows.map((row) => row.createdAt.slice(0, 7)))].sort().reverse(),
-    [rows],
-  )
-  const filteredRows = useMemo(
-    () =>
-      rows.filter((row) => {
-        if (statusFilter !== 'all' && taskFilterStageForStatus[row.status] !== statusFilter) return false
-        if (assigneeFilter !== 'all' && row.assignee !== assigneeFilter) return false
-        if (monthFilter !== 'all' && row.createdAt.slice(0, 7) !== monthFilter) return false
-        return true
-      }),
-    [assigneeFilter, monthFilter, statusFilter, rows],
-  )
-
-  const totalPages = Math.max(1, Math.ceil(filteredRows.length / pageSize))
-  const pagedRows = useMemo(() => {
-    const start = (page - 1) * pageSize
-    return filteredRows.slice(start, start + pageSize)
-  }, [filteredRows, page, pageSize])
 
   useEffect(() => {
     function closeOnOutsideClick(event: MouseEvent) {
       if (!filterBarRef.current?.contains(event.target as Node)) setOpenFilter(null)
     }
-    function closeOnEscape(event: KeyboardEvent) {
-      if (event.key === 'Escape') setOpenFilter(null)
-    }
     document.addEventListener('mousedown', closeOnOutsideClick)
-    document.addEventListener('keydown', closeOnEscape)
-    return () => {
-      document.removeEventListener('mousedown', closeOnOutsideClick)
-      document.removeEventListener('keydown', closeOnEscape)
-    }
+    return () => document.removeEventListener('mousedown', closeOnOutsideClick)
   }, [])
 
-  const hasActiveFilter = statusFilter !== 'all' || assigneeFilter !== 'all' || monthFilter !== 'all'
-
-  function selectFilter(update: () => void) {
-    update()
-    setPage(1)
+  function updateQuery(values: Record<string, string | undefined>) {
+    const next = new URLSearchParams(params)
+    Object.entries(values).forEach(([key, value]) => {
+      if (value) next.set(key, value)
+      else next.delete(key)
+    })
+    if (!('page' in values)) next.set('page', '1')
+    setParams(next)
     setOpenFilter(null)
   }
 
   function clearFilters() {
-    setStatusFilter('all')
-    setAssigneeFilter('all')
-    setMonthFilter('all')
-    setPage(1)
+    const next = new URLSearchParams()
+    if (scope === 'all') next.set('scope', 'all')
+    next.set('page', '1')
+    next.set('page_size', String(pageSize))
+    setParams(next)
     setOpenFilter(null)
   }
+
+  const hasActiveFilter = Boolean(params.get('search') || priority || stage || status || assignee || month)
+  const pageCount = Math.max(1, Math.ceil((data?.total_count ?? 0) / pageSize))
 
   return (
     <PageWrapper>
       <GNB />
       <SubNav activeTo="/dashboard/tasks" items={PRACTITIONER_NAV_ITEMS} />
       <MainContent>
-        <DataStateNotice loading={loading} error={error} empty={!loading && !error && rows.length === 0} subject="작업 리스트 데이터" />
+        <DataStateNotice loading={loading} error={error} empty={!loading && !error && data?.total_count === 0} subject="작업 리스트 데이터" />
         <TableSection>
           <SectionHeader>
-            <SectionTitle>
-              전체 작업 관리 리스트{priority ? ` · ${PRIORITY_LABELS[priority]} 우선순위만 표시 중` : ''}
-            </SectionTitle>
+            <SectionTitle>작업 리스트{priority ? ` · ${PRIORITY_LABELS[priority]} 우선순위` : ''}</SectionTitle>
             <SortBar ref={filterBarRef}>
-              <FilterGroup>
-                <SortChip type="button" aria-haspopup="menu" aria-expanded={openFilter === 'status'} onClick={() => setOpenFilter((current) => current === 'status' ? null : 'status')}>
-                  {statusFilter === 'all' ? '단계별 상태' : `단계: ${statusFilter}`}
-                  <SortChipIcon src={chevronDownSrc} alt="" />
-                </SortChip>
-                {openFilter === 'status' && (
-                  <FilterMenu role="menu" aria-label="단계별 상태 필터">
-                    {(['all', ...TASK_FILTER_STAGES] as const).map((status) => (
-                      <FilterOption key={status} type="button" role="menuitemradio" aria-checked={statusFilter === status} $selected={statusFilter === status} onClick={() => selectFilter(() => setStatusFilter(status))}>
-                        {status === 'all' ? '전체 상태' : status}
-                      </FilterOption>
-                    ))}
-                  </FilterMenu>
-                )}
-              </FilterGroup>
-              <FilterGroup>
-                <SortChip type="button" aria-haspopup="menu" aria-expanded={openFilter === 'assignee'} onClick={() => setOpenFilter((current) => current === 'assignee' ? null : 'assignee')}>
-                  {assigneeFilter === 'all' ? '담당자' : assigneeFilter}
-                  <SortChipIcon src={chevronDownSrc} alt="" />
-                </SortChip>
-                {openFilter === 'assignee' && (
-                  <FilterMenu role="menu" aria-label="담당자 필터">
-                    <FilterOption type="button" role="menuitemradio" aria-checked={assigneeFilter === 'all'} $selected={assigneeFilter === 'all'} onClick={() => selectFilter(() => setAssigneeFilter('all'))}>전체 담당자</FilterOption>
-                    {assigneeOptions.map((assignee) => (
-                      <FilterOption key={assignee} type="button" role="menuitemradio" aria-checked={assigneeFilter === assignee} $selected={assigneeFilter === assignee} onClick={() => selectFilter(() => setAssigneeFilter(assignee))}>{assignee}</FilterOption>
-                    ))}
-                  </FilterMenu>
-                )}
-              </FilterGroup>
-              <FilterGroup>
-                <SortChip type="button" aria-haspopup="menu" aria-expanded={openFilter === 'month'} onClick={() => setOpenFilter((current) => current === 'month' ? null : 'month')}>
-                  {monthFilter === 'all' ? '날짜' : monthFilter.replace('.', '년 ') + '월'}
-                  <SortChipIcon src={chevronDownSrc} alt="" />
-                </SortChip>
-                {openFilter === 'month' && (
-                  <FilterMenu role="menu" aria-label="등록 월 필터">
-                    <FilterOption type="button" role="menuitemradio" aria-checked={monthFilter === 'all'} $selected={monthFilter === 'all'} onClick={() => selectFilter(() => setMonthFilter('all'))}>전체 날짜</FilterOption>
-                    {monthOptions.map((month) => (
-                      <FilterOption key={month} type="button" role="menuitemradio" aria-checked={monthFilter === month} $selected={monthFilter === month} onClick={() => selectFilter(() => setMonthFilter(month))}>{month.replace('.', '년 ')}월</FilterOption>
-                    ))}
-                  </FilterMenu>
-                )}
-              </FilterGroup>
-              <FilterSummary>{rows.length}건 중 {filteredRows.length}건</FilterSummary>
+              {canViewAll && (
+                <GhostButton type="button" onClick={() => updateQuery({ scope: scope === 'all' ? undefined : 'all' })}>
+                  {scope === 'all' ? '전체 작업 조회 중' : '내 작업만 보기'}
+                </GhostButton>
+              )}
+              {(['stage', 'status', 'assignee', 'month'] as const).map((name) => {
+                const label = name === 'stage' ? STAGES.find((option) => option.value === stage)?.label ?? '단계'
+                  : name === 'status' ? STATUSES.find((option) => option.value === status)?.label ?? '상태'
+                    : name === 'assignee' ? assigneeOptions.find(([code]) => code === assignee)?.[1] ?? '담당자'
+                      : month ?? '등록 월'
+                return (
+                  <FilterGroup key={name}>
+                    <SortChip type="button" aria-haspopup="menu" aria-expanded={openFilter === name} onClick={() => setOpenFilter((current) => current === name ? null : name)}>
+                      {label}<SortChipIcon src={chevronDownSrc} alt="" />
+                    </SortChip>
+                    {openFilter === name && (
+                      <FilterMenu role="menu" aria-label={`${label} 필터`}>
+                        <FilterOption type="button" role="menuitemradio" aria-checked={false} $selected={false} onClick={() => updateQuery({ [name]: undefined })}>전체</FilterOption>
+                        {name === 'stage' && STAGES.map((option) => <FilterOption key={option.value} type="button" role="menuitemradio" aria-checked={stage === option.value} $selected={stage === option.value} onClick={() => updateQuery({ stage: option.value })}>{option.label}</FilterOption>)}
+                        {name === 'status' && STATUSES.map((option) => <FilterOption key={option.value} type="button" role="menuitemradio" aria-checked={status === option.value} $selected={status === option.value} onClick={() => updateQuery({ status: option.value })}>{option.label}</FilterOption>)}
+                        {name === 'assignee' && assigneeOptions.map(([code, label]) => <FilterOption key={code} type="button" role="menuitemradio" aria-checked={assignee === code} $selected={assignee === code} onClick={() => updateQuery({ assignee: code })}>{label}</FilterOption>)}
+                        {name === 'month' && <input type="month" aria-label="등록 월" value={month ?? ''} onChange={(event) => updateQuery({ month: event.target.value || undefined })} />}
+                      </FilterMenu>
+                    )}
+                  </FilterGroup>
+                )
+              })}
+              <FilterSummary>{data?.total_count ?? 0}건</FilterSummary>
               {hasActiveFilter && <ClearFilters type="button" onClick={clearFilters}>필터 초기화</ClearFilters>}
-              <GhostButton
-                type="button"
-                onClick={() => {
-                  setPageSize(30)
-                  setPage(1)
-                }}
-                style={{ color: pageSize === 30 ? colors.primary : colors.textMuted }}
-              >
-                30개
-              </GhostButton>
-              <GhostButton
-                type="button"
-                onClick={() => {
-                  setPageSize(50)
-                  setPage(1)
-                }}
-                style={{ color: pageSize === 50 ? colors.primary : colors.textMuted }}
-              >
-                50개
-              </GhostButton>
+              {([30, 50, 100] as DashboardPageSize[]).map((value) => <GhostButton key={value} type="button" onClick={() => updateQuery({ page_size: String(value), page: '1' })} style={{ opacity: pageSize === value ? 1 : 0.55 }}>{value}개</GhostButton>)}
             </SortBar>
           </SectionHeader>
-
           <TableContainer>
             <TableHeaderRow>
-              <Cell $width={140}>요청번호</Cell>
-              <Cell $width={180}>고객사명</Cell>
-              <Cell $width={160}>데이터 유형</Cell>
-              <Cell $flex>데이터 상세</Cell>
-              <Cell $width={120}>담당자</Cell>
-              <Cell $width={110}>등록일</Cell>
-              <Cell $width={110}>작업수정일</Cell>
-              <Cell $width={120}>상태</Cell>
+              <Cell $width={160}>요청번호</Cell><Cell $width={180}>고객사명</Cell><Cell $flex>작업명</Cell><Cell $width={120}>담당자</Cell><Cell $width={100}>진행률</Cell><Cell $width={110}>등록일</Cell><Cell $width={140}>상태</Cell>
             </TableHeaderRow>
             <TableBody>
-              {pagedRows.length === 0 && <EmptyState>선택한 조건에 해당하는 작업이 없습니다.</EmptyState>}
-              {pagedRows.map((row) => (
-                <TableRowEl
-                  key={row.reqId}
-                  role="link"
-                  tabIndex={0}
-                  onClick={() => navigate(`${taskDetailRoute[row.status]}?requestNo=${encodeURIComponent(row.reqId)}`)}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter' || event.key === ' ') {
-                      event.preventDefault()
-                      navigate(`${taskDetailRoute[row.status]}?requestNo=${encodeURIComponent(row.reqId)}`)
-                    }
-                  }}
-                  style={{ cursor: 'pointer' }}
-                  aria-label={`${row.reqId} 작업 상세 보기`}
-                >
-                  <ReqIdCell $width={140}>{row.reqId}</ReqIdCell>
-                  <ClientCell $width={180}>{row.client}</ClientCell>
-                  <Cell $width={160} style={{ color: '#495057' }}>
-                    {row.dataType}
-                  </Cell>
-                  <Cell $flex style={{ color: '#495057' }}>
-                    {row.detail}
-                  </Cell>
-                  <Cell $width={120} style={{ color: '#495057' }}>
-                    {row.assignee}
-                  </Cell>
-                  <MutedCell $width={110}>{row.createdAt}</MutedCell>
-                  <MutedCell $width={110}>{row.updatedAt}</MutedCell>
-                  <StatusCell $width={120}>
-                    <StatusPill $bg={taskStatusColors[row.status].bg} $color={taskStatusColors[row.status].color}>
-                      {row.status}
-                    </StatusPill>
-                  </StatusCell>
+              {items.length === 0 && <EmptyState>선택한 조건에 해당하는 작업이 없습니다.</EmptyState>}
+              {items.map((item: DashboardTaskItem) => {
+                const tone = dashboardStatusTone(item.status_group_code)
+                return <TableRowEl key={item.request_no} role="link" tabIndex={0} style={{ cursor: 'pointer' }} aria-label={`${item.request_no} 작업 상세 보기`} onClick={() => navigate(item.detail_route)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); navigate(item.detail_route) } }}>
+                  <ReqIdCell $width={160}>{item.request_no}</ReqIdCell><ClientCell $width={180}>{item.client}</ClientCell><Cell $flex>{item.title}</Cell><Cell $width={120}>{item.assignee_name}</Cell><Cell $width={100}>{item.progress_percent}%</Cell><MutedCell $width={110}>{formatDate(item.created_at)}</MutedCell><StatusCell $width={140}><StatusPill $bg={tone.bg} $color={tone.color}>{tone.label}</StatusPill></StatusCell>
                 </TableRowEl>
-              ))}
+              })}
             </TableBody>
           </TableContainer>
-
           <Pagination>
-            <PageNav type="button" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}>
-              <NavIcon src={chevronLeftSrc} alt="이전" />
-            </PageNav>
-            <PageNumbers>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
-                <PageNumber key={n} type="button" $active={n === page} onClick={() => setPage(n)}>
-                  {n}
-                </PageNumber>
-              ))}
-            </PageNumbers>
-            <PageNav type="button" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages}>
-              <NavIcon src={chevronRightSrc} alt="다음" />
-            </PageNav>
+            <PageNav type="button" disabled={page === 1} onClick={() => updateQuery({ page: String(page - 1) })}><NavIcon src={chevronLeftSrc} alt="이전" /></PageNav>
+            <PageNumbers>{Array.from({ length: pageCount }, (_, index) => index + 1).slice(0, 10).map((number) => <PageNumber key={number} type="button" $active={number === page} onClick={() => updateQuery({ page: String(number) })}>{number}</PageNumber>)}</PageNumbers>
+            <PageNav type="button" disabled={page === pageCount} onClick={() => updateQuery({ page: String(page + 1) })}><NavIcon src={chevronRightSrc} alt="다음" /></PageNav>
           </Pagination>
         </TableSection>
       </MainContent>

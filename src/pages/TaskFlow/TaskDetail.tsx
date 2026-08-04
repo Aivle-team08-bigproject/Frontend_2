@@ -6,7 +6,7 @@ import SectionCard from '../../shared/SectionCard'
 import { useAsyncData } from '../../shared/hooks'
 import DataStateNotice from '../../shared/DataStateNotice'
 import { formatDateTime } from '../../shared/datetime'
-import { fetchTaskDetail } from '../../shared/api'
+import { fetchTaskDetail, pipelineResultDownloadUrl } from '../../shared/api'
 import { runStatusTone, stageLabel, stageScreenPath, stageStatusTone } from '../../shared/pipelineLabels'
 import { colors } from '../../shared/theme'
 import { DataNotice, FlowContentArea, PageWrapper } from '../../shared/layout.styles'
@@ -140,7 +140,7 @@ export default function TaskDetail() {
                   </PrimaryAction>
                 )}
                 {canDownload && (
-                  <PrimaryAction type="button" onClick={goToStageScreen}>
+                  <PrimaryAction type="button" onClick={() => window.open(pipelineResultDownloadUrl(data.run_id), '_blank')}>
                     {ACTION_LABELS.DOWNLOAD}
                   </PrimaryAction>
                 )}
