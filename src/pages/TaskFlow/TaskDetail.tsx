@@ -140,7 +140,7 @@ export default function TaskDetail() {
                   </PrimaryAction>
                 )}
                 {canDownload && (
-                  <PrimaryAction type="button" onClick={() => window.open(pipelineResultDownloadUrl(data.run_id), '_blank')}>
+                  <PrimaryAction type="button" onClick={() => window.open(pipelineResultDownloadUrl(data.run_id), '_blank', 'noopener')}>
                     {ACTION_LABELS.DOWNLOAD}
                   </PrimaryAction>
                 )}

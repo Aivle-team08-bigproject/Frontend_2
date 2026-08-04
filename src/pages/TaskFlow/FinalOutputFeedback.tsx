@@ -70,9 +70,12 @@ export default function FinalOutputFeedback() {
     setSubmitError(null)
     try {
       const result = await submitReview(numericRunId, { approved, feedback: approved ? null : feedback.trim() })
-      navigate(result.run_status === 'COMPLETED'
-        ? `/tasks/${requestNo}/runs/${runId}/complete`
-        : `/tasks/${requestNo}/runs/${runId}/processing`)
+      const target = result.next_stage ?? result.rollback_to_stage
+      const route = target === 'REQUIREMENT_ANALYSIS' ? 'analyzing'
+        : target === 'DATA_SELECTION' ? 'selection'
+          : target === 'DATA_PROCESSING' ? 'processing'
+            : 'detail'
+      navigate(result.run_status === 'COMPLETED' ? `/tasks/${requestNo}/runs/${runId}/complete` : `/tasks/${requestNo}/runs/${runId}/${route}`)
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : '검토 제출에 실패했습니다.')
       setSubmitting(false)
@@ -100,7 +103,7 @@ export default function FinalOutputFeedback() {
             <Card>
               <CardHeaderRow>
                 <CardTitle>산출물 데이터 (Top 10)</CardTitle>
-                <DownloadLink type="button" onClick={() => window.open(pipelineResultDownloadUrl(numericRunId), '_blank')} disabled={invalidRoute}>CSV 다운로드</DownloadLink>
+                <DownloadLink type="button" onClick={() => window.open(pipelineResultDownloadUrl(numericRunId), '_blank', 'noopener')} disabled={invalidRoute}>CSV 다운로드</DownloadLink>
               </CardHeaderRow>
               <DataTable>
                 <THead>
