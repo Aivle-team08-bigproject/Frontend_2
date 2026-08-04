@@ -70,6 +70,17 @@ export default function FinalOutputFeedback() {
     typeof processingResult?.processing_explanation.summary === 'string' ? processingResult.processing_explanation.summary : null,
   ].filter((summary): summary is string => Boolean(summary))
   const qualityRows = Object.entries(processingResult?.quality_report ?? {})
+  const chartSeries = Array.isArray(processingResult?.visualization?.series)
+    ? processingResult.visualization.series.filter(
+      (item): item is { label: string; value: number } => (
+        typeof item === 'object'
+        && item !== null
+        && typeof item.label === 'string'
+        && typeof item.value === 'number'
+      ),
+    )
+    : []
+  const maxChartValue = Math.max(...chartSeries.map((item) => item.value), 1)
   const [feedback, setFeedback] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
@@ -143,9 +154,9 @@ export default function FinalOutputFeedback() {
                     ))}
                   </SummaryText>
                   <MiniChart>
-                    {view.chartBars.map((bar) => (
+                    {chartSeries.map((bar) => (
                       <BarColumn key={bar.label}>
-                        <Bar $height={bar.height} $highlight={bar.highlight} />
+                        <Bar $height={(bar.value / maxChartValue) * 100} $highlight={bar.value === maxChartValue} />
                         <BarLabel>{bar.label}</BarLabel>
                       </BarColumn>
                     ))}
