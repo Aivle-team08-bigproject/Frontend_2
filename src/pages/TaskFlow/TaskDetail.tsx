@@ -7,7 +7,7 @@ import { useAsyncData } from '../../shared/hooks'
 import DataStateNotice from '../../shared/DataStateNotice'
 import { formatDateTime } from '../../shared/datetime'
 import { fetchTaskDetail, pipelineResultDownloadUrl } from '../../shared/api'
-import { runStatusTone, stageLabel, stageScreenPath, stageStatusTone } from '../../shared/pipelineLabels'
+import { runStatusTone, stageContentPath, stageLabel, stageScreenPath, stageStatusTone } from '../../shared/pipelineLabels'
 import { colors } from '../../shared/theme'
 import { DataNotice, FlowContentArea, PageWrapper } from '../../shared/layout.styles'
 import {
@@ -198,7 +198,11 @@ export default function TaskDetail() {
                       {requestNo && (
                         <StageLink
                           type="button"
-                          onClick={() => navigate(stageScreenPath(requestNo, data.run_id, data.run_status, stage.stage_code))}
+                          onClick={() => navigate(
+                            stage.status === 'COMPLETED'
+                              ? stageContentPath(requestNo, data.run_id, stage.stage_code)
+                              : stageScreenPath(requestNo, data.run_id, data.run_status, stage.stage_code),
+                          )}
                         >
                           단계 화면 열기 &gt;
                         </StageLink>

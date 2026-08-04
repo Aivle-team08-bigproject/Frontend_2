@@ -199,7 +199,7 @@ export default function FinalOutputFeedback() {
         </SplitGrid>
 
         <BottomActionsRow>
-          <BackLink type="button">
+          <BackLink type="button" onClick={() => navigate(`/tasks/${requestNo}/runs/${runId}/sample-feedback`)}>
             <ArrowIcon src={arrowLeftSrc} alt="" />
             이전 단계
           </BackLink>
