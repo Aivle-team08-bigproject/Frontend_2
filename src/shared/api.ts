@@ -179,6 +179,7 @@ export type ReviewDecision = 'APPROVED' | 'CHANGES_REQUESTED'
 /** POST /api/v1/runs/{run_id}/review 요청 바디. */
 export type StageReviewPayload = {
   approved: boolean
+  retry?: boolean
   feedback?: string | null
   failure_code?: FailureCode | null
 }
@@ -381,7 +382,7 @@ export type TaskHistoryEntry = {
   created_at: string
 }
 
-export type TaskDetailAction = 'APPROVE' | 'REQUEST_CHANGES' | 'DOWNLOAD'
+export type TaskDetailAction = 'APPROVE' | 'REQUEST_CHANGES' | 'RETRY' | 'DOWNLOAD'
 
 /** `GET /api/v1/tasks/{request_no}/runs/{run_id}/detail` */
 export type TaskDetailResponse = {

@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useCallback, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import GNB from '../../shared/GNB'
 import FlowPageHeader from '../../shared/FlowPageHeader'
@@ -6,7 +6,7 @@ import SectionCard from '../../shared/SectionCard'
 import { useAsyncData } from '../../shared/hooks'
 import DataStateNotice from '../../shared/DataStateNotice'
 import { formatDateTime } from '../../shared/datetime'
-import { fetchTaskDetail, pipelineResultDownloadUrl } from '../../shared/api'
+import { fetchTaskDetail, pipelineResultDownloadUrl, submitReview } from '../../shared/api'
 import { runStatusTone, stageContentPath, stageLabel, stageScreenPath, stageStatusTone } from '../../shared/pipelineLabels'
 import { colors } from '../../shared/theme'
 import { DataNotice, FlowContentArea, PageWrapper } from '../../shared/layout.styles'
@@ -46,6 +46,7 @@ import {
 const ACTION_LABELS: Record<string, string> = {
   APPROVE: '검토하고 승인하기',
   REQUEST_CHANGES: '재처리 요청하기',
+  RETRY: '실패 작업 재시도',
   DOWNLOAD: '산출물 다운로드',
 }
 
@@ -62,16 +63,31 @@ export default function TaskDetail() {
 
   const fetcher = useCallback(() => fetchTaskDetail(requestNo!, numericRunId), [requestNo, numericRunId])
   const { data, loading, error } = useAsyncData(fetcher, { intervalMs: 10_000 })
+  const [retrying, setRetrying] = useState(false)
 
   const tone = runStatusTone(data?.run_status)
   const canReview = (data?.available_actions ?? []).some(
     (action) => action === 'APPROVE' || action === 'REQUEST_CHANGES',
   )
+  const canRetry = (data?.available_actions ?? []).includes('RETRY')
   const canDownload = (data?.available_actions ?? []).includes('DOWNLOAD')
 
   function goToStageScreen() {
     if (!data || !requestNo) return
     navigate(stageScreenPath(requestNo, data.run_id, data.run_status, data.current_stage))
+  }
+
+  async function retryFailedRun() {
+    if (!data || !requestNo || retrying) return
+    setRetrying(true)
+    try {
+      const response = await submitReview(data.run_id, { approved: false, retry: true })
+      navigate(stageScreenPath(requestNo, data.run_id, response.run_status, response.next_stage))
+    } catch (retryError) {
+      window.alert(retryError instanceof Error ? retryError.message : '실패 작업 재시도에 실패했습니다.')
+    } finally {
+      setRetrying(false)
+    }
   }
 
   return (
@@ -137,6 +153,11 @@ export default function TaskDetail() {
                 {canReview && (
                   <PrimaryAction type="button" onClick={goToStageScreen}>
                     {ACTION_LABELS.APPROVE}
+                  </PrimaryAction>
+                )}
+                {canRetry && (
+                  <PrimaryAction type="button" onClick={retryFailedRun} disabled={retrying}>
+                    {retrying ? '재시도 중...' : ACTION_LABELS.RETRY}
                   </PrimaryAction>
                 )}
                 {canDownload && (
