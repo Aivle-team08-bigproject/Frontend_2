@@ -1,6 +1,14 @@
-import { fetchDashboard, type DashboardResponse, type DashboardTaskItem, type StageGroupCode } from '../../shared/api'
+import type { SubNavItem } from '../../shared/SubNav'
+import { fetchDashboard, fetchDashboardTasks, type DashboardResponse, type DashboardTaskItem, type PriorityCode, type StageGroupCode } from '../../shared/api'
 import { formatDate } from '../../shared/datetime'
 import { colors } from '../../shared/theme'
+
+/** 전체 작업/작업 리스트/내 작업 현황 세 페이지가 공유하는 SubNav 탭. 페이지마다 따로 하드코딩하면 하나 바꿀 때 나머지가 안 맞음. */
+export const PRACTITIONER_NAV_ITEMS: SubNavItem[] = [
+  { label: '전체 작업', to: '/dashboard' },
+  { label: '작업 리스트', to: '/dashboard/tasks' },
+  { label: '내 작업 현황', to: '/dashboard/my-tasks' },
+]
 
 export type StatCard = {
   label: string
@@ -8,6 +16,8 @@ export type StatCard = {
   unit: string
   caption: string
   highlight?: boolean
+  /** 클릭 시 이동할 경로. 없으면 클릭 불가. */
+  linkTo?: string
 }
 
 export type WarningCard = {
@@ -36,6 +46,16 @@ export type SupplementItem = {
   tag: string
   tagBg: string
   tagColor: string
+}
+
+export type DeadlineItem = {
+  requestNo: string
+  title: string
+  subtitle: string
+  tag: string
+  tagBg: string
+  tagColor: string
+  route: string
 }
 
 export const TASK_STATUSES = [
@@ -93,8 +113,7 @@ export type PractitionerDashboardData = {
   warningCards: WarningCard[]
   preferredItems: RankedItem[]
   supplementItems: SupplementItem[]
-  taskRows: TaskRow[]
-  pageSize: number
+  deadlineItems: DeadlineItem[]
 }
 
 const legacyStatusForStageGroup: Record<StageGroupCode, TaskStatus> = {
@@ -110,6 +129,32 @@ const priorityColors = {
   SAMPLE: { bg: colors.warningBgAlt, color: colors.warningAlt },
   FINAL: { bg: colors.warningBg, color: colors.warning },
 } as const
+
+export const PRIORITY_LABELS: Record<PriorityCode, string> = {
+  REQUIREMENT: '요구사항 분석',
+  SAMPLE: '샘플 데이터',
+  FINAL: '최종 산출물',
+}
+
+function deadlineUrgency(dueAt: string): { label: string; urgent: boolean } {
+  const remainingHours = Math.ceil((new Date(dueAt).getTime() - Date.now()) / (60 * 60 * 1000))
+  if (remainingHours <= 0) return { label: '마감 지남', urgent: true }
+  if (remainingHours <= 24) return { label: `D-day · ${remainingHours}시간 남음`, urgent: true }
+  return { label: `D-${Math.ceil(remainingHours / 24)}`, urgent: false }
+}
+
+function deadlineItemFromTask(item: DashboardResponse['deadline_tasks'][number]): DeadlineItem {
+  const urgency = deadlineUrgency(item.due_at)
+  return {
+    requestNo: item.request_no,
+    title: item.title,
+    subtitle: `${item.request_no} · ${item.client} · 담당 ${item.assignee_name}`,
+    tag: urgency.label,
+    tagBg: urgency.urgent ? colors.dangerBg : colors.warningBg,
+    tagColor: urgency.urgent ? colors.danger : colors.warning,
+    route: `${item.detail_route}${item.detail_route.includes('?') ? '&' : '?'}requestNo=${encodeURIComponent(item.request_no)}`,
+  }
+}
 
 function taskRowFromDashboardItem(item: DashboardTaskItem): TaskRow {
   return {
@@ -155,8 +200,7 @@ export const EMPTY_PRACTITIONER_DASHBOARD: PractitionerDashboardData = {
   warningCards: [],
   preferredItems: [],
   supplementItems: [],
-  taskRows: [],
-  pageSize: 30,
+  deadlineItems: [],
 }
 
 export async function fetchPractitionerDashboardData(): Promise<PractitionerDashboardData> {
@@ -170,12 +214,14 @@ export async function fetchPractitionerDashboardData(): Promise<PractitionerDash
         unit: '건',
         caption: `우선순위 ${index + 1}`,
         highlight: card.count > 0,
+        linkTo: card.detail_route,
       })),
       {
         label: '진행 중인 전체 작업',
         value: data.active_task_count,
         unit: '건',
         caption: '전체 작업 현황',
+        linkTo: '/dashboard/tasks',
       },
     ],
     alertBannerCount: actions.length,
@@ -198,7 +244,25 @@ export async function fetchPractitionerDashboardData(): Promise<PractitionerDash
           tagColor: colors.textSecondary,
         }]
       : [],
-    taskRows: actions.map(taskRowFromDashboardItem),
-    pageSize: 30,
+    deadlineItems: data.deadline_tasks.slice(0, 5).map(deadlineItemFromTask),
   }
+}
+
+/**
+ * /dashboard/tasks 전용 데이터 소스. fetchPractitionerDashboardData()의 priority_actions/approval_tasks는
+ * 백엔드에서 각각 상위 5건으로 캡되어 있어(service.py의 action_items[:5]) 우선순위 카드 count와
+ * 실제 표시 가능한 행 수가 안 맞는 문제가 있었다. /api/v1/dashboard/tasks는 진짜 페이지네이션을
+ * 지원하므로 여기서 그걸 직접 쓴다.
+ */
+export async function fetchTaskListRows(priority?: PriorityCode): Promise<TaskRow[]> {
+  const response = await fetchDashboardTasks({ priority, page_size: 100 })
+  // priority_code는 과거에 그 우선순위 검토를 거쳤다는 이력 태그라 완료된 작업에도 남아있다.
+  // priority_cards.count(=action_items 기준: requires_action && !completed)와 건수를 맞추려면
+  // 우선순위로 필터링해 들어온 경우에 한해 같은 조건을 프론트에서도 적용해야 한다.
+  const items = priority
+    ? response.items.filter(
+        (item) => item.requires_action && item.status_group_code !== 'completed' && item.status_code !== 'COMPLETED',
+      )
+    : response.items
+  return items.map(taskRowFromDashboardItem)
 }
