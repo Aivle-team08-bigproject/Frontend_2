@@ -1,45 +1,14 @@
 import GNB from '../../shared/GNB'
 import FlowPageHeader from '../../shared/FlowPageHeader'
-import RequestHeaderCard from '../../shared/RequestHeaderCard'
-import StepProgressBar from '../../shared/StepProgressBar'
-import Timeline from '../../shared/Timeline'
-import LiveLogPanel from '../../shared/LiveLogPanel'
-import { useAsyncData } from '../../shared/hooks'
-import DataStateNotice from '../../shared/DataStateNotice'
-import { fetchPipelineRun } from '../../shared/api'
-import { FlowContentArea, LeftPanel, PageWrapper, SplitGrid } from '../../shared/layout.styles'
-import { EMPTY_DATA_SELECTION_IN_PROGRESS } from './dataSelectionInProgressData'
+import UnimplementedProgressModal from '../../shared/UnimplementedProgressModal'
+import { FlowContentArea, PageWrapper } from '../../shared/layout.styles'
 
 export default function DataSelectionInProgress() {
-  const { runId } = useParams()
-  const numericRunId = Number(runId)
-  const runFetcher = useCallback(() => fetchPipelineRun(numericRunId), [numericRunId])
-  const { data: run, loading, error } = useAsyncData(runFetcher, { intervalMs: 10_000 })
-  const view = { ...EMPTY_DATA_SELECTION_IN_PROGRESS, reqId: run?.request_no ?? EMPTY_DATA_SELECTION_IN_PROGRESS.reqId, requestTitle: run?.request_title ?? EMPTY_DATA_SELECTION_IN_PROGRESS.requestTitle }
-
   return (
     <PageWrapper>
       <GNB />
       <FlowPageHeader title="실시간 데이터 선별 진행" badgeLabel="데이터 선별" />
-      <FlowContentArea>
-        <DataStateNotice loading={loading} error={error} subject="데이터 선별 정보" />
-        <RequestHeaderCard reqId={view.reqId} title={view.requestTitle} />
-        <StepProgressBar currentStep={2} />
-        <SplitGrid>
-          <LeftPanel>
-            <Timeline
-              sectionTitle="데이터 선별 프로세스"
-              statusLabel="⏳ 진행중"
-              statusBg="#dcfce7"
-              statusColor="#22c55e"
-              items={view.timelineItems}
-            />
-          </LeftPanel>
-          <LiveLogPanel lines={view.logLines} />
-        </SplitGrid>
-      </FlowContentArea>
+      <FlowContentArea><UnimplementedProgressModal stageLabel="데이터 선별" /></FlowContentArea>
     </PageWrapper>
   )
 }
-import { useCallback } from 'react'
-import { useParams } from 'react-router-dom'
