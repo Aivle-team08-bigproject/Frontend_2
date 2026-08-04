@@ -68,7 +68,8 @@ export default function SampleDataFeedback() {
         feedback: approved ? null : prompt.trim(),
       })
       const target = result.next_stage ?? result.rollback_to_stage
-      navigate(`/tasks/${requestNo}/runs/${runId}/${target === 'DATA_PROCESSING' ? 'processing' : 'selection'}`)
+      const route = target === 'DATA_PROCESSING' ? 'processing' : target === 'DATA_SELECTION' ? 'selection' : 'detail'
+      navigate(`/tasks/${requestNo}/runs/${runId}/${route}`)
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : '검토 제출에 실패했습니다.')
       setSubmitting(false)
@@ -96,7 +97,7 @@ export default function SampleDataFeedback() {
           <PreviewHeader>
             <PreviewTitle>샘플 데이터 미리보기 (Top 5)</PreviewTitle>
             <ButtonGroup>
-              <DownloadButton type="button" onClick={() => window.open(pipelineResultDownloadUrl(numericRunId), '_blank')} disabled={invalidRoute}>
+              <DownloadButton type="button" onClick={() => window.open(pipelineResultDownloadUrl(numericRunId), '_blank', 'noopener')} disabled={invalidRoute}>
                 CSV 다운로드
               </DownloadButton>
               <EmailButton type="button">
