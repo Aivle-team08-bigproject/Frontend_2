@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import GNB from '../../shared/GNB'
 import FlowPageHeader from '../../shared/FlowPageHeader'
@@ -7,8 +7,9 @@ import StepProgressBar from '../../shared/StepProgressBar'
 import { infoSrc } from '../../shared/icons'
 import { useAsyncData } from '../../shared/hooks'
 import DataStateNotice from '../../shared/DataStateNotice'
-import { FlowContentArea, PageWrapper } from '../../shared/layout.styles'
-import { EMPTY_SAMPLE_DATA_FEEDBACK, fetchSampleDataFeedbackData } from './sampleDataFeedbackData'
+import { fetchPipelineRun, pipelineResultDownloadUrl, submitReview } from '../../shared/api'
+import { DataNotice, FlowContentArea, PageWrapper } from '../../shared/layout.styles'
+import { EMPTY_SAMPLE_DATA_FEEDBACK } from './sampleDataFeedbackData'
 import {
   AccordionCard,
   AccordionContent,
@@ -45,19 +46,49 @@ import {
 
 export default function SampleDataFeedback() {
   const { requestNo, runId } = useParams()
-  const { data, loading, error } = useAsyncData(fetchSampleDataFeedbackData)
-  const view = data ?? EMPTY_SAMPLE_DATA_FEEDBACK
+  const numericRunId = Number(runId)
+  const invalidRoute = !requestNo || !Number.isInteger(numericRunId)
+  const runFetcher = useCallback(() => fetchPipelineRun(numericRunId), [numericRunId])
+  const { data: run, loading: runLoading, error: runError } = useAsyncData(runFetcher)
+  const runNotReady = !runLoading && run !== null && run.run_status !== 'WAITING_SAMPLE_REVIEW'
+  const view = { ...EMPTY_SAMPLE_DATA_FEEDBACK, reqId: run?.request_no ?? EMPTY_SAMPLE_DATA_FEEDBACK.reqId, requestTitle: run?.request_title ?? EMPTY_SAMPLE_DATA_FEEDBACK.requestTitle }
   const [accordionOpen, setAccordionOpen] = useState(true)
   const [prompt, setPrompt] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
   const navigate = useNavigate()
 
+  async function handleDecision(approved: boolean) {
+    if (invalidRoute || submitting || (!approved && !prompt.trim())) return
+    setSubmitting(true)
+    setSubmitError(null)
+    try {
+      const result = await submitReview(numericRunId, {
+        approved,
+        feedback: approved ? null : prompt.trim(),
+      })
+      const target = result.next_stage ?? result.rollback_to_stage
+      navigate(`/tasks/${requestNo}/runs/${runId}/${target === 'DATA_PROCESSING' ? 'processing' : 'selection'}`)
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : '검토 제출에 실패했습니다.')
+      setSubmitting(false)
+    }
+  }
 
   return (
     <PageWrapper>
       <GNB />
       <FlowPageHeader title="샘플데이터 및 피드백" badgeLabel="샘플 검토" />
       <FlowContentArea>
-        <DataStateNotice loading={loading} error={error} subject="샘플 데이터" />
+        {invalidRoute ? (
+          <DataNotice $error role="alert">잘못된 실행 경로입니다. 요청번호와 실행 ID를 확인해주세요.</DataNotice>
+        ) : (
+          <>
+            <DataStateNotice loading={runLoading} error={runError} subject="샘플 데이터" />
+            {runNotReady && <DataNotice $error role="alert">이 작업은 현재 샘플 검토 대기 상태가 아닙니다 ({run?.run_status}).</DataNotice>}
+            {submitError && <DataNotice $error role="alert">{submitError}</DataNotice>}
+          </>
+        )}
         <RequestHeaderCard reqId={view.reqId} title={view.requestTitle} />
         <StepProgressBar currentStep={2} />
 
@@ -65,7 +96,9 @@ export default function SampleDataFeedback() {
           <PreviewHeader>
             <PreviewTitle>샘플 데이터 미리보기 (Top 5)</PreviewTitle>
             <ButtonGroup>
-              <DownloadButton type="button">CSV 다운로드</DownloadButton>
+              <DownloadButton type="button" onClick={() => window.open(pipelineResultDownloadUrl(numericRunId), '_blank')} disabled={invalidRoute}>
+                CSV 다운로드
+              </DownloadButton>
               <EmailButton type="button">
                 <span>✉</span>
                 메일로 전송
@@ -131,11 +164,11 @@ export default function SampleDataFeedback() {
         </FeedbackCard>
 
         <ActionsRow>
-          <RequestButton type="button" disabled={!prompt.trim()}>
+          <RequestButton type="button" disabled={!prompt.trim() || invalidRoute || submitting || runNotReady} onClick={() => handleDecision(false)}>
             재가공 요청
           </RequestButton>
-          <ApproveButton type="button" onClick={() => navigate(`/tasks/${requestNo}/runs/${runId}/processing`)}>
-            샘플 승인 → 계약 체결
+          <ApproveButton type="button" disabled={invalidRoute || submitting || runNotReady} onClick={() => handleDecision(true)}>
+            {submitting ? '제출 중...' : '샘플 승인 → 계약 체결'}
           </ApproveButton>
           <DisabledButton type="button" disabled>
             본 데이터 가공 시작

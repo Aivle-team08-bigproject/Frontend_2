@@ -449,6 +449,11 @@ export function fetchPipelineRun(runId: number): Promise<PipelineRunResponse> {
   return request(`/api/v1/runs/${runId}`)
 }
 
+/** 인증 쿠키 기반 결과 파일 다운로드 주소. */
+export function pipelineResultDownloadUrl(runId: number): string {
+  return `${API_BASE_URL}/api/v1/runs/${runId}/result.csv`
+}
+
 /** 단계 산출물 검토(HITL). 승인 시 다음 단계로, 반려 시 해당 단계로 되돌린다. */
 export function submitReview(runId: number, payload: StageReviewPayload): Promise<StageReviewResponse> {
   return request(`/api/v1/runs/${runId}/review`, {

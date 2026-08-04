@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import GNB from '../../shared/GNB'
 import FlowPageHeader from '../../shared/FlowPageHeader'
@@ -8,8 +8,9 @@ import SectionCard from '../../shared/SectionCard'
 import { arrowLeftSrc, arrowRightSrc } from '../../shared/icons'
 import { useAsyncData } from '../../shared/hooks'
 import DataStateNotice from '../../shared/DataStateNotice'
-import { FlowContentArea, PageWrapper } from '../../shared/layout.styles'
-import { EMPTY_FINAL_OUTPUT_FEEDBACK, fetchFinalOutputFeedbackData } from './finalOutputFeedbackData'
+import { fetchPipelineRun, pipelineResultDownloadUrl, submitReview } from '../../shared/api'
+import { DataNotice, FlowContentArea, PageWrapper } from '../../shared/layout.styles'
+import { EMPTY_FINAL_OUTPUT_FEEDBACK } from './finalOutputFeedbackData'
 import {
   ApproveButton,
   ArrowIcon,
@@ -52,18 +53,46 @@ import {
 
 export default function FinalOutputFeedback() {
   const { requestNo, runId } = useParams()
-  const { data, loading, error } = useAsyncData(fetchFinalOutputFeedbackData)
-  const view = data ?? EMPTY_FINAL_OUTPUT_FEEDBACK
+  const numericRunId = Number(runId)
+  const invalidRoute = !requestNo || !Number.isInteger(numericRunId)
+  const runFetcher = useCallback(() => fetchPipelineRun(numericRunId), [numericRunId])
+  const { data: run, loading: runLoading, error: runError } = useAsyncData(runFetcher)
+  const runNotReady = !runLoading && run !== null && run.run_status !== 'WAITING_FINAL_REVIEW'
+  const view = { ...EMPTY_FINAL_OUTPUT_FEEDBACK, reqId: run?.request_no ?? EMPTY_FINAL_OUTPUT_FEEDBACK.reqId, requestTitle: run?.request_title ?? EMPTY_FINAL_OUTPUT_FEEDBACK.requestTitle }
   const [feedback, setFeedback] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
   const navigate = useNavigate()
 
+  async function handleDecision(approved: boolean) {
+    if (invalidRoute || submitting || (!approved && !feedback.trim())) return
+    setSubmitting(true)
+    setSubmitError(null)
+    try {
+      const result = await submitReview(numericRunId, { approved, feedback: approved ? null : feedback.trim() })
+      navigate(result.run_status === 'COMPLETED'
+        ? `/tasks/${requestNo}/runs/${runId}/complete`
+        : `/tasks/${requestNo}/runs/${runId}/processing`)
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : '검토 제출에 실패했습니다.')
+      setSubmitting(false)
+    }
+  }
 
   return (
     <PageWrapper>
       <GNB />
       <FlowPageHeader title="최종 산출물 및 피드백" badgeLabel="산출물 검토" />
       <FlowContentArea>
-        <DataStateNotice loading={loading} error={error} subject="최종 산출물" />
+        {invalidRoute ? (
+          <DataNotice $error role="alert">잘못된 실행 경로입니다. 요청번호와 실행 ID를 확인해주세요.</DataNotice>
+        ) : (
+          <>
+            <DataStateNotice loading={runLoading} error={runError} subject="최종 산출물" />
+            {runNotReady && <DataNotice $error role="alert">이 작업은 현재 최종 검토 대기 상태가 아닙니다 ({run?.run_status}).</DataNotice>}
+            {submitError && <DataNotice $error role="alert">{submitError}</DataNotice>}
+          </>
+        )}
         <RequestHeaderCard reqId={view.reqId} title={view.requestTitle} />
         <StepProgressBar currentStep={3} />
         <SplitGrid>
@@ -71,7 +100,7 @@ export default function FinalOutputFeedback() {
             <Card>
               <CardHeaderRow>
                 <CardTitle>산출물 데이터 (Top 10)</CardTitle>
-                <DownloadLink type="button">CSV 다운로드</DownloadLink>
+                <DownloadLink type="button" onClick={() => window.open(pipelineResultDownloadUrl(numericRunId), '_blank')} disabled={invalidRoute}>CSV 다운로드</DownloadLink>
               </CardHeaderRow>
               <DataTable>
                 <THead>
@@ -146,7 +175,7 @@ export default function FinalOutputFeedback() {
                 placeholder={view.feedbackPlaceholder}
               />
               <FeedbackActions>
-                <ResubmitButton type="button" disabled={!feedback.trim()}>
+                <ResubmitButton type="button" disabled={!feedback.trim() || invalidRoute || submitting || runNotReady} onClick={() => handleDecision(false)}>
                   재가공 요청
                 </ResubmitButton>
               </FeedbackActions>
@@ -161,8 +190,8 @@ export default function FinalOutputFeedback() {
           </BackLink>
           <RightActions>
             <RecutButton type="button">수정 후 재생성</RecutButton>
-            <ApproveButton type="button" onClick={() => navigate(`/tasks/${requestNo}/runs/${runId}/complete`)}>
-              최종 승인
+            <ApproveButton type="button" disabled={invalidRoute || submitting || runNotReady} onClick={() => handleDecision(true)}>
+              {submitting ? '제출 중...' : '최종 승인'}
             </ApproveButton>
           </RightActions>
         </BottomActionsRow>

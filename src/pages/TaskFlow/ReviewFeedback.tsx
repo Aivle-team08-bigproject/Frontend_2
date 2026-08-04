@@ -10,7 +10,7 @@ import { useAsyncData } from '../../shared/hooks'
 import DataStateNotice from '../../shared/DataStateNotice'
 import { fetchPipelineRun, submitReview } from '../../shared/api'
 import { DataNotice, FlowContentArea, LeftPanel, PageWrapper, SplitGrid } from '../../shared/layout.styles'
-import { EMPTY_REVIEW_FEEDBACK, fetchReviewFeedbackData } from './reviewFeedbackData'
+import { EMPTY_REVIEW_FEEDBACK } from './reviewFeedbackData'
 import {
   ApproveButton,
   BackButton,
@@ -54,12 +54,9 @@ export default function ReviewFeedback() {
   const invalidRoute = !requestNo || !Number.isInteger(numericRunId)
   const navigate = useNavigate()
 
-  const viewFetcher = useCallback(() => fetchReviewFeedbackData(requestNo!), [requestNo])
-  const { data, loading, error } = useAsyncData(viewFetcher)
-  const view = data ?? EMPTY_REVIEW_FEEDBACK
-
   const runFetcher = useCallback(() => fetchPipelineRun(numericRunId), [numericRunId])
-  const { data: run, loading: runLoading } = useAsyncData(runFetcher)
+  const { data: run, loading: runLoading, error: runError } = useAsyncData(runFetcher)
+  const view = { ...EMPTY_REVIEW_FEEDBACK, reqId: run?.request_no ?? EMPTY_REVIEW_FEEDBACK.reqId, requestTitle: run?.request_title ?? EMPTY_REVIEW_FEEDBACK.requestTitle }
   const runNotReady = !runLoading && run !== null && run.run_status !== 'WAITING_REQUIREMENT_REVIEW'
 
   const [feedback, setFeedback] = useState('')
@@ -99,7 +96,7 @@ export default function ReviewFeedback() {
           <DataNotice $error role="alert">잘못된 실행 경로입니다. 요청번호와 실행 ID를 확인해주세요.</DataNotice>
         ) : (
           <>
-            <DataStateNotice loading={loading} error={error} subject="요구사항 분석 결과" />
+            <DataStateNotice loading={runLoading} error={runError} subject="요구사항 분석 결과" />
             {runNotReady && (
               <DataNotice $error role="alert">
                 이 작업은 더 이상 요구사항 검토 대기 상태가 아닙니다 (현재 상태: {run?.run_status}). 최신 화면으로 이동해주세요.

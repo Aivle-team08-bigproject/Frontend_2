@@ -6,12 +6,16 @@ import Timeline from '../../shared/Timeline'
 import LiveLogPanel from '../../shared/LiveLogPanel'
 import { useAsyncData } from '../../shared/hooks'
 import DataStateNotice from '../../shared/DataStateNotice'
+import { fetchPipelineRun } from '../../shared/api'
 import { FlowContentArea, LeftPanel, PageWrapper, SplitGrid } from '../../shared/layout.styles'
-import { EMPTY_DATA_SELECTION_IN_PROGRESS, fetchDataSelectionInProgressData } from './dataSelectionInProgressData'
+import { EMPTY_DATA_SELECTION_IN_PROGRESS } from './dataSelectionInProgressData'
 
 export default function DataSelectionInProgress() {
-  const { data, loading, error } = useAsyncData(fetchDataSelectionInProgressData)
-  const view = data ?? EMPTY_DATA_SELECTION_IN_PROGRESS
+  const { runId } = useParams()
+  const numericRunId = Number(runId)
+  const runFetcher = useCallback(() => fetchPipelineRun(numericRunId), [numericRunId])
+  const { data: run, loading, error } = useAsyncData(runFetcher, { intervalMs: 10_000 })
+  const view = { ...EMPTY_DATA_SELECTION_IN_PROGRESS, reqId: run?.request_no ?? EMPTY_DATA_SELECTION_IN_PROGRESS.reqId, requestTitle: run?.request_title ?? EMPTY_DATA_SELECTION_IN_PROGRESS.requestTitle }
 
   return (
     <PageWrapper>
@@ -37,3 +41,5 @@ export default function DataSelectionInProgress() {
     </PageWrapper>
   )
 }
+import { useCallback } from 'react'
+import { useParams } from 'react-router-dom'

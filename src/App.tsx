@@ -4,6 +4,7 @@ import PractitionerDashboardMain from './pages/PractitionerDashboard/Practitione
 import TaskList from './pages/PractitionerDashboard/TaskList'
 import MyTaskStatus from './pages/PractitionerDashboard/MyTaskStatus'
 import TaskLookup from './pages/PractitionerDashboard/TaskLookup'
+import AdminDashboard from './pages/PractitionerDashboard/AdminDashboard'
 import DeveloperDashboardMain from './pages/DeveloperDashboard/DeveloperDashboardMain'
 import MemberManagement from './pages/DeveloperDashboard/MemberManagement'
 import RequirementAnalysisRegister from './pages/TaskFlow/RequirementAnalysisRegister'
@@ -40,6 +41,7 @@ function App() {
         <Route path="/dashboard/tasks" element={protectedPage(<TaskList />)} />
         <Route path="/dashboard/my-tasks" element={protectedPage(<MyTaskStatus />)} />
         <Route path="/dashboard/task-lookup" element={protectedPage(<TaskLookup />)} />
+        <Route path="/dashboard/overview" element={protectedPage(<AdminDashboard />)} />
         <Route path="/dev-dashboard" element={protectedPage(<DeveloperDashboardMain />)} />
         <Route path="/dev-dashboard/members" element={protectedPage(<MemberManagement />)} />
         <Route path="/tasks/register" element={protectedPage(<RequirementAnalysisRegister />)} />
