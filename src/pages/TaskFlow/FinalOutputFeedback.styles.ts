@@ -6,6 +6,10 @@ export const SplitGrid = styled.div`
   gap: 24px;
   align-items: flex-start;
   width: 100%;
+
+  @media (max-width: 1100px) {
+    flex-direction: column;
+  }
 `
 
 export const LeftCol = styled.div`
@@ -14,14 +18,22 @@ export const LeftCol = styled.div`
   min-width: 0;
   flex-direction: column;
   gap: 24px;
+
+  @media (max-width: 1100px) {
+    width: 100%;
+  }
 `
 
 export const RightCol = styled.div`
   display: flex;
   flex-direction: column;
   gap: 24px;
-  width: 580px;
+  width: min(580px, 100%);
   flex-shrink: 0;
+
+  @media (max-width: 1100px) {
+    width: 100%;
+  }
 `
 
 export const Card = styled.div`
