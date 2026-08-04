@@ -15,7 +15,9 @@ export default function StepProgressBar({ currentStep }: StepProgressBarProps) {
         const state = step < currentStep ? 'done' : step === currentStep ? 'active' : 'pending'
         return (
           <StepItem key={label}>
-            <StepCircle $state={state}>{state === 'done' ? <CheckIcon src={checkSrc} alt="완료" /> : step}</StepCircle>
+            <StepCircle $state={state} aria-label={`${step}단계 ${label}`} title={label}>
+              {state === 'done' ? <CheckIcon src={checkSrc} alt="완료" /> : step}
+            </StepCircle>
             <StepLabel $state={state}>{label}</StepLabel>
             {step < steps.length && <StepLine $done={step < currentStep} />}
           </StepItem>
