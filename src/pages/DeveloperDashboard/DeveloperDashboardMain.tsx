@@ -7,7 +7,7 @@ import DataStateNotice from '../../shared/DataStateNotice'
 import { formatTime } from '../../shared/datetime'
 import { MainContent, PageWrapper } from '../../shared/layout.styles'
 import type { AgentStatus, DashboardPeriod, TokenUsagePoint } from './dashboardData'
-import { emptyDeveloperDashboard, fetchDeveloperDashboardData } from './dashboardData'
+import { DEVELOPER_NAV_ITEMS, emptyDeveloperDashboard, fetchDeveloperDashboardData } from './dashboardData'
 import {
   AgentCardEl,
   AgentCardsRow,
@@ -166,13 +166,7 @@ export default function DeveloperDashboardMain() {
   const navigation = (
     <>
       <GNB />
-      <SubNav
-        activeTo="/dev-dashboard"
-        items={[
-          { label: '대시보드', to: '/dev-dashboard' },
-          { label: '회원 관리', to: '/dev-dashboard/members' },
-        ]}
-      />
+      <SubNav activeTo="/dev-dashboard" items={DEVELOPER_NAV_ITEMS} />
     </>
   )
 

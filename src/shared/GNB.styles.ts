@@ -91,12 +91,18 @@ export const SearchIcon = styled.img`
   height: 16px;
 `
 
-export const SearchPlaceholder = styled.p`
-  margin: 0;
+export const SearchInput = styled.input`
+  border: 0;
+  outline: 0;
+  background: transparent;
   flex: 1 0 0;
   min-width: 0;
   font-size: 14px;
-  color: ${colors.textMuted};
+  color: ${colors.text};
+
+  &::placeholder {
+    color: ${colors.textMuted};
+  }
 `
 
 export const Right = styled.div`

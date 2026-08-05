@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useCallback, useState } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import GNB from '../../shared/GNB'
 import FlowPageHeader from '../../shared/FlowPageHeader'
 import RequestHeaderCard from '../../shared/RequestHeaderCard'
@@ -7,9 +7,9 @@ import StepProgressBar from '../../shared/StepProgressBar'
 import { infoSrc } from '../../shared/icons'
 import { useAsyncData } from '../../shared/hooks'
 import DataStateNotice from '../../shared/DataStateNotice'
-import { currentRequestNo } from '../../shared/api'
-import { FlowContentArea, PageWrapper } from '../../shared/layout.styles'
-import { EMPTY_SAMPLE_DATA_FEEDBACK, fetchSampleDataFeedbackData } from './sampleDataFeedbackData'
+import { fetchPipelineRun, fetchSamplePreview, pipelineResultDownloadUrl, submitReview } from '../../shared/api'
+import { DataNotice, FlowContentArea, PageWrapper } from '../../shared/layout.styles'
+import { EMPTY_SAMPLE_DATA_FEEDBACK } from './sampleDataFeedbackData'
 import {
   AccordionCard,
   AccordionContent,
@@ -45,19 +45,53 @@ import {
 } from './SampleDataFeedback.styles'
 
 export default function SampleDataFeedback() {
-  const { data, loading, error } = useAsyncData(fetchSampleDataFeedbackData)
-  const view = data ?? EMPTY_SAMPLE_DATA_FEEDBACK
+  const { requestNo, runId } = useParams()
+  const numericRunId = Number(runId)
+  const invalidRoute = !requestNo || !Number.isInteger(numericRunId)
+  const runFetcher = useCallback(() => fetchPipelineRun(numericRunId), [numericRunId])
+  const { data: run, loading: runLoading, error: runError } = useAsyncData(runFetcher)
+  const previewFetcher = useCallback(() => fetchSamplePreview(numericRunId), [numericRunId])
+  const { data: preview, loading: previewLoading, error: previewError } = useAsyncData(previewFetcher)
+  const runNotReady = !runLoading && run !== null && run.run_status !== 'WAITING_SAMPLE_REVIEW'
+  const view = { ...EMPTY_SAMPLE_DATA_FEEDBACK, reqId: run?.request_no ?? EMPTY_SAMPLE_DATA_FEEDBACK.reqId, requestTitle: run?.request_title ?? EMPTY_SAMPLE_DATA_FEEDBACK.requestTitle }
   const [accordionOpen, setAccordionOpen] = useState(true)
   const [prompt, setPrompt] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
   const navigate = useNavigate()
 
+  async function handleDecision(approved: boolean) {
+    if (invalidRoute || submitting || (!approved && !prompt.trim())) return
+    setSubmitting(true)
+    setSubmitError(null)
+    try {
+      const result = await submitReview(numericRunId, {
+        approved,
+        feedback: approved ? null : prompt.trim(),
+      })
+      const target = result.next_stage ?? result.rollback_to_stage
+      const route = target === 'DATA_PROCESSING' ? 'processing' : target === 'DATA_SELECTION' ? 'selection' : 'detail'
+      navigate(`/tasks/${requestNo}/runs/${runId}/${route}`)
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : '검토 제출에 실패했습니다.')
+      setSubmitting(false)
+    }
+  }
 
   return (
     <PageWrapper>
       <GNB />
       <FlowPageHeader title="샘플데이터 및 피드백" badgeLabel="샘플 검토" />
       <FlowContentArea>
-        <DataStateNotice loading={loading} error={error} subject="샘플 데이터" />
+        {invalidRoute ? (
+          <DataNotice $error role="alert">잘못된 실행 경로입니다. 요청번호와 실행 ID를 확인해주세요.</DataNotice>
+        ) : (
+          <>
+            <DataStateNotice loading={runLoading || previewLoading} error={runError ?? previewError} subject="샘플 데이터" />
+            {runNotReady && <DataNotice $error role="alert">이 작업은 현재 샘플 검토 대기 상태가 아닙니다 ({run?.run_status}).</DataNotice>}
+            {submitError && <DataNotice $error role="alert">{submitError}</DataNotice>}
+          </>
+        )}
         <RequestHeaderCard reqId={view.reqId} title={view.requestTitle} />
         <StepProgressBar currentStep={2} />
 
@@ -65,7 +99,9 @@ export default function SampleDataFeedback() {
           <PreviewHeader>
             <PreviewTitle>샘플 데이터 미리보기 (Top 5)</PreviewTitle>
             <ButtonGroup>
-              <DownloadButton type="button">CSV 다운로드</DownloadButton>
+              <DownloadButton type="button" onClick={() => window.open(pipelineResultDownloadUrl(numericRunId), '_blank', 'noopener')} disabled={invalidRoute}>
+                CSV 다운로드
+              </DownloadButton>
               <EmailButton type="button">
                 <span>✉</span>
                 메일로 전송
@@ -74,21 +110,15 @@ export default function SampleDataFeedback() {
           </PreviewHeader>
           <SampleTable>
             <SampleHeaderRow>
-              <SampleCell $strong>지역(구)</SampleCell>
-              <SampleCell $strong>지역(동)</SampleCell>
-              <SampleCell $strong>업종</SampleCell>
-              <SampleCell $strong>연령대</SampleCell>
-              <SampleCell $strong>결제월</SampleCell>
-              <SampleCell $strong>매출지수</SampleCell>
+              {(preview?.columns ?? []).map((column) => (
+                <SampleCell key={column.name} $strong>{column.name}</SampleCell>
+              ))}
             </SampleHeaderRow>
-            {view.sampleRows.map((row, index) => (
+            {(preview?.rows ?? []).map((row, index) => (
               <SampleRowEl key={index}>
-                <SampleCell>{row.district}</SampleCell>
-                <SampleCell>{row.neighborhood}</SampleCell>
-                <SampleCell>{row.category}</SampleCell>
-                <SampleCell>{row.ageGroup}</SampleCell>
-                <SampleCell>{row.paymentMonth}</SampleCell>
-                <SampleCell $strong>{row.salesIndex}</SampleCell>
+                {(preview?.columns ?? []).map((column) => (
+                  <SampleCell key={column.name}>{String(row[column.name] ?? '-')}</SampleCell>
+                ))}
               </SampleRowEl>
             ))}
           </SampleTable>
@@ -103,10 +133,10 @@ export default function SampleDataFeedback() {
             <>
               <AccordionDivider />
               <AccordionContent>
-                {view.columnInfo.map((info) => (
-                  <InfoBlock key={info.title}>
-                    <InfoTitle>{info.title}</InfoTitle>
-                    <InfoDescription>{info.description}</InfoDescription>
+                {(preview?.columns ?? []).map((column) => (
+                  <InfoBlock key={column.name}>
+                    <InfoTitle>{column.name} ({column.data_type})</InfoTitle>
+                    <InfoDescription>{column.description || '선별된 컬럼'}</InfoDescription>
                   </InfoBlock>
                 ))}
               </AccordionContent>
@@ -131,11 +161,14 @@ export default function SampleDataFeedback() {
         </FeedbackCard>
 
         <ActionsRow>
-          <RequestButton type="button" disabled={!prompt.trim()}>
+          <RequestButton type="button" disabled={!prompt.trim() || invalidRoute || submitting || runNotReady} onClick={() => handleDecision(false)}>
             재가공 요청
           </RequestButton>
-          <ApproveButton type="button" onClick={() => navigate(`/tasks/processing?requestNo=${encodeURIComponent(currentRequestNo())}`)}>
-            샘플 승인 → 계약 체결
+          <RequestButton type="button" onClick={() => navigate(`/tasks/${requestNo}/runs/${runId}/review`)}>
+            요구사항 분석 다시 보기
+          </RequestButton>
+          <ApproveButton type="button" disabled={invalidRoute || submitting || runNotReady} onClick={() => handleDecision(true)}>
+            {submitting ? '제출 중...' : '샘플 승인 → 계약 체결'}
           </ApproveButton>
           <DisabledButton type="button" disabled>
             본 데이터 가공 시작

@@ -1,4 +1,5 @@
 import styled from 'styled-components'
+import { Link } from 'react-router-dom'
 
 export const LoginScreen = styled.main`
   min-height: 100vh;
@@ -173,6 +174,24 @@ export const HelperText = styled.p`
   }
 `
 
+export const SignupLink = styled.button`
+  height: 45px;
+  border: 1px solid #008c8d;
+  border-radius: 11px;
+  background: #fff;
+  color: #008485;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+`
+
+export const LegalLink = styled(Link)`
+  color: #008485;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+`
+
 export const ErrorText = styled.p`
   margin: -6px 0 0;
   color: #dc2626;
@@ -180,15 +199,9 @@ export const ErrorText = styled.p`
   text-align: center;
 `
 
-export const SecurityFooter = styled.footer`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  margin-top: 30px;
-  padding-top: 31px;
-  border-top: 1px solid #e9ecef;
-  color: #008485;
-  font-size: 11px;
-  font-weight: 600;
+export const SuccessText = styled.p`
+  margin: -6px 0 0;
+  color: #087f5b;
+  font-size: 12px;
+  text-align: center;
 `

@@ -6,6 +6,10 @@ export const SplitGrid = styled.div`
   gap: 24px;
   align-items: flex-start;
   width: 100%;
+
+  @media (max-width: 1100px) {
+    flex-direction: column;
+  }
 `
 
 export const LeftCol = styled.div`
@@ -14,14 +18,22 @@ export const LeftCol = styled.div`
   min-width: 0;
   flex-direction: column;
   gap: 24px;
+
+  @media (max-width: 1100px) {
+    width: 100%;
+  }
 `
 
 export const RightCol = styled.div`
   display: flex;
   flex-direction: column;
   gap: 24px;
-  width: 580px;
+  width: min(580px, 100%);
   flex-shrink: 0;
+
+  @media (max-width: 1100px) {
+    width: 100%;
+  }
 `
 
 export const Card = styled.div`
@@ -236,7 +248,7 @@ export const InfoGrid = styled.div`
 
 export const InfoRowEl = styled.div<{ $last?: boolean }>`
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   width: 100%;
   padding-bottom: ${({ $last }) => ($last ? '0' : '12px')};
@@ -250,8 +262,39 @@ export const InfoLabel = styled.p`
 
 export const InfoValue = styled.p`
   margin: 0;
+  min-width: 0;
+  max-width: 68%;
   font-weight: 600;
   color: ${colors.text};
+  text-align: right;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  white-space: normal;
+`
+
+export const InfoStructuredValue = styled.pre`
+  width: 68%;
+  max-width: 68%;
+  min-width: 0;
+  max-height: 180px;
+  margin: 0;
+  padding: 10px 12px;
+  overflow: auto;
+  border-radius: 6px;
+  background: ${colors.bg};
+  color: ${colors.text};
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.45;
+  text-align: left;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+
+  @media (max-width: 600px) {
+    width: 60%;
+    max-width: 60%;
+  }
 `
 
 export const FeedbackTextarea = styled.textarea`

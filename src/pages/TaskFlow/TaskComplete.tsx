@@ -1,4 +1,5 @@
-import { useNavigate } from 'react-router-dom'
+import { useCallback } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import GNB from '../../shared/GNB'
 import FlowPageHeader from '../../shared/FlowPageHeader'
 import RequestHeaderCard from '../../shared/RequestHeaderCard'
@@ -15,8 +16,9 @@ import {
 } from '../../shared/icons'
 import { useAsyncData } from '../../shared/hooks'
 import DataStateNotice from '../../shared/DataStateNotice'
+import { fetchPipelineRun } from '../../shared/api'
 import { FlowContentArea, PageWrapper } from '../../shared/layout.styles'
-import { EMPTY_TASK_COMPLETE, fetchTaskCompleteData } from './taskCompleteData'
+import { EMPTY_TASK_COMPLETE } from './taskCompleteData'
 import {
   BottomActions,
   Card,
@@ -63,8 +65,11 @@ import {
 const fileIcons = { csv: fileTextSrc, xlsx: fileSpreadsheetSrc }
 
 export default function TaskComplete() {
-  const { data, loading, error } = useAsyncData(fetchTaskCompleteData)
-  const view = data ?? EMPTY_TASK_COMPLETE
+  const { runId } = useParams()
+  const numericRunId = Number(runId)
+  const runFetcher = useCallback(() => fetchPipelineRun(numericRunId), [numericRunId])
+  const { data: run, loading, error } = useAsyncData(runFetcher)
+  const view = { ...EMPTY_TASK_COMPLETE, reqId: run?.request_no ?? EMPTY_TASK_COMPLETE.reqId, requestTitle: run?.request_title ?? EMPTY_TASK_COMPLETE.requestTitle }
   const navigate = useNavigate()
 
 
