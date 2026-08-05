@@ -1,6 +1,8 @@
 import { clearAccessToken, getAccessToken, remembersLogin, saveAccessToken } from './auth'
 
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000').replace(/\/$/, '')
+// 빌드 시 VITE_API_BASE_URL을 안 넘기면 Docker ARG가 "안 정해짐"이 아니라 빈 문자열로
+// 들어온다. ??는 null/undefined만 잡고 빈 문자열은 안 잡아서 || 로 둘 다 처리해야 한다.
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000').replace(/\/$/, '')
 let refreshPromise: Promise<string> | null = null
 
 /** `GET /api/auth/me`와 `POST /api/auth/login`이 공유하는 EmployeeSummary 스키마. */
@@ -433,11 +435,14 @@ async function refreshAccessToken(): Promise<string> {
 
 async function request<T>(path: string, init?: RequestInit, retried = false): Promise<T> {
   const accessToken = getAccessToken()
+  // FormData(파일 업로드)는 브라우저가 자동으로 boundary 포함한 Content-Type을 설정해야 하므로
+  // 여기서 application/json을 강제로 넣지 않는다.
+  const isFormData = init?.body instanceof FormData
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...init,
     credentials: 'include',
     headers: {
-      'Content-Type': 'application/json',
+      ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
       ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
       ...init?.headers,
     },
@@ -495,6 +500,26 @@ export function createDataRequest(payload: CreateDataRequestPayload): Promise<Cr
   return request('/api/v1/data-requests', {
     method: 'POST',
     body: JSON.stringify(payload),
+  })
+}
+
+export type ExtractedTextResponse = {
+  extracted_text: string
+  filename: string
+  /** extracted_text가 길이 제한(8000자, raw_requirement max_length와 동일)을 넘어 잘렸는지. */
+  truncated: boolean
+}
+
+/**
+ * 업로드한 문서(.txt/.docx/.pdf)에서 텍스트만 추출한다. DB에 아무것도 안 쓰고 에이전트도
+ * 안 돈다 — 순수 변환이라 결과를 어디에 채워 넣을지는 호출부 몫이다.
+ */
+export function extractDocumentText(file: File): Promise<ExtractedTextResponse> {
+  const formData = new FormData()
+  formData.append('file', file)
+  return request<ExtractedTextResponse>('/api/documents/extract-text', {
+    method: 'POST',
+    body: formData,
   })
 }
 

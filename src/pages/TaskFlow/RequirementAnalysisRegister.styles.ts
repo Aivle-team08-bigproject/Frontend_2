@@ -40,6 +40,46 @@ export const InputSubtitle = styled.p`
   color: ${colors.textSecondary};
 `
 
+export const UploadRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  width: 100%;
+`
+
+export const UploadButton = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border: 1.5px solid ${colors.flowPrimary};
+  border-radius: 8px;
+  background: ${colors.white};
+  color: ${colors.flowPrimary};
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+
+  &:disabled {
+    border-color: ${colors.textMuted};
+    color: ${colors.textMuted};
+    cursor: not-allowed;
+  }
+`
+
+export const UploadHint = styled.span`
+  font-size: 12px;
+  color: ${colors.textMuted};
+`
+
+export const InfoMessage = styled.p`
+  margin: 0;
+  color: ${colors.flowPrimary};
+  font-size: 13px;
+`
+
 export const Textarea = styled.textarea`
   width: 100%;
   height: 594px;
