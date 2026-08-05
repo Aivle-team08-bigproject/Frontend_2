@@ -16,6 +16,147 @@ export const InputSection = styled.div`
   width: 100%;
 `
 
+export const FormGrid = styled.div`
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 24px;
+  align-items: start;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
+`
+
+export const MainForm = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+`
+
+export const GuidePanel = styled.aside`
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid ${colors.border};
+  border-radius: 12px;
+  background: ${colors.white};
+  color: ${colors.textSecondary};
+  font-size: 13px;
+  line-height: 1.55;
+
+  @media (max-width: 900px) {
+    order: -1;
+  }
+`
+
+export const GuideTitle = styled.h2`
+  margin: 0;
+  color: ${colors.text};
+  font-size: 16px;
+  font-weight: 800;
+`
+
+export const GuideList = styled.ul`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding-left: 18px;
+`
+
+export const FieldGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  padding: 20px;
+  border: 1px solid ${colors.border};
+  border-radius: 12px;
+  background: ${colors.white};
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+`
+
+export const Field = styled.label`
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  color: ${colors.textSecondary};
+  font-size: 13px;
+  font-weight: 700;
+`
+
+export const RequiredMark = styled.span`
+  margin-left: 2px;
+  color: ${colors.danger};
+`
+
+export const FieldInput = styled.input<{ $invalid?: boolean }>`
+  width: 100%;
+  height: 46px;
+  box-sizing: border-box;
+  padding: 0 13px;
+  border: 1px solid ${({ $invalid }) => $invalid ? colors.danger : '#dee2e6'};
+  border-radius: 10px;
+  outline: 0;
+  background: #f8f9fa;
+  color: ${colors.text};
+  font: inherit;
+  font-weight: 400;
+
+  &:focus {
+    border-color: ${({ $invalid }) => $invalid ? colors.danger : colors.flowPrimary};
+    box-shadow: 0 0 0 3px ${({ $invalid }) => $invalid ? 'rgba(224, 49, 49, 0.1)' : 'rgba(0, 132, 133, 0.1)'};
+  }
+`
+
+export const FieldSelect = styled.select<{ $invalid?: boolean }>`
+  width: 100%;
+  height: 46px;
+  box-sizing: border-box;
+  padding: 0 13px;
+  border: 1px solid ${({ $invalid }) => $invalid ? colors.danger : '#dee2e6'};
+  border-radius: 10px;
+  outline: 0;
+  background: #f8f9fa;
+  color: ${colors.text};
+  font: inherit;
+  font-weight: 400;
+
+  &:focus {
+    border-color: ${({ $invalid }) => $invalid ? colors.danger : colors.flowPrimary};
+    box-shadow: 0 0 0 3px ${({ $invalid }) => $invalid ? 'rgba(224, 49, 49, 0.1)' : 'rgba(0, 132, 133, 0.1)'};
+  }
+`
+
+export const SectionLabel = styled.h2`
+  grid-column: 1 / -1;
+  margin: 0;
+  color: ${colors.text};
+  font-size: 16px;
+  font-weight: 800;
+`
+
+export const FieldHint = styled.span`
+  grid-column: 1 / -1;
+  margin-top: -4px;
+  color: ${colors.textMuted};
+  font-size: 12px;
+  font-weight: 500;
+`
+
+export const FieldError = styled.span`
+  grid-column: 1 / -1;
+  margin-top: -4px;
+  color: ${colors.danger};
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.4;
+`
+
 export const InputHeader = styled.div`
   display: flex;
   flex-direction: column;
@@ -46,6 +187,7 @@ export const UploadRow = styled.div`
   gap: 12px;
   flex-wrap: wrap;
   width: 100%;
+  grid-column: 1 / -1;
 `
 
 export const UploadButton = styled.button`
@@ -92,6 +234,7 @@ export const Textarea = styled.textarea`
   line-height: 1.5;
   color: ${colors.text};
   resize: none;
+  grid-column: 1 / -1;
 
   &::placeholder {
     color: ${colors.textMuted};
