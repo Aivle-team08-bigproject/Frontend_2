@@ -30,6 +30,6 @@ export const EMPTY_REVIEW_FEEDBACK: ReviewFeedbackData = {
   feedbackPlaceholder: '',
 }
 
-export function fetchReviewFeedbackData(): Promise<ReviewFeedbackData> {
-  return fetchTaskView<ReviewFeedbackData>('review')
+export function fetchReviewFeedbackData(requestNo: string): Promise<ReviewFeedbackData> {
+  return fetchTaskView<ReviewFeedbackData>('review', requestNo)
 }

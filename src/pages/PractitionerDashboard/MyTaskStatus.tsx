@@ -5,6 +5,7 @@ import { useAsyncData } from '../../shared/hooks'
 import DataStateNotice from '../../shared/DataStateNotice'
 import { MainContent, PageWrapper, SectionTitle } from '../../shared/layout.styles'
 import { EMPTY_MY_TASK_STATUS, fetchMyTaskStatusData } from './myTaskStatusData'
+import { PRACTITIONER_NAV_ITEMS } from './data'
 import { useNavigate } from 'react-router-dom'
 import {
   ActionButton,
@@ -51,13 +52,7 @@ export default function MyTaskStatus() {
   return (
     <PageWrapper>
       <GNB />
-      <SubNav
-        activeTo="/dashboard/my-tasks"
-        items={[
-          { label: '전체 작업', to: '/dashboard' },
-          { label: '내 작업 현황', to: '/dashboard/my-tasks' },
-        ]}
-      />
+      <SubNav activeTo="/dashboard/my-tasks" items={PRACTITIONER_NAV_ITEMS} />
       <MainContent>
         <DataStateNotice loading={loading} error={error} empty={!loading && !error && view.cards.length === 0} subject="내 작업" />
         <ProfileHeader>

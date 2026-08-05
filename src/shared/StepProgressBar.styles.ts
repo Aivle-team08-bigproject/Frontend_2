@@ -7,10 +7,14 @@ export const Bar = styled.div`
   justify-content: center;
   gap: 0;
   width: 100%;
-  padding: 24px 280px;
+  padding: 24px 64px;
   border-radius: 12px;
   border: 1px solid ${colors.border};
   background: ${colors.white};
+
+  @media (max-width: 700px) {
+    padding: 20px 16px;
+  }
 `
 
 export const StepItem = styled.div`
@@ -48,6 +52,17 @@ export const StepLabel = styled.p<{ $state: 'done' | 'active' | 'pending' }>`
   color: ${({ $state }) =>
     $state === 'active' ? colors.flowPrimary : $state === 'done' ? colors.text : colors.textMuted};
   white-space: nowrap;
+
+  @media (max-width: 700px) {
+    display: block;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    white-space: nowrap;
+    clip: rect(0, 0, 0, 0);
+    clip-path: inset(50%);
+  }
 `
 
 export const StepLine = styled.div<{ $done: boolean }>`
