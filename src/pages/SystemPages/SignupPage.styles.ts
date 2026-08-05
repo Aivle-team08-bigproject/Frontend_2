@@ -2,8 +2,11 @@ import styled from 'styled-components'
 import { Link } from 'react-router-dom'
 
 export const LoginScreen = styled.main`
-  min-height: 100vh; display: grid; place-items: center; padding: 40px 20px;
+  min-height: 100vh; display: flex; flex-direction: column;
   background: radial-gradient(circle at 10% 45%, rgba(0,132,133,.08), transparent 38%), linear-gradient(120deg,#f5fbfb 0%,#fff 72%);
+`
+export const LoginBody = styled.div`
+  flex: 1; display: grid; place-items: center; padding: 40px 20px;
 `
 export const LoginCard = styled.section`
   width: min(680px,100%); padding: 42px 48px; border: 1px solid #f1f3f5; border-radius: 24px; background: #fff; box-shadow: 0 24px 60px rgba(15,90,82,.1);

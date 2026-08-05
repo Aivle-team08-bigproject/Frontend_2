@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import GNB from '../../shared/GNB'
+import Footer from '../../shared/Footer'
 import SubNav from '../../shared/SubNav'
 import type { DashboardPageSize, DashboardTaskItem, PriorityCode, StageGroupCode, StatusGroupCode } from '../../shared/api'
 import { fetchCurrentUser } from '../../shared/currentUser'
@@ -172,6 +173,7 @@ export default function TaskList() {
           </Pagination>
         </TableSection>
       </MainContent>
+    <Footer />
     </PageWrapper>
   )
 }

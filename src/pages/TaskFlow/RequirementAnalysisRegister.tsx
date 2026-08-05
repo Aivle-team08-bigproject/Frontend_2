@@ -1,6 +1,7 @@
 import { useRef, useState, type ChangeEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import GNB from '../../shared/GNB'
+import Footer from '../../shared/Footer'
 import FlowPageHeader from '../../shared/FlowPageHeader'
 import RequestHeaderCard from '../../shared/RequestHeaderCard'
 import StepProgressBar from '../../shared/StepProgressBar'
@@ -116,6 +117,7 @@ export default function RequirementAnalysisRegister() {
           </ActionsRow>
         </InputSection>
       </ContentArea>
+    <Footer />
     </PageWrapper>
   )
 }

@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import GNB from '../../shared/GNB'
+import Footer from '../../shared/Footer'
 import FlowPageHeader from '../../shared/FlowPageHeader'
 import SectionCard from '../../shared/SectionCard'
 import { useAsyncData } from '../../shared/hooks'
@@ -256,6 +257,7 @@ export default function TaskDetail() {
           </>
         )}
       </FlowContentArea>
+    <Footer />
     </PageWrapper>
   )
 }

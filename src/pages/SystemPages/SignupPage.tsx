@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ApiError, fetchPublicDepartments, signup } from '../../shared/api'
 import type { Department, SignupPosition } from '../../shared/api'
+import Footer from '../../shared/Footer'
+import Logo from '../../shared/Logo'
 import {
   BackLink,
   ConsentBox,
@@ -14,6 +16,7 @@ import {
   Form,
   FormGrid,
   Input,
+  LoginBody,
   LoginCard,
   LoginScreen,
   PrimaryButton,
@@ -232,25 +235,29 @@ export default function SignupPage() {
   if (signupResult) {
     return (
       <LoginScreen>
-        <LoginCard>
-          <SignupHeader><span>DATA FORGE</span><Title>가입 신청 완료</Title><SignupNote>관리자 승인 후 서비스를 이용할 수 있습니다.</SignupNote></SignupHeader>
-          <SuccessBox>
-            <strong>관리자 승인 후 로그인할 수 있습니다.</strong>
-            <p>{signupResult.message}</p>
-            <p>신청 번호: {signupResult.employee_code} · {signupResult.email}</p>
-          </SuccessBox>
-          <PrimaryButton type="button" onClick={() => navigate('/login')}>로그인으로 돌아가기</PrimaryButton>
-        </LoginCard>
+        <LoginBody>
+          <LoginCard>
+            <SignupHeader><Logo size="md" to="/login" /><Title>가입 신청 완료</Title><SignupNote>관리자 승인 후 서비스를 이용할 수 있습니다.</SignupNote></SignupHeader>
+            <SuccessBox>
+              <strong>관리자 승인 후 로그인할 수 있습니다.</strong>
+              <p>{signupResult.message}</p>
+              <p>신청 번호: {signupResult.employee_code} · {signupResult.email}</p>
+            </SuccessBox>
+            <PrimaryButton type="button" onClick={() => navigate('/login')}>로그인으로 돌아가기</PrimaryButton>
+          </LoginCard>
+        </LoginBody>
+        <Footer />
       </LoginScreen>
     )
   }
 
   return (
     <LoginScreen>
+      <LoginBody>
       <LoginCard>
         <SignupHeader>
           <BackLink to="/login">← 로그인으로 돌아가기</BackLink>
-          <span>DATA FORGE</span>
+          <Logo size="md" to="/login" />
           <Title>회원가입 신청</Title>
           <SignupNote>포트폴리오 데모 임직원 정보를 입력해 가입을 신청하세요. 관리자 승인 후 서비스를 이용할 수 있습니다.</SignupNote>
         </SignupHeader>
@@ -289,6 +296,8 @@ export default function SignupPage() {
           <PrimaryButton type="submit" disabled={submitting || departmentsLoading}>{submitting ? '가입 신청 중...' : '가입 신청하기'}</PrimaryButton>
         </Form>
       </LoginCard>
+      </LoginBody>
+      <Footer />
     </LoginScreen>
   )
 }

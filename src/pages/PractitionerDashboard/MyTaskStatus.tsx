@@ -1,4 +1,5 @@
 import GNB from '../../shared/GNB'
+import Footer from '../../shared/Footer'
 import SubNav from '../../shared/SubNav'
 import { avatarLgSrc } from '../../shared/icons'
 import { useAsyncData } from '../../shared/hooks'
@@ -127,6 +128,7 @@ export default function MyTaskStatus() {
           </CardsGrid>
         </CardsSection>
       </MainContent>
+    <Footer />
     </PageWrapper>
   )
 }

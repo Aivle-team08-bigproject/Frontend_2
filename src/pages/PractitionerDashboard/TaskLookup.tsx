@@ -1,4 +1,5 @@
 import GNB from '../../shared/GNB'
+import Footer from '../../shared/Footer'
 import { alertCircleSrc, chevronDownSrc, chevronLeftSrc, chevronRightSrc, xCircleSrc } from '../../shared/icons'
 import { useAsyncData } from '../../shared/hooks'
 import DataStateNotice from '../../shared/DataStateNotice'
@@ -133,6 +134,7 @@ export default function TaskLookup() {
           </PageNav>
         </Pagination>
       </MainContent>
+    <Footer />
     </PageWrapper>
   )
 }
