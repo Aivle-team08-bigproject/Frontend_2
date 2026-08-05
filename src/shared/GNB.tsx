@@ -5,17 +5,13 @@ import { logout } from './api'
 import { clearAccessToken } from './auth'
 import { useAsyncData } from './hooks'
 import { alarmBadgeSrc, avatarSrc, searchIconSrc } from './icons'
+import Logo from './Logo'
 import {
   AlarmBadge,
   Avatar,
   Bar,
   Divider,
   Left,
-  LogoGroup,
-  LogoMark,
-  LogoSubtitle,
-  LogoTexts,
-  LogoTitle,
   ProfileMenu,
   ProfileMenuButton,
   ProfileMenuItem,
@@ -84,13 +80,7 @@ export default function GNB() {
   return (
     <Bar>
       <Left>
-        <LogoGroup to="/dashboard" aria-label="대시보드로 이동">
-          <LogoMark />
-          <LogoTexts>
-            <LogoTitle>Lumen Platform</LogoTitle>
-            <LogoSubtitle>OPERATOR PLATFORM</LogoSubtitle>
-          </LogoTexts>
-        </LogoGroup>
+        <Logo size="sm" to="/dashboard" />
       </Left>
       <Search>
         <SearchIcon src={searchIconSrc} alt="" />

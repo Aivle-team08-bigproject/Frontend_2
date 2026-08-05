@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import GNB from '../../shared/GNB'
+import Footer from '../../shared/Footer'
 import SubNav from '../../shared/SubNav'
 import { chevronLeftSrc, chevronRightSrc, memberAvatarPlaceholderSrc, plusIconSrc, searchIconSrc } from '../../shared/icons'
 import { useAsyncData } from '../../shared/hooks'
@@ -315,6 +316,7 @@ export default function MemberManagement() {
           </RoleDialogBackdrop>
         )}
       </MainContent>
+    <Footer />
     </PageWrapper>
   )
 }

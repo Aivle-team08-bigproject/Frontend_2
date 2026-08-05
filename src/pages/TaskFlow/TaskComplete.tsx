@@ -1,6 +1,7 @@
 import { useCallback } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import GNB from '../../shared/GNB'
+import Footer from '../../shared/Footer'
 import FlowPageHeader from '../../shared/FlowPageHeader'
 import RequestHeaderCard from '../../shared/RequestHeaderCard'
 import StepProgressBar from '../../shared/StepProgressBar'
@@ -182,6 +183,7 @@ export default function TaskComplete() {
           </NewTaskButton>
         </BottomActions>
       </FlowContentArea>
+    <Footer />
     </PageWrapper>
   )
 }

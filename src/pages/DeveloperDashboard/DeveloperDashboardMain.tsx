@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from 'react'
 import GNB from '../../shared/GNB'
+import Footer from '../../shared/Footer'
 import SubNav from '../../shared/SubNav'
 import { statusDotGreenSrc, statusDotOrangeSrc, statusDotRedSrc } from '../../shared/icons'
 import { useAsyncData } from '../../shared/hooks'
@@ -313,6 +314,7 @@ export default function DeveloperDashboardMain() {
           </RecentFailuresCard>
         </FailureSection>
       </MainContent>
+    <Footer />
     </PageWrapper>
   )
 }

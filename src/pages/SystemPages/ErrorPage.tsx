@@ -1,4 +1,6 @@
 import { useNavigate } from 'react-router-dom'
+import Footer from '../../shared/Footer'
+import Logo from '../../shared/Logo'
 import {
   ErrorActions,
   ErrorCode,
@@ -9,8 +11,6 @@ import {
   ErrorScreen,
   ErrorTitle,
   GridIcon,
-  HeaderBrand,
-  HeaderMark,
   Illustration,
   PrimaryAction,
   SecondaryAction,
@@ -19,7 +19,7 @@ import {
 } from './ErrorPage.styles'
 
 function Header() {
-  return <ErrorHeader><HeaderBrand><HeaderMark />하나 데이터마켓</HeaderBrand><SecurityArea>Internal Security Area</SecurityArea></ErrorHeader>
+  return <ErrorHeader><Logo size="sm" to="/dashboard" /><SecurityArea>Internal Security Area</SecurityArea></ErrorHeader>
 }
 
 export function NotFoundPage() {
@@ -37,6 +37,7 @@ export function NotFoundPage() {
           <SecondaryAction type="button" onClick={() => navigate(-1)}>이전 페이지</SecondaryAction>
         </ErrorActions>
       </ErrorContent>
+      <Footer />
     </ErrorScreen>
   )
 }
@@ -58,6 +59,7 @@ export function ServerErrorPage() {
         </ErrorActions>
         <SupportText>문제가 지속되면 개발팀에 문의하세요 <a href="mailto:dev@hanacard.co.kr">dev@hanacard.co.kr</a></SupportText>
       </ErrorContent>
+      <Footer />
     </ErrorScreen>
   )
 }

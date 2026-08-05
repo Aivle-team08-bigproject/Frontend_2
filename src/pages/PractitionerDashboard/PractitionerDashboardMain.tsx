@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import GNB from '../../shared/GNB'
+import Footer from '../../shared/Footer'
 import SubNav from '../../shared/SubNav'
 import { useAsyncData } from '../../shared/hooks'
 import DataStateNotice from '../../shared/DataStateNotice'
@@ -191,6 +192,7 @@ export default function PractitionerDashboardMain() {
           </InsightCol>
         </InsightRow>
       </MainContent>
+    <Footer />
     </PageWrapper>
   )
 }

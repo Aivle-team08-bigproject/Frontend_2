@@ -1,6 +1,7 @@
 import { useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import GNB from '../../shared/GNB'
+import Footer from '../../shared/Footer'
 import SubNav from '../../shared/SubNav'
 import { fetchAdminDashboard } from '../../shared/api'
 import { useAsyncData } from '../../shared/hooks'
@@ -43,5 +44,6 @@ export default function AdminDashboard() {
         </TableSection>)}
       </>}
     </MainContent>
+  <Footer />
   </PageWrapper>
 }

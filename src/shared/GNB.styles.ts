@@ -27,50 +27,6 @@ export const Left = styled.div`
   align-items: center;
 `
 
-export const LogoGroup = styled(Link)`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: inherit;
-  text-decoration: none;
-  cursor: pointer;
-
-  &:focus-visible {
-    outline: 2px solid ${colors.primary};
-    outline-offset: 4px;
-    border-radius: 6px;
-  }
-`
-
-export const LogoMark = styled.div`
-  width: 22px;
-  height: 22px;
-  border-radius: 6px;
-  background: ${colors.primary};
-  flex-shrink: 0;
-`
-
-export const LogoTexts = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  white-space: nowrap;
-`
-
-export const LogoTitle = styled.p`
-  margin: 0;
-  font-weight: 800;
-  font-size: 16px;
-  color: ${colors.primary};
-`
-
-export const LogoSubtitle = styled.p`
-  margin: 0;
-  font-weight: 700;
-  font-size: 9px;
-  color: ${colors.textMuted};
-`
-
 export const Search = styled.div`
   display: flex;
   align-items: center;

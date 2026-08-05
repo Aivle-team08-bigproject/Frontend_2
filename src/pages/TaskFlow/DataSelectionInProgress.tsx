@@ -1,4 +1,5 @@
 import GNB from '../../shared/GNB'
+import Footer from '../../shared/Footer'
 import FlowPageHeader from '../../shared/FlowPageHeader'
 import UnimplementedProgressModal from '../../shared/UnimplementedProgressModal'
 import { FlowContentArea, PageWrapper } from '../../shared/layout.styles'
@@ -12,6 +13,7 @@ export default function DataSelectionInProgress() {
       <GNB />
       <FlowPageHeader title="실시간 데이터 선별 진행" badgeLabel="데이터 선별" />
       <FlowContentArea><UnimplementedProgressModal stageLabel="데이터 선별" requestNo={requestNo} runId={runId} /></FlowContentArea>
+    <Footer />
     </PageWrapper>
   )
 }
