@@ -1,6 +1,5 @@
 import type { SubNavItem } from '../../shared/SubNav'
-import { fetchDashboard, fetchDashboardTasks, type DashboardResponse, type DashboardTaskItem, type PriorityCode, type StageGroupCode } from '../../shared/api'
-import { formatDate } from '../../shared/datetime'
+import { fetchDashboard, type DashboardResponse, type DashboardTaskItem, type PriorityCode } from '../../shared/api'
 import { colors } from '../../shared/theme'
 
 /** 전체 작업/작업 리스트/내 작업 현황 세 페이지가 공유하는 SubNav 탭. 페이지마다 따로 하드코딩하면 하나 바꿀 때 나머지가 안 맞음. */
@@ -116,14 +115,6 @@ export type PractitionerDashboardData = {
   deadlineItems: DeadlineItem[]
 }
 
-const legacyStatusForStageGroup: Record<StageGroupCode, TaskStatus> = {
-  REQUIREMENT_ANALYSIS: '요구사항 분석 진행',
-  SAMPLE_DATA: '샘플데이터 및 피드백',
-  FINAL_OUTPUT: '최종 산출물 및 피드백',
-  COMPLETED: '작업완료',
-  UNKNOWN: '요구사항 분석',
-}
-
 const priorityColors = {
   REQUIREMENT: { bg: colors.dangerBg, color: colors.danger },
   SAMPLE: { bg: colors.warningBgAlt, color: colors.warningAlt },
@@ -153,19 +144,6 @@ function deadlineItemFromTask(item: DashboardResponse['deadline_tasks'][number])
     tagBg: urgency.urgent ? colors.dangerBg : colors.warningBg,
     tagColor: urgency.urgent ? colors.danger : colors.warning,
     route: `${item.detail_route}${item.detail_route.includes('?') ? '&' : '?'}requestNo=${encodeURIComponent(item.request_no)}`,
-  }
-}
-
-function taskRowFromDashboardItem(item: DashboardTaskItem): TaskRow {
-  return {
-    reqId: item.request_no,
-    client: item.client,
-    dataType: item.stage_label,
-    detail: item.title,
-    assignee: item.assignee_name,
-    createdAt: formatDate(item.created_at),
-    updatedAt: formatDate(item.updated_at),
-    status: legacyStatusForStageGroup[item.stage_group_code],
   }
 }
 
@@ -246,23 +224,4 @@ export async function fetchPractitionerDashboardData(): Promise<PractitionerDash
       : [],
     deadlineItems: data.deadline_tasks.slice(0, 5).map(deadlineItemFromTask),
   }
-}
-
-/**
- * /dashboard/tasks 전용 데이터 소스. fetchPractitionerDashboardData()의 priority_actions/approval_tasks는
- * 백엔드에서 각각 상위 5건으로 캡되어 있어(service.py의 action_items[:5]) 우선순위 카드 count와
- * 실제 표시 가능한 행 수가 안 맞는 문제가 있었다. /api/v1/dashboard/tasks는 진짜 페이지네이션을
- * 지원하므로 여기서 그걸 직접 쓴다.
- */
-export async function fetchTaskListRows(priority?: PriorityCode): Promise<TaskRow[]> {
-  const response = await fetchDashboardTasks({ priority, page_size: 100 })
-  // priority_code는 과거에 그 우선순위 검토를 거쳤다는 이력 태그라 완료된 작업에도 남아있다.
-  // priority_cards.count(=action_items 기준: requires_action && !completed)와 건수를 맞추려면
-  // 우선순위로 필터링해 들어온 경우에 한해 같은 조건을 프론트에서도 적용해야 한다.
-  const items = priority
-    ? response.items.filter(
-        (item) => item.requires_action && item.status_group_code !== 'completed' && item.status_code !== 'COMPLETED',
-      )
-    : response.items
-  return items.map(taskRowFromDashboardItem)
 }
