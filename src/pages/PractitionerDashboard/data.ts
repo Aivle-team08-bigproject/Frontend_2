@@ -8,11 +8,10 @@ import {
 } from '../../shared/api'
 import { colors } from '../../shared/theme'
 
-/** 전체 작업/작업 리스트/내 작업 현황 세 페이지가 공유하는 SubNav 탭. 페이지마다 따로 하드코딩하면 하나 바꿀 때 나머지가 안 맞음. */
+/** 실무자 대시보드와 작업 리스트가 공유하는 SubNav 탭. */
 export const PRACTITIONER_NAV_ITEMS: SubNavItem[] = [
   { label: '전체 작업', to: '/dashboard' },
   { label: '작업 리스트', to: '/dashboard/tasks' },
-  { label: '내 작업 현황', to: '/dashboard/my-tasks' },
 ]
 
 export type StatCard = {
