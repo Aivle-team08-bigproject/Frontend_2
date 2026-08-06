@@ -218,8 +218,8 @@ export async function fetchPractitionerDashboardData(): Promise<PractitionerDash
         linkTo: card.detail_route,
       })),
       {
-        label: '진행 중인 전체 작업',
-        value: data.active_task_count,
+        label: '전체 작업',
+        value: data.summary.total_count,
         unit: '건',
         caption: '전체 작업 현황',
         linkTo: '/dashboard/tasks',
