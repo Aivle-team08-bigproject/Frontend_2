@@ -19,7 +19,7 @@ export type StatCard = {
   label: string
   value: number
   unit: string
-  caption: string
+  caption?: string
   highlight?: boolean
   /** 클릭 시 이동할 경로. 없으면 클릭 불가. */
   linkTo?: string
@@ -210,11 +210,10 @@ export async function fetchPractitionerDashboardData(): Promise<PractitionerDash
     .map(queueItemFromTask)
   return {
     statCards: [
-      ...data.priority_cards.map((card, index) => ({
+      ...data.priority_cards.map((card) => ({
         label: card.label,
         value: card.count,
         unit: '건',
-        caption: `우선순위 ${index + 1}`,
         highlight: card.count > 0,
         linkTo: card.detail_route,
       })),

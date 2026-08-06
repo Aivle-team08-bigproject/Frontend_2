@@ -116,7 +116,7 @@ export default function PractitionerDashboardMain() {
                 <StatValue $highlight={stat.highlight}>{stat.value}</StatValue>
                 <StatUnit $highlight={stat.highlight}>{stat.unit}</StatUnit>
               </StatNumbers>
-              <StatCaption $highlight={stat.highlight}>{stat.caption}</StatCaption>
+              {stat.caption && <StatCaption $highlight={stat.highlight}>{stat.caption}</StatCaption>}
             </StatCardEl>
           ))}
         </StatsRow>
