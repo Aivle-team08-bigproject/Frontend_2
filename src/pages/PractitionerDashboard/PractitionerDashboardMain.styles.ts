@@ -390,6 +390,9 @@ export const CalendarNavButton = styled.button`
 export const CalendarGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
+  /* 요일 라벨 줄(auto) + 항상 6주치 날짜 줄. 날짜 줄 높이를 고정해야
+     달 끝자락 빈 칸이 있는 줄이 찌그러져서 달마다 카드 높이가 흔들리는 걸 막는다. */
+  grid-template-rows: auto repeat(6, minmax(48px, auto));
   gap: 4px;
 `
 
@@ -438,11 +441,10 @@ export const CalendarEventDot = styled.span<{ $color: string }>`
   background: ${({ $color }) => $color};
 `
 
-export const CalendarPopover = styled.div<{ $flipUp?: boolean; $alignRight?: boolean }>`
-  position: absolute;
+export const CalendarPopover = styled.div<{ $visible: boolean }>`
+  position: fixed;
   z-index: 20;
-  ${({ $flipUp }) => ($flipUp ? 'bottom: 100%; margin-bottom: 6px;' : 'top: 100%; margin-top: 6px;')}
-  ${({ $alignRight }) => ($alignRight ? 'right: 0;' : 'left: 0;')}
+  visibility: ${({ $visible }) => ($visible ? 'visible' : 'hidden')};
   display: flex;
   flex-direction: column;
   gap: 6px;

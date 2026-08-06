@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import GNB from '../../shared/GNB'
 import Footer from '../../shared/Footer'
@@ -86,7 +86,9 @@ function calendarCells(month: Date): Array<Date | null> {
   for (let day = 1; day <= lastDay.getDate(); day += 1) {
     cells.push(new Date(month.getFullYear(), month.getMonth(), day))
   }
-  while (cells.length % 7 !== 0) cells.push(null)
+  // 6주(42칸) 고정 — 월마다 4~6줄로 들쭉날쭉하면 달력 카드 높이가 바뀌면서
+  // 옆 "통합 작업 큐" 패널과 전체 레이아웃이 같이 흔들린다.
+  while (cells.length < 42) cells.push(null)
   return cells
 }
 
@@ -96,8 +98,26 @@ export default function PractitionerDashboardMain() {
   const navigate = useNavigate()
   const [calendarMonth, setCalendarMonth] = useState(() => new Date())
   const [openDateKey, setOpenDateKey] = useState<string | null>(null)
+  const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null)
+  const [popoverPos, setPopoverPos] = useState<{ top: number; left: number } | null>(null)
   const calendarGridRef = useRef<HTMLDivElement>(null)
+  const popoverRef = useRef<HTMLDivElement>(null)
   const cells = useMemo(() => calendarCells(calendarMonth), [calendarMonth])
+
+  function openPopover(key: string, anchor: HTMLElement) {
+    setOpenDateKey(key)
+    setAnchorRect(anchor.getBoundingClientRect())
+  }
+  function closePopover(key: string) {
+    setOpenDateKey((current) => (current === key ? null : current))
+  }
+  function togglePopover(key: string, anchor: HTMLElement) {
+    setOpenDateKey((current) => {
+      if (current === key) return null
+      setAnchorRect(anchor.getBoundingClientRect())
+      return key
+    })
+  }
 
   useEffect(() => {
     function closeOnOutsideClick(event: MouseEvent) {
@@ -106,6 +126,42 @@ export default function PractitionerDashboardMain() {
     document.addEventListener('mousedown', closeOnOutsideClick)
     return () => document.removeEventListener('mousedown', closeOnOutsideClick)
   }, [])
+
+  useEffect(() => {
+    if (!openDateKey) setPopoverPos(null)
+  }, [openDateKey])
+
+  // 열려 있는 동안 창 크기가 바뀌거나 스크롤되면 anchorRect가 그대로라 위치가 안 맞을 수
+  // 있다 — 다시 계산하는 대신 그냥 닫는다(툴팁류에서 흔한 처리).
+  useEffect(() => {
+    if (!openDateKey) return
+    function close() {
+      setOpenDateKey(null)
+    }
+    window.addEventListener('resize', close)
+    window.addEventListener('scroll', close, true)
+    return () => {
+      window.removeEventListener('resize', close)
+      window.removeEventListener('scroll', close, true)
+    }
+  }, [openDateKey])
+
+  // 팝오버를 일단 화면 밖(측정용)으로 렌더링한 뒤 실제 크기를 재서 화면 안에 들어오도록
+  // 위치를 다시 계산한다 — 뷰포트 경계를 고정 임계값(행/열 인덱스)으로 추측하면 창 폭이나
+  // 스크롤 위치가 달라질 때 어긋난다.
+  useLayoutEffect(() => {
+    if (!openDateKey || !anchorRect || !popoverRef.current) return
+    const margin = 12
+    const gap = 6
+    const rect = popoverRef.current.getBoundingClientRect()
+    let left = anchorRect.left
+    let top = anchorRect.bottom + gap
+    if (left + rect.width > window.innerWidth - margin) left = window.innerWidth - rect.width - margin
+    if (left < margin) left = margin
+    if (top + rect.height > window.innerHeight - margin) top = anchorRect.top - rect.height - gap
+    if (top < margin) top = margin
+    setPopoverPos({ top, left })
+  }, [openDateKey, anchorRect])
 
   const eventsByDate = useMemo(() => {
     const grouped = new Map<string, typeof view.calendarItems>()
@@ -195,10 +251,6 @@ export default function PractitionerDashboardMain() {
                 const events = eventsByDate.get(key) ?? []
                 const isToday = key === dateKey(new Date())
                 const isOpen = openDateKey === key && events.length > 0
-                const rowIndex = Math.floor(index / 7)
-                const totalRows = cells.length / 7
-                const flipUp = rowIndex >= totalRows - 2
-                const alignRight = index % 7 >= 5
                 return (
                   <CalendarDayCell key={key}>
                     <CalendarDay
@@ -206,19 +258,19 @@ export default function PractitionerDashboardMain() {
                       $today={isToday}
                       $hasEvent={events.length > 0}
                       aria-label={events.length ? `${cell.getDate()}일 ${events.map((event) => EVENT_LABELS[event.event_type]).join(', ')}` : `${cell.getDate()}일`}
-                      onMouseEnter={() => events.length > 0 && setOpenDateKey(key)}
-                      onMouseLeave={() => setOpenDateKey((current) => (current === key ? null : current))}
-                      onFocus={() => events.length > 0 && setOpenDateKey(key)}
-                      onClick={() => {
+                      onMouseEnter={(event) => events.length > 0 && openPopover(key, event.currentTarget)}
+                      onMouseLeave={() => closePopover(key)}
+                      onFocus={(event) => events.length > 0 && openPopover(key, event.currentTarget)}
+                      onClick={(event) => {
                         if (events.length === 1) navigate(events[0].detail_route)
-                        else if (events.length > 1) setOpenDateKey((current) => (current === key ? null : key))
+                        else if (events.length > 1) togglePopover(key, event.currentTarget)
                       }}
                     >
                       {cell.getDate()}
                       {events.length > 0 && <CalendarEventDots>{events.slice(0, 3).map((event) => <CalendarEventDot key={`${event.request_no}-${event.event_type}`} $color={EVENT_COLORS[event.event_type]} />)}</CalendarEventDots>}
                     </CalendarDay>
                     {isOpen && (
-                      <CalendarPopover $flipUp={flipUp} $alignRight={alignRight} role="dialog" aria-label={`${cell.getDate()}일 작업 목록`}>
+                      <CalendarPopover ref={popoverRef} $visible={Boolean(popoverPos)} style={popoverPos ?? undefined} role="dialog" aria-label={`${cell.getDate()}일 작업 목록`}>
                         <CalendarPopoverHeader>{cell.getMonth() + 1}월 {cell.getDate()}일 ({WEEKDAY_LABELS[cell.getDay()]})</CalendarPopoverHeader>
                         {events.map((event) => (
                           <CalendarPopoverItem
