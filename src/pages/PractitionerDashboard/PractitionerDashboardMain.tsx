@@ -5,15 +5,9 @@ import Footer from '../../shared/Footer'
 import SubNav from '../../shared/SubNav'
 import { useAsyncData } from '../../shared/hooks'
 import DataStateNotice from '../../shared/DataStateNotice'
-import { MainContent, PageWrapper, SectionHeader, SectionTitle, SectionTitleGroup } from '../../shared/layout.styles'
+import { MainContent, PageWrapper, SectionHeader, SectionTitle } from '../../shared/layout.styles'
 import { EMPTY_PRACTITIONER_DASHBOARD, fetchPractitionerDashboardData, PRACTITIONER_NAV_ITEMS } from './data'
 import {
-  ActionLink,
-  AlertBadge,
-  AlertsRow,
-  AlertsSection,
-  CardBottom,
-  CardTop,
   CalendarDay,
   CalendarEventDot,
   CalendarEventDots,
@@ -24,7 +18,6 @@ import {
   CalendarNav,
   CalendarNavButton,
   CalendarWeekday,
-  CountBadge,
   EmptyState,
   FootNote,
   LegendDot,
@@ -43,9 +36,6 @@ import {
   StatUnit,
   StatValue,
   StatsRow,
-  WarningCardEl,
-  WarningDesc,
-  WarningTitle,
   WorkArea,
   WorkPanel,
 } from './PractitionerDashboardMain.styles'
@@ -130,34 +120,6 @@ export default function PractitionerDashboardMain() {
             </StatCardEl>
           ))}
         </StatsRow>
-
-        <AlertsSection>
-          <SectionHeader>
-            <SectionTitleGroup>
-              <SectionTitle>단계별 조치 대기 작업 (Human Intervention Required)</SectionTitle>
-              <AlertBadge>{view.alertBannerCount}건 지속 관리 필요</AlertBadge>
-            </SectionTitleGroup>
-          </SectionHeader>
-          <AlertsRow>
-            {view.warningCards.map((card, index) => (
-              <WarningCardEl key={card.title} $urgent={index === 0}>
-                <CardTop>
-                  <WarningTitle>{card.title}</WarningTitle>
-                  <CountBadge $bg={card.countBg} $color={card.countColor}>
-                    {card.countLabel}
-                  </CountBadge>
-                </CardTop>
-                <WarningDesc>{card.description}</WarningDesc>
-                <CardBottom>
-                  <FootNote>{card.footNote}</FootNote>
-                  <ActionLink type="button" onClick={() => navigate(card.actionTo)}>
-                    상세 조치 &gt;
-                  </ActionLink>
-                </CardBottom>
-              </WarningCardEl>
-            ))}
-          </AlertsRow>
-        </AlertsSection>
 
         <WorkArea>
           <WorkPanel>

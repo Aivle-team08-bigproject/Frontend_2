@@ -1,5 +1,4 @@
 import searchIconSrc from '../assets/icons/search-icon.svg'
-import alarmBadgeSrc from '../assets/icons/alarm-badge.svg'
 import chevronDownSrc from '../assets/icons/chevron-down.svg'
 import chevronLeftSrc from '../assets/icons/chevron-left.svg'
 import chevronRightSrc from '../assets/icons/chevron-right.svg'
@@ -32,7 +31,6 @@ import plusSmSrc from '../assets/icons/plus-sm.svg'
 
 export {
   searchIconSrc,
-  alarmBadgeSrc,
   chevronDownSrc,
   chevronLeftSrc,
   chevronRightSrc,

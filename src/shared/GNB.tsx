@@ -4,13 +4,11 @@ import { EMPTY_CURRENT_USER, fetchCurrentUser } from './currentUser'
 import { logout } from './api'
 import { clearAccessToken } from './auth'
 import { useAsyncData } from './hooks'
-import { alarmBadgeSrc, avatarSrc, searchIconSrc } from './icons'
+import { avatarSrc, searchIconSrc } from './icons'
 import Logo from './Logo'
 import {
-  AlarmBadge,
   Avatar,
   Bar,
-  Divider,
   Left,
   ProfileMenu,
   ProfileMenuButton,
@@ -95,8 +93,6 @@ export default function GNB() {
         />
       </Search>
       <Right>
-        <AlarmBadge src={alarmBadgeSrc} alt="알림" />
-        <Divider />
         <ProfileMenuWrap ref={profileMenuRef}>
           <Profile
             type="button"
