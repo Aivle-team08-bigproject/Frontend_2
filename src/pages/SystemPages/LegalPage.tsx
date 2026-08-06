@@ -1,4 +1,6 @@
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import Footer from '../../shared/Footer'
+import Logo from '../../shared/Logo'
 import {
   DocumentBody,
   DocumentFacts,
@@ -35,7 +37,7 @@ type SectionData = {
 }
 
 const termsSections: SectionData[] = [
-  { id: 'terms-1', title: '제1조 총칙 및 목적', body: '이 약관은 포트폴리오 데모 서비스(이하 “회사”)가 임직원 및 내부 업무상 초대된 사용자에게 제공하는 하나 데이터마켓(이하 “서비스”)의 이용 조건, 절차, 권리·의무와 책임사항을 정함을 목적으로 합니다.' },
+  { id: 'terms-1', title: '제1조 총칙 및 목적', body: '이 약관은 포트폴리오 데모 서비스(이하 “회사”)가 임직원 및 내부 업무상 초대된 사용자에게 제공하는 하나 데이터 플랫폼(이하 “서비스”)의 이용 조건, 절차, 권리·의무와 책임사항을 정함을 목적으로 합니다.' },
   { id: 'terms-2', title: '제2조 용어의 정의', body: '“회원”은 회사가 정한 절차에 따라 가입 신청과 관리자 승인을 완료한 사람을 말합니다. “데이터 활용 요청”은 회원이 업무 목적의 데이터 활용을 위해 서비스에 등록하는 요청을 말하며, “산출물”은 요청에 따라 서비스가 제공하는 분석·가공 결과를 말합니다.' },
   { id: 'terms-3', title: '제3조 서비스의 제공 범위와 변경', body: '회사는 데이터 활용 요청 등록, 요청 진행상태 확인, 검토·승인 및 산출물 확인 기능을 제공합니다. 회사는 보안, 운영, 정책 또는 기술상의 필요에 따라 서비스의 일부 또는 전부를 변경·중단할 수 있으며, 중요한 변경은 서비스 내 공지로 안내합니다.' },
   { id: 'terms-4', title: '제4조 회원가입·승인·계정 관리', body: '회원가입 신청에는 정확한 회사 이메일, 이름, 휴대폰 번호, 부서 및 직급 정보를 사용해야 합니다. 가입 신청은 관리자 승인 후 활성화되며, 회원은 비밀번호와 인증정보를 직접 관리하고 제3자에게 공유해서는 안 됩니다.' },
@@ -70,26 +72,33 @@ function LegalTable({ table }: { table: NonNullable<SectionData['table']> }) {
 
 export default function LegalPage({ type }: { type: LegalType }) {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const isStandaloneTab = searchParams.get('standalone') === '1'
+  const withStandalone = (path: string) => (isStandaloneTab ? `${path}?standalone=1` : path)
   const sections = type === 'terms' ? termsSections : privacySections
   const title = type === 'terms' ? '서비스 이용약관' : '개인정보 처리방침'
   const version = type === 'terms' ? 'TERMS-2026-08' : 'PRIVACY-2026-08'
   return (
     <DocumentLayout>
       <DocumentHeader>
-        <button type="button" onClick={() => navigate(-1)}>← 이전</button>
-        <Link to="/login">하나 데이터마켓</Link>
+        {isStandaloneTab ? (
+          <button type="button" onClick={() => window.close()}>✕ 닫기</button>
+        ) : (
+          <button type="button" onClick={() => navigate(-1)}>← 이전</button>
+        )}
+        <Logo size="sm" to="/login" />
         <span>PUBLIC INFORMATION</span>
       </DocumentHeader>
       <DocumentBody>
-        <DocumentNav><Link to="/legal/terms" className={type === 'terms' ? 'active' : ''}>서비스 이용약관</Link><Link to="/legal/privacy" className={type === 'privacy' ? 'active' : ''}>개인정보 처리방침</Link><PrintButton type="button" onClick={() => window.print()}>인쇄</PrintButton></DocumentNav>
+        <DocumentNav><Link to={withStandalone('/legal/terms')} className={type === 'terms' ? 'active' : ''}>서비스 이용약관</Link><Link to={withStandalone('/legal/privacy')} className={type === 'privacy' ? 'active' : ''}>개인정보 처리방침</Link><PrintButton type="button" onClick={() => window.print()}>인쇄</PrintButton></DocumentNav>
         <DocumentTitle>{title}</DocumentTitle>
-        <DocumentMeta>문서 버전 {version} · 시행일 2026년 8월 1일 · 최종 수정일 2026년 8월 1일 · <Link to="#document-history">이전 버전 보기</Link></DocumentMeta>
+        <DocumentMeta>문서 버전 {version} · 시행일 2026년 8월 1일 · 최종 수정일 2026년 8월 1일 · <a href="#document-history">이전 버전 보기</a></DocumentMeta>
         {type === 'privacy' && <DocumentFacts><FactRow><strong>처리자</strong><span>포트폴리오 데모 서비스</span></FactRow><FactRow><strong>보유기간</strong><span>신청·로그 1년 · 계정·동의·감사 이력 3년</span></FactRow><FactRow><strong>제3자 제공</strong><span>원칙적으로 없음</span></FactRow><FactRow><strong>위탁·국외 이전</strong><span>Neon Cloud PostgreSQL·AWS·사내 인프라 / 미국 저장·백업</span></FactRow><FactRow><strong>문의</strong><span>privacy@example.com · 02-0000-0000</span></FactRow></DocumentFacts>}
         <TableOfContents aria-label="문서 목차"><strong>문서 목차</strong>{sections.map((section) => <a key={section.id} href={`#${section.id}`}>{section.title}</a>)}</TableOfContents>
         {sections.map((section) => <Section id={section.id} key={section.id}><SectionTitle>{section.title}</SectionTitle><SectionBody>{section.body}</SectionBody>{section.table && <LegalTable table={section.table} />}</Section>)}
         <DocumentFooter id="document-history"><strong>이전 버전 및 문서 문의</strong><span>이전 버전은 개인정보보호 담당부서에 요청할 수 있습니다. 문의: privacy@example.com / 02-0000-0000</span></DocumentFooter>
-        <button className="return-button" type="button" onClick={() => navigate('/signup')}>회원가입 신청으로 돌아가기</button>
       </DocumentBody>
+      <Footer />
     </DocumentLayout>
   )
 }

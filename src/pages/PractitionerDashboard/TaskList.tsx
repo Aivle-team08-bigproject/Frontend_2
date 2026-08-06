@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import GNB from '../../shared/GNB'
+import Footer from '../../shared/Footer'
 import SubNav from '../../shared/SubNav'
 import type { DashboardPageSize, DashboardTaskItem, PriorityCode, StageGroupCode, StatusGroupCode } from '../../shared/api'
 import { fetchCurrentUser } from '../../shared/currentUser'
@@ -138,7 +139,7 @@ export default function TaskList() {
                       <FilterMenu role="menu" aria-label={`${label} 필터`}>
                         <FilterOption type="button" role="menuitemradio" aria-checked={false} $selected={false} onClick={() => updateQuery({ [name]: undefined })}>전체</FilterOption>
                         {name === 'stage' && STAGES.map((option) => <FilterOption key={option.value} type="button" role="menuitemradio" aria-checked={stage === option.value} $selected={stage === option.value} onClick={() => updateQuery({ stage: option.value })}>{option.label}</FilterOption>)}
-                        {name === 'status' && STATUSES.map((option) => <FilterOption key={option.value} type="button" role="menuitemradio" aria-checked={status === option.value} $selected={status === option.value} onClick={() => updateQuery({ status: option.value })}>{option.label}</FilterOption>)}
+                        {name === 'status' && STATUSES.map((option) => <FilterOption key={option.value} type="button" role="menuitemradio" aria-checked={status === option.value} $selected={status === option.value} onClick={() => updateQuery({ status: option.value, ...(option.value === 'waiting_review' ? {} : { priority: undefined, filter: undefined }) })}>{option.label}</FilterOption>)}
                         {name === 'assignee' && assigneeOptions.map(([code, label]) => <FilterOption key={code} type="button" role="menuitemradio" aria-checked={assignee === code} $selected={assignee === code} onClick={() => updateQuery({ assignee: code })}>{label}</FilterOption>)}
                         {name === 'month' && <input type="month" aria-label="등록 월" value={month ?? ''} onChange={(event) => updateQuery({ month: event.target.value || undefined })} />}
                       </FilterMenu>
@@ -172,6 +173,7 @@ export default function TaskList() {
           </Pagination>
         </TableSection>
       </MainContent>
+    <Footer />
     </PageWrapper>
   )
 }

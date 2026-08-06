@@ -2,10 +2,9 @@ import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { ApiError, login } from '../../shared/api'
 import { saveAccessToken } from '../../shared/auth'
+import Logo from '../../shared/Logo'
 import {
   Brand,
-  BrandMark,
-  BrandPill,
   ErrorText,
   Field,
   Form,
@@ -14,15 +13,15 @@ import {
   Icon,
   Input,
   InputWrap,
+  LegalLink,
+  LoginBody,
   LoginButton,
   LoginCard,
   LoginScreen,
   RememberLabel,
   SignupLink,
-  LegalLink,
   Subtitle,
   TextButton,
-  Title,
 } from './LoginPage.styles'
 
 function UserIcon() {
@@ -71,31 +70,32 @@ export default function LoginPage() {
 
   return (
     <LoginScreen>
-      <LoginCard>
-        <Brand>
-          <BrandPill><BrandMark />DATA FORGE</BrandPill>
-          <Title>하나 데이터마켓</Title>
-          <Subtitle>실무자 관리 시스템 • Operator Platform</Subtitle>
-        </Brand>
-        <Form onSubmit={handleSubmit}>
-          <Field>
-            회사 이메일
-            <InputWrap><Icon><UserIcon /></Icon><Input type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="name@example.com" autoComplete="username" /></InputWrap>
-          </Field>
-          <Field>
-            비밀번호
-            <InputWrap><Icon><LockIcon /></Icon><Input type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="••••••••••••" autoComplete="current-password" /></InputWrap>
-          </Field>
-          <FormMeta>
-            <RememberLabel><input type="checkbox" checked={rememberMe} onChange={(event) => setRememberMe(event.target.checked)} />로그인 상태 유지</RememberLabel>
-            <TextButton type="button" onClick={() => setError('비밀번호 재설정은 관리자에게 문의해주세요.')}>비밀번호를 잊으셨나요?</TextButton>
-          </FormMeta>
-          {error && <ErrorText role="alert">{error}</ErrorText>}
-          <LoginButton type="submit" disabled={submitting || !email.trim() || !password}>{submitting ? '로그인 중...' : '로그인'}</LoginButton>
-          <SignupLink type="button" onClick={() => navigate('/signup')}>회원가입 신청</SignupLink>
-          <HelperText><LegalLink to="/legal/terms">서비스 이용약관</LegalLink> · <LegalLink to="/legal/privacy">개인정보 처리방침</LegalLink></HelperText>
-        </Form>
-      </LoginCard>
+      <LoginBody>
+        <LoginCard>
+          <Brand>
+            <Logo size="md" to="/login" />
+            <Subtitle>실무자 관리 시스템 • Operator Platform</Subtitle>
+          </Brand>
+          <Form onSubmit={handleSubmit}>
+            <Field>
+              회사 이메일
+              <InputWrap><Icon><UserIcon /></Icon><Input type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="name@example.com" autoComplete="username" /></InputWrap>
+            </Field>
+            <Field>
+              비밀번호
+              <InputWrap><Icon><LockIcon /></Icon><Input type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="••••••••••••" autoComplete="current-password" /></InputWrap>
+            </Field>
+            <FormMeta>
+              <RememberLabel><input type="checkbox" checked={rememberMe} onChange={(event) => setRememberMe(event.target.checked)} />로그인 상태 유지</RememberLabel>
+              <TextButton type="button" onClick={() => setError('비밀번호 재설정은 관리자에게 문의해주세요.')}>비밀번호를 잊으셨나요?</TextButton>
+            </FormMeta>
+            {error && <ErrorText role="alert">{error}</ErrorText>}
+            <LoginButton type="submit" disabled={submitting || !email.trim() || !password}>{submitting ? '로그인 중...' : '로그인'}</LoginButton>
+            <SignupLink type="button" onClick={() => navigate('/signup')}>회원가입 신청</SignupLink>
+            <HelperText><LegalLink to="/legal/terms">서비스 이용약관</LegalLink> · <LegalLink to="/legal/privacy">개인정보 처리방침</LegalLink></HelperText>
+          </Form>
+        </LoginCard>
+      </LoginBody>
     </LoginScreen>
   )
 }

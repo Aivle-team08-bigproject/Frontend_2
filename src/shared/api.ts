@@ -68,10 +68,27 @@ export type CreateDataRequestPayload = {
   raw_requirement: string
   title?: string
   requester_name?: string
+  client?: {
+    company_name: string
+    business_registration_number?: string
+    contact_name?: string
+    contact_email?: string
+    contact_phone?: string
+  }
+  contract?: {
+    contract_no?: string
+    start_date?: string
+    end_date?: string
+    delivery_due_at?: string
+  }
+  structured_requirement?: Record<string, unknown>
+  source_data_status?: 'READY' | 'PREPARING' | 'UNKNOWN'
+  data_sensitivity?: 'NONE' | 'POSSIBLE' | 'UNKNOWN'
 }
 
 export type CreateDataRequestResponse = {
   request_no: string
+  contract_no?: string | null
   run_id: number
   request_status: string
   run_status: string
@@ -262,6 +279,15 @@ export type DashboardDeadlineTask = {
   detail_route: string
 }
 
+export type DashboardCalendarEvent = {
+  request_no: string
+  title: string
+  client: string
+  event_type: 'CONTRACT_START' | 'CONTRACT_END' | 'DELIVERY_DUE'
+  event_date: string
+  detail_route: string
+}
+
 export type DashboardScope = 'mine' | 'all'
 
 export type PersonalDashboardSummary = {
@@ -296,6 +322,7 @@ export type DashboardResponse = {
   popular_products_unavailable_message: string
   approval_tasks: DashboardTaskItem[]
   deadline_tasks: DashboardDeadlineTask[]
+  calendar_events: DashboardCalendarEvent[]
   active_task_count: number
 }
 
@@ -577,10 +604,6 @@ export function fetchTaskDetail(requestNo: string, runId: number): Promise<TaskD
   return request<TaskDetailResponse>(
     `/api/v1/tasks/${encodeURIComponent(requestNo)}/runs/${runId}/detail`,
   )
-}
-
-export function fetchDashboardMyTasks<T>(): Promise<T> {
-  return request('/api/v1/dashboard/my-tasks')
 }
 
 export function fetchDashboardTaskLookup<T>(): Promise<T> {

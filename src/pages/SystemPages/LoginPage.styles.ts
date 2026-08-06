@@ -3,12 +3,18 @@ import { Link } from 'react-router-dom'
 
 export const LoginScreen = styled.main`
   min-height: 100vh;
-  display: grid;
-  place-items: center;
-  padding: 40px 20px;
+  display: flex;
+  flex-direction: column;
   background:
     radial-gradient(circle at 10% 45%, rgba(0, 132, 133, 0.08), transparent 38%),
     linear-gradient(120deg, #f5fbfb 0%, #ffffff 72%);
+`
+
+export const LoginBody = styled.div`
+  flex: 1;
+  display: grid;
+  place-items: center;
+  padding: 40px 20px;
 `
 
 export const LoginCard = styled.section`
@@ -27,25 +33,6 @@ export const Brand = styled.header`
   align-items: center;
 `
 
-export const BrandPill = styled.div`
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 14px;
-  border-radius: 999px;
-  background: #e6f3f3;
-  color: #008485;
-  font-size: 12px;
-  font-weight: 700;
-`
-
-export const BrandMark = styled.span`
-  width: 13px;
-  height: 13px;
-  border-radius: 4px;
-  background: #008485;
-`
-
 export const Title = styled.h1`
   margin: 14px 0 4px;
   color: #1a1a1b;
@@ -55,7 +42,7 @@ export const Title = styled.h1`
 `
 
 export const Subtitle = styled.p`
-  margin: 0;
+  margin: 12px 0 0;
   color: #495057;
   font-size: 14px;
   font-weight: 500;
@@ -163,17 +150,6 @@ export const LoginButton = styled.button`
   }
 `
 
-export const HelperText = styled.p`
-  margin: 0;
-  text-align: center;
-  color: #adb5bd;
-  font-size: 12px;
-
-  strong {
-    color: #495057;
-  }
-`
-
 export const SignupLink = styled.button`
   height: 45px;
   border: 1px solid #008c8d;
@@ -185,18 +161,25 @@ export const SignupLink = styled.button`
   cursor: pointer;
 `
 
-export const LegalLink = styled(Link)`
-  color: #008485;
-  font-weight: 700;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-`
-
 export const ErrorText = styled.p`
   margin: -6px 0 0;
   color: #dc2626;
   font-size: 12px;
   text-align: center;
+`
+
+export const HelperText = styled.p`
+  margin: 0;
+  text-align: center;
+  color: #adb5bd;
+  font-size: 12px;
+`
+
+export const LegalLink = styled(Link)`
+  color: #008485;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 `
 
 export const SuccessText = styled.p`

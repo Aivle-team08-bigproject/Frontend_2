@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import { colors } from '../../shared/theme'
+import { colors, shadow } from '../../shared/theme'
 
 export const StatsRow = styled.div`
   display: flex;
@@ -53,111 +53,10 @@ export const StatCaption = styled.p<{ $highlight?: boolean }>`
   color: ${({ $highlight }) => ($highlight ? colors.textSecondary : colors.textMuted)};
 `
 
-export const AlertsSection = styled.section`
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  width: 100%;
-`
-
-export const AlertBadge = styled.span`
-  display: inline-flex;
-  padding: 2px 8px;
-  border-radius: 100px;
-  background: ${colors.dangerBg};
-  color: ${colors.danger};
-  font-size: 12px;
-  font-weight: 700;
-  white-space: nowrap;
-`
-
-export const AlertsRow = styled.div`
-  display: flex;
-  gap: 16px;
-  align-items: stretch;
-  width: 100%;
-`
-
-export const WarningCardEl = styled.div<{ $urgent?: boolean }>`
-  display: flex;
-  flex: 1 0 0;
-  min-width: 0;
-  flex-direction: column;
-  gap: 12px;
-  padding: 20px;
-  border-radius: 12px;
-  background: ${colors.white};
-  border: ${({ $urgent }) => ($urgent ? `1.5px solid ${colors.danger}` : `1px solid ${colors.border}`)};
-`
-
-export const CardTop = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-`
-
-export const WarningTitle = styled.p`
-  margin: 0;
-  font-size: 14px;
-  font-weight: 800;
-  color: ${colors.text};
-  white-space: nowrap;
-`
-
-export const CountBadge = styled.span<{ $bg: string; $color: string }>`
-  display: inline-flex;
-  padding: 4px 10px;
-  border-radius: 6px;
-  background: ${({ $bg }) => $bg};
-  color: ${({ $color }) => $color};
-  font-size: 12px;
-  font-weight: 700;
-  white-space: nowrap;
-`
-
-export const WarningDesc = styled.p`
-  margin: 0;
-  width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 13px;
-  color: ${colors.textSecondary};
-`
-
-export const CardBottom = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-`
-
 export const FootNote = styled.p`
   margin: 0;
   font-size: 12px;
   color: ${colors.textMuted};
-`
-
-export const ActionLink = styled.button`
-  margin: 0;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  font-size: 13px;
-  font-weight: 700;
-  color: ${colors.primary};
-  cursor: pointer;
-
-  &:hover {
-    text-decoration: underline;
-  }
-
-  &:focus-visible {
-    outline: 2px solid ${colors.primary};
-    outline-offset: 3px;
-    border-radius: 2px;
-  }
 `
 
 export const InsightRow = styled.div`
@@ -352,4 +251,290 @@ export const EmptyState = styled.div`
   justify-content: center;
   color: ${colors.textMuted};
   font-size: 14px;
+`
+
+export const WorkArea = styled.div`
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.85fr);
+  gap: 20px;
+  width: 100%;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
+`
+
+export const WorkPanel = styled.section`
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 20px;
+  padding: 24px;
+  border: 1px solid ${colors.border};
+  border-radius: 16px;
+  background: ${colors.white};
+`
+
+export const QueueList = styled.div`
+  display: flex;
+  min-height: 240px;
+  flex-direction: column;
+  gap: 10px;
+`
+
+export const QueueItemRow = styled.button`
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+  padding: 14px;
+  border: 1px solid ${colors.border};
+  border-radius: 10px;
+  background: ${colors.white};
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    border-color: ${colors.primary};
+    outline: none;
+    box-shadow: 0 0 0 3px ${colors.flowPrimaryBg};
+  }
+`
+
+export const QueueRank = styled.span`
+  display: inline-flex;
+  width: 24px;
+  height: 24px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: ${colors.primary};
+  color: ${colors.white};
+  font-size: 12px;
+  font-weight: 800;
+`
+
+export const QueueTexts = styled.span`
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+`
+
+export const QueueTitle = styled.span`
+  overflow: hidden;
+  color: ${colors.text};
+  font-size: 14px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`
+
+export const QueueMeta = styled.span`
+  overflow: hidden;
+  color: ${colors.textMuted};
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`
+
+export const QueueAction = styled.span<{ $bg: string; $color: string }>`
+  display: inline-flex;
+  padding: 6px 9px;
+  border-radius: 7px;
+  background: ${({ $bg }) => $bg};
+  color: ${({ $color }) => $color};
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+`
+
+export const CalendarHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+`
+
+export const CalendarMonth = styled.h3`
+  margin: 0;
+  color: ${colors.text};
+  font-size: 20px;
+  font-weight: 800;
+`
+
+export const CalendarNav = styled.div`
+  display: flex;
+  gap: 4px;
+`
+
+export const CalendarNavButton = styled.button`
+  width: 30px;
+  height: 30px;
+  border: 1px solid ${colors.border};
+  border-radius: 7px;
+  background: ${colors.white};
+  color: ${colors.primary};
+  font-size: 18px;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    border-color: ${colors.primary};
+    outline: none;
+  }
+`
+
+export const CalendarGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  /* 요일 라벨 줄(auto) + 항상 6주치 날짜 줄. 날짜 줄 높이를 고정해야
+     달 끝자락 빈 칸이 있는 줄이 찌그러져서 달마다 카드 높이가 흔들리는 걸 막는다. */
+  grid-template-rows: auto repeat(6, minmax(48px, auto));
+  gap: 4px;
+`
+
+export const CalendarWeekday = styled.span`
+  padding: 4px 0;
+  color: ${colors.textMuted};
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+`
+
+export const CalendarDayCell = styled.div`
+  position: relative;
+`
+
+export const CalendarDay = styled.button<{ $muted?: boolean; $today?: boolean; $hasEvent?: boolean }>`
+  width: 100%;
+  position: relative;
+  min-height: 48px;
+  padding: 7px 5px;
+  border: 1px solid ${({ $today }) => ($today ? colors.primary : colors.border)};
+  border-radius: 8px;
+  background: ${({ $today }) => ($today ? colors.flowPrimaryBg : colors.white)};
+  color: ${({ $muted }) => ($muted ? colors.textMuted : colors.text)};
+  font-size: 12px;
+  text-align: left;
+  cursor: ${({ $hasEvent }) => ($hasEvent ? 'pointer' : 'default')};
+
+  &:hover,
+  &:focus-visible {
+    border-color: ${({ $hasEvent }) => ($hasEvent ? colors.primary : colors.border)};
+    outline: none;
+  }
+`
+
+export const CalendarEventDots = styled.span`
+  display: flex;
+  gap: 3px;
+  margin-top: 5px;
+`
+
+export const CalendarEventDot = styled.span<{ $color: string }>`
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: ${({ $color }) => $color};
+`
+
+export const CalendarPopover = styled.div<{ $visible: boolean }>`
+  position: fixed;
+  z-index: 20;
+  visibility: ${({ $visible }) => ($visible ? 'visible' : 'hidden')};
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 220px;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid ${colors.border};
+  background: ${colors.white};
+  box-shadow: ${shadow.card};
+`
+
+export const CalendarPopoverHeader = styled.p`
+  margin: 0 0 2px;
+  font-size: 12px;
+  font-weight: 800;
+  color: ${colors.text};
+`
+
+export const CalendarPopoverItem = styled.button`
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  width: 100%;
+  padding: 6px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    background: ${colors.bg};
+    outline: none;
+  }
+`
+
+export const CalendarPopoverDot = styled.span<{ $color: string }>`
+  flex-shrink: 0;
+  margin-top: 5px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: ${({ $color }) => $color};
+`
+
+export const CalendarPopoverText = styled.span`
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+`
+
+export const CalendarPopoverLabel = styled.span`
+  font-size: 11px;
+  font-weight: 700;
+  color: ${colors.textMuted};
+`
+
+export const CalendarPopoverTitle = styled.span`
+  font-size: 12px;
+  font-weight: 700;
+  color: ${colors.text};
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`
+
+export const CalendarPopoverMeta = styled.span`
+  font-size: 11px;
+  color: ${colors.textSecondary};
+`
+
+export const CalendarLegend = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  color: ${colors.textSecondary};
+  font-size: 11px;
+`
+
+export const LegendItem = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+`
+
+export const LegendDot = styled.span<{ $color: string }>`
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: ${({ $color }) => $color};
 `

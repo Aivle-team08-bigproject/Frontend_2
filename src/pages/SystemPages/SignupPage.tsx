@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ApiError, fetchPublicDepartments, signup } from '../../shared/api'
 import type { Department, SignupPosition } from '../../shared/api'
+import Footer from '../../shared/Footer'
+import Logo from '../../shared/Logo'
 import {
   BackLink,
   ConsentBox,
@@ -14,6 +16,7 @@ import {
   Form,
   FormGrid,
   Input,
+  LoginBody,
   LoginCard,
   LoginScreen,
   PrimaryButton,
@@ -31,6 +34,7 @@ import {
   EmailInputRow,
   SignupHeader,
   SignupNote,
+  SuccessAction,
   SuccessBox,
   Title,
   LegalLink,
@@ -45,6 +49,8 @@ const positions: Array<{ value: SignupPosition; label: string }> = [
   { value: 'DEPUTY_GENERAL_MANAGER', label: '차장' },
   { value: 'GENERAL_MANAGER', label: '부장' },
 ]
+
+const SIGNUP_EMAIL_DOMAIN = 'example.com'
 
 type FormState = {
   name: string
@@ -87,7 +93,7 @@ function sanitizeEmailDomain(value: string) {
 }
 
 function composeEmail(form: FormState) {
-  return `${form.emailLocal}@${form.emailDomain}`
+  return `${form.emailLocal}@${SIGNUP_EMAIL_DOMAIN}`
 }
 
 function validateField(field: ValidatableField, value: string, form: FormState): string | null {
@@ -146,7 +152,7 @@ function FieldDropdown({ label, value, options, placeholder, searchable, disable
 
 export default function SignupPage() {
   const navigate = useNavigate()
-  const [form, setForm] = useState<FormState>({ name: '', emailLocal: '', emailDomain: '', phone: '', departmentId: '', position: '', password: '', passwordConfirm: '', terms: false, privacy: false })
+  const [form, setForm] = useState<FormState>({ name: '', emailLocal: '', emailDomain: SIGNUP_EMAIL_DOMAIN, phone: '', departmentId: '', position: '', password: '', passwordConfirm: '', terms: false, privacy: false })
   const [departments, setDepartments] = useState<Department[]>([])
   const [departmentsLoading, setDepartmentsLoading] = useState(true)
   const [departmentsError, setDepartmentsError] = useState<string | null>(null)
@@ -232,25 +238,29 @@ export default function SignupPage() {
   if (signupResult) {
     return (
       <LoginScreen>
-        <LoginCard>
-          <SignupHeader><span>DATA FORGE</span><Title>가입 신청 완료</Title><SignupNote>관리자 승인 후 서비스를 이용할 수 있습니다.</SignupNote></SignupHeader>
-          <SuccessBox>
-            <strong>관리자 승인 후 로그인할 수 있습니다.</strong>
-            <p>{signupResult.message}</p>
-            <p>신청 번호: {signupResult.employee_code} · {signupResult.email}</p>
-          </SuccessBox>
-          <PrimaryButton type="button" onClick={() => navigate('/login')}>로그인으로 돌아가기</PrimaryButton>
-        </LoginCard>
+        <LoginBody>
+          <LoginCard>
+            <SignupHeader><Logo size="md" to="/login" /><Title>가입 신청 완료</Title><SignupNote>관리자 승인 후 서비스를 이용할 수 있습니다.</SignupNote></SignupHeader>
+            <SuccessBox>
+              <strong>관리자 승인 후 로그인할 수 있습니다.</strong>
+              <p>{signupResult.message}</p>
+              <p>신청 번호: {signupResult.employee_code} · {signupResult.email}</p>
+            </SuccessBox>
+            <SuccessAction type="button" onClick={() => navigate('/login')}>로그인으로 돌아가기</SuccessAction>
+          </LoginCard>
+        </LoginBody>
+        <Footer />
       </LoginScreen>
     )
   }
 
   return (
     <LoginScreen>
+      <LoginBody>
       <LoginCard>
         <SignupHeader>
           <BackLink to="/login">← 로그인으로 돌아가기</BackLink>
-          <span>DATA FORGE</span>
+          <Logo size="md" to="/login" />
           <Title>회원가입 신청</Title>
           <SignupNote>포트폴리오 데모 임직원 정보를 입력해 가입을 신청하세요. 관리자 승인 후 서비스를 이용할 수 있습니다.</SignupNote>
         </SignupHeader>
@@ -265,7 +275,7 @@ export default function SignupPage() {
           <SignupSection>
             <SectionTitle>소속 정보</SectionTitle>
             <FormGrid>
-              <Field $wide>회사 이메일<EmailInputRow $invalid={Boolean(fieldErrors.email)}><EmailInput type="text" value={form.emailLocal} onChange={(event) => update('emailLocal', event.target.value)} placeholder="name" autoComplete="username" maxLength={64} inputMode="email" autoCapitalize="none" spellCheck={false} aria-label="이메일 아이디" aria-invalid={Boolean(fieldErrors.email)} /><EmailAt>@</EmailAt><EmailInput type="text" value={form.emailDomain} onChange={(event) => update('emailDomain', event.target.value)} placeholder="example.com" autoComplete="off" maxLength={255} inputMode="url" autoCapitalize="none" spellCheck={false} aria-label="이메일 도메인" aria-invalid={Boolean(fieldErrors.email)} /></EmailInputRow>{fieldErrors.email && <FieldError>{fieldErrors.email}</FieldError>}</Field>
+              <Field $wide>회사 이메일<EmailInputRow $invalid={Boolean(fieldErrors.email)}><EmailInput type="text" value={form.emailLocal} onChange={(event) => update('emailLocal', event.target.value)} placeholder="name" autoComplete="username" maxLength={64} inputMode="email" autoCapitalize="none" spellCheck={false} aria-label="이메일 아이디" aria-invalid={Boolean(fieldErrors.email)} /><EmailAt>@</EmailAt><EmailInput type="text" value={SIGNUP_EMAIL_DOMAIN} readOnly tabIndex={-1} aria-label="고정 이메일 도메인" /></EmailInputRow>{fieldErrors.email && <FieldError>{fieldErrors.email}</FieldError>}</Field>
               <FieldDropdown label="부서" value={form.departmentId} options={departments.map((department) => ({ value: String(department.id), label: department.name }))} placeholder={departmentsLoading ? '부서 목록을 불러오는 중...' : '부서를 선택하세요'} searchable disabled={departmentsLoading || Boolean(departmentsError)} invalid={Boolean(fieldErrors.departmentId)} error={fieldErrors.departmentId} onChange={(value) => update('departmentId', value)} />
               <FieldDropdown label="직급" value={form.position} options={positions} placeholder="직급을 선택하세요" invalid={Boolean(fieldErrors.position)} error={fieldErrors.position} onChange={(value) => update('position', value)} />
             </FormGrid>
@@ -280,15 +290,17 @@ export default function SignupPage() {
           {departmentsError && <ErrorText role="alert">{departmentsError} <button type="button" onClick={() => void loadDepartments()}>다시 시도</button></ErrorText>}
           <SignupNote>비밀번호는 대문자·소문자·숫자·특수문자를 각각 포함해야 합니다.</SignupNote>
           <ConsentBox>
-            <ConsentLabel><input type="checkbox" checked={form.terms} onChange={(event) => update('terms', event.target.checked)} /> <span><strong>[필수]</strong> 서비스 이용약관에 동의합니다.</span> <LegalLink to="/legal/terms">전문 보기</LegalLink></ConsentLabel>
+            <ConsentLabel><input type="checkbox" checked={form.terms} onChange={(event) => update('terms', event.target.checked)} /> <span><strong>[필수]</strong> 서비스 이용약관에 동의합니다.</span> <LegalLink to="/legal/terms?standalone=1" target="_blank" rel="noopener noreferrer">전문 보기</LegalLink></ConsentLabel>
             <ConsentDetails>서비스 이용 조건, 계정 관리, 관리자 승인, 권한 범위 및 이용 제한을 안내합니다.</ConsentDetails>
-            <ConsentLabel><input type="checkbox" checked={form.privacy} onChange={(event) => update('privacy', event.target.checked)} /> <span><strong>[필수]</strong> 개인정보 수집·이용에 동의합니다.</span> <LegalLink to="/legal/privacy">전문 보기</LegalLink></ConsentLabel>
+            <ConsentLabel><input type="checkbox" checked={form.privacy} onChange={(event) => update('privacy', event.target.checked)} /> <span><strong>[필수]</strong> 개인정보 수집·이용에 동의합니다.</span> <LegalLink to="/legal/privacy?standalone=1" target="_blank" rel="noopener noreferrer">전문 보기</LegalLink></ConsentLabel>
             <ConsentDetails>항목: 이름·회사 이메일·휴대폰·부서·직급·동의 IP · 근거: 필수 동의·서비스 이용계약 · 목적: 가입 심사·계정 인증·권한·보안 운영 · 보유기간: 신청 1년, 계정·동의 이력 3년 · 거부 시 회원가입 제한</ConsentDetails>
           </ConsentBox>
           {error && <ErrorText role="alert">{error}</ErrorText>}
           <PrimaryButton type="submit" disabled={submitting || departmentsLoading}>{submitting ? '가입 신청 중...' : '가입 신청하기'}</PrimaryButton>
         </Form>
       </LoginCard>
+      </LoginBody>
+      <Footer />
     </LoginScreen>
   )
 }

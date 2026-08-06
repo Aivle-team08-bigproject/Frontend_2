@@ -25,8 +25,7 @@ export const DocumentBody = styled.section`
   width: min(1080px, calc(100% - 40px));
   margin: 0 auto;
   padding: 40px 0 72px;
-  & > .return-button { margin-top: 28px; padding: 12px 20px; border: 1px solid #008c8d; border-radius: 10px; background: #008c8d; color: #fff; font-weight: 700; cursor: pointer; }
-  @media print { width: 100%; padding: 0; & > .return-button { display: none; } }
+  @media print { width: 100%; padding: 0; }
 `
 
 export const DocumentNav = styled.nav`

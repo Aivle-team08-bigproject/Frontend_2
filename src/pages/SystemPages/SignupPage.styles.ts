@@ -2,8 +2,11 @@ import styled from 'styled-components'
 import { Link } from 'react-router-dom'
 
 export const LoginScreen = styled.main`
-  min-height: 100vh; display: grid; place-items: center; padding: 40px 20px;
+  min-height: 100vh; display: flex; flex-direction: column;
   background: radial-gradient(circle at 10% 45%, rgba(0,132,133,.08), transparent 38%), linear-gradient(120deg,#f5fbfb 0%,#fff 72%);
+`
+export const LoginBody = styled.div`
+  flex: 1; display: grid; place-items: center; padding: 40px 20px;
 `
 export const LoginCard = styled.section`
   width: min(680px,100%); padding: 42px 48px; border: 1px solid #f1f3f5; border-radius: 24px; background: #fff; box-shadow: 0 24px 60px rgba(15,90,82,.1);
@@ -34,6 +37,7 @@ export const ConsentLabel = styled.label`display:flex; align-items:center; gap:8
 export const ConsentDetails = styled.p`margin:-5px 0 0 25px; color:#6c757d; font-size:11px; line-height:1.6;`
 export const LegalLink = styled(Link)`margin-left:auto; color:#008485; font-size:12px; font-weight:700; white-space:nowrap;`
 export const PrimaryButton = styled.button`height:48px; border:0; border-radius:11px; background:#008c8d; color:#fff; font-size:15px; font-weight:800; cursor:pointer; &:hover{background:#007879;} &:disabled{opacity:.6; cursor:wait;}`
+export const SuccessAction = styled(PrimaryButton)`display:block; margin:0 auto;`
 export const ErrorText = styled.p`margin:0; color:#dc2626; font-size:12px; text-align:center; button{margin-left:6px; padding:0; border:0; border-bottom:1px solid currentColor; background:transparent; color:inherit; font:inherit; font-weight:700; cursor:pointer;}`
 export const FieldError = styled.span`margin-top:-2px; color:#c92a2a; font-size:11px; font-weight:600; line-height:1.4;`
 export const FieldHint = styled.span`margin-top:-2px; color:#868e96; font-size:11px; font-weight:400; line-height:1.4;`

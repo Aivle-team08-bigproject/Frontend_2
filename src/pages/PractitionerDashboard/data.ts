@@ -1,32 +1,27 @@
 import type { SubNavItem } from '../../shared/SubNav'
-import { fetchDashboard, type DashboardResponse, type DashboardTaskItem, type PriorityCode } from '../../shared/api'
+import {
+  fetchDashboard,
+  type DashboardCalendarEvent,
+  type DashboardResponse,
+  type DashboardTaskItem,
+  type PriorityCode,
+} from '../../shared/api'
 import { colors } from '../../shared/theme'
 
-/** 전체 작업/작업 리스트/내 작업 현황 세 페이지가 공유하는 SubNav 탭. 페이지마다 따로 하드코딩하면 하나 바꿀 때 나머지가 안 맞음. */
+/** 실무자 대시보드와 작업 리스트가 공유하는 SubNav 탭. */
 export const PRACTITIONER_NAV_ITEMS: SubNavItem[] = [
   { label: '전체 작업', to: '/dashboard' },
   { label: '작업 리스트', to: '/dashboard/tasks' },
-  { label: '내 작업 현황', to: '/dashboard/my-tasks' },
 ]
 
 export type StatCard = {
   label: string
   value: number
   unit: string
-  caption: string
+  caption?: string
   highlight?: boolean
   /** 클릭 시 이동할 경로. 없으면 클릭 불가. */
   linkTo?: string
-}
-
-export type WarningCard = {
-  title: string
-  countLabel: string
-  countBg: string
-  countColor: string
-  description: string
-  footNote: string
-  actionTo: string
 }
 
 export type RankedItem = {
@@ -56,6 +51,21 @@ export type DeadlineItem = {
   tagColor: string
   route: string
 }
+
+export type QueueItem = {
+  requestNo: string
+  client: string
+  title: string
+  stageLabel: string
+  priorityLabel: string
+  priorityBg: string
+  priorityColor: string
+  actionLabel: string
+  dueAt: string | null
+  route: string
+}
+
+export type CalendarItem = DashboardCalendarEvent
 
 export const TASK_STATUSES = [
   '요구사항 분석',
@@ -108,11 +118,11 @@ export type TaskRow = {
 
 export type PractitionerDashboardData = {
   statCards: StatCard[]
-  alertBannerCount: number
-  warningCards: WarningCard[]
   preferredItems: RankedItem[]
   supplementItems: SupplementItem[]
   deadlineItems: DeadlineItem[]
+  queueItems: QueueItem[]
+  calendarItems: CalendarItem[]
 }
 
 const priorityColors = {
@@ -155,55 +165,65 @@ function dashboardTasks(data: DashboardResponse): DashboardTaskItem[] {
   return [...uniqueItems.values()]
 }
 
-function warningCardFromPriority(
-  card: DashboardResponse['priority_cards'][number],
-  actions: DashboardTaskItem[],
-): WarningCard {
-  const palette = priorityColors[card.priority_code]
-  const action = actions.find((item) => item.priority_code === card.priority_code)
-  return {
-    title: card.label,
-    countLabel: `${card.count}건`,
-    countBg: palette.bg,
-    countColor: palette.color,
-    description: action?.title ?? `${card.count}건의 작업이 조치를 기다리고 있습니다.`,
-    footNote: card.count > 0 ? '상세 조치가 필요합니다.' : '현재 조치 대기 작업이 없습니다.',
-    actionTo: card.detail_route,
-  }
-}
-
 export const EMPTY_PRACTITIONER_DASHBOARD: PractitionerDashboardData = {
   statCards: [],
-  alertBannerCount: 0,
-  warningCards: [],
   preferredItems: [],
   supplementItems: [],
   deadlineItems: [],
+  queueItems: [],
+  calendarItems: [],
+}
+
+const PRIORITY_ORDER: Record<PriorityCode, number> = { REQUIREMENT: 0, SAMPLE: 1, FINAL: 2 }
+
+function queueItemFromTask(item: DashboardTaskItem): QueueItem {
+  const priority = item.priority_code ?? 'FINAL'
+  const palette = priorityColors[priority]
+  return {
+    requestNo: item.request_no,
+    client: item.client,
+    title: item.title,
+    stageLabel: item.stage_label,
+    priorityLabel: PRIORITY_LABELS[priority],
+    priorityBg: palette.bg,
+    priorityColor: palette.color,
+    actionLabel: item.decision_status === 'pending' ? '검토하기' : '작업 확인',
+    dueAt: item.due_at,
+    route: item.detail_route,
+  }
 }
 
 export async function fetchPractitionerDashboardData(): Promise<PractitionerDashboardData> {
   const data = await fetchDashboard()
   const actions = dashboardTasks(data)
+  const queueItems = actions
+    .filter((item) => item.requires_action)
+    .sort((a, b) => {
+      const priorityDifference = PRIORITY_ORDER[a.priority_code ?? 'FINAL'] - PRIORITY_ORDER[b.priority_code ?? 'FINAL']
+      if (priorityDifference !== 0) return priorityDifference
+      if (!a.due_at && !b.due_at) return a.created_at.localeCompare(b.created_at)
+      if (!a.due_at) return 1
+      if (!b.due_at) return -1
+      return a.due_at.localeCompare(b.due_at)
+    })
+    .map(queueItemFromTask)
   return {
     statCards: [
-      ...data.priority_cards.map((card, index) => ({
+      ...data.priority_cards.map((card) => ({
         label: card.label,
         value: card.count,
         unit: '건',
-        caption: `우선순위 ${index + 1}`,
         highlight: card.count > 0,
         linkTo: card.detail_route,
       })),
       {
-        label: '진행 중인 전체 작업',
-        value: data.active_task_count,
+        label: '전체 작업',
+        value: data.summary.total_count,
         unit: '건',
         caption: '전체 작업 현황',
         linkTo: '/dashboard/tasks',
       },
     ],
-    alertBannerCount: actions.length,
-    warningCards: data.priority_cards.map((card) => warningCardFromPriority(card, actions)),
     preferredItems: data.popular_products.map((item, index) => ({
       rank: index + 1,
       title: item.product_name,
@@ -223,5 +243,7 @@ export async function fetchPractitionerDashboardData(): Promise<PractitionerDash
         }]
       : [],
     deadlineItems: data.deadline_tasks.slice(0, 5).map(deadlineItemFromTask),
+    queueItems,
+    calendarItems: data.calendar_events,
   }
 }

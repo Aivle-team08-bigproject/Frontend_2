@@ -16,21 +16,6 @@ export const ErrorHeader = styled.header`
   background: #fff;
 `
 
-export const HeaderBrand = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 15px;
-  font-weight: 800;
-`
-
-export const HeaderMark = styled.span`
-  width: 18px;
-  height: 18px;
-  border-radius: 4px;
-  background: #008c8d;
-`
-
 export const SecurityArea = styled.span`
   color: #adb5bd;
   font-size: 13px;
