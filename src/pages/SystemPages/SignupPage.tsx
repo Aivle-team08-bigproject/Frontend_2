@@ -50,6 +50,8 @@ const positions: Array<{ value: SignupPosition; label: string }> = [
   { value: 'GENERAL_MANAGER', label: '부장' },
 ]
 
+const SIGNUP_EMAIL_DOMAIN = 'hanafn.com'
+
 type FormState = {
   name: string
   emailLocal: string
@@ -91,7 +93,7 @@ function sanitizeEmailDomain(value: string) {
 }
 
 function composeEmail(form: FormState) {
-  return `${form.emailLocal}@${form.emailDomain}`
+  return `${form.emailLocal}@${SIGNUP_EMAIL_DOMAIN}`
 }
 
 function validateField(field: ValidatableField, value: string, form: FormState): string | null {
@@ -150,7 +152,7 @@ function FieldDropdown({ label, value, options, placeholder, searchable, disable
 
 export default function SignupPage() {
   const navigate = useNavigate()
-  const [form, setForm] = useState<FormState>({ name: '', emailLocal: '', emailDomain: '', phone: '', departmentId: '', position: '', password: '', passwordConfirm: '', terms: false, privacy: false })
+  const [form, setForm] = useState<FormState>({ name: '', emailLocal: '', emailDomain: SIGNUP_EMAIL_DOMAIN, phone: '', departmentId: '', position: '', password: '', passwordConfirm: '', terms: false, privacy: false })
   const [departments, setDepartments] = useState<Department[]>([])
   const [departmentsLoading, setDepartmentsLoading] = useState(true)
   const [departmentsError, setDepartmentsError] = useState<string | null>(null)
@@ -273,7 +275,7 @@ export default function SignupPage() {
           <SignupSection>
             <SectionTitle>소속 정보</SectionTitle>
             <FormGrid>
-              <Field $wide>회사 이메일<EmailInputRow $invalid={Boolean(fieldErrors.email)}><EmailInput type="text" value={form.emailLocal} onChange={(event) => update('emailLocal', event.target.value)} placeholder="name" autoComplete="username" maxLength={64} inputMode="email" autoCapitalize="none" spellCheck={false} aria-label="이메일 아이디" aria-invalid={Boolean(fieldErrors.email)} /><EmailAt>@</EmailAt><EmailInput type="text" value={form.emailDomain} onChange={(event) => update('emailDomain', event.target.value)} placeholder="hanacard.co.kr" autoComplete="off" maxLength={255} inputMode="url" autoCapitalize="none" spellCheck={false} aria-label="이메일 도메인" aria-invalid={Boolean(fieldErrors.email)} /></EmailInputRow>{fieldErrors.email && <FieldError>{fieldErrors.email}</FieldError>}</Field>
+              <Field $wide>회사 이메일<EmailInputRow $invalid={Boolean(fieldErrors.email)}><EmailInput type="text" value={form.emailLocal} onChange={(event) => update('emailLocal', event.target.value)} placeholder="name" autoComplete="username" maxLength={64} inputMode="email" autoCapitalize="none" spellCheck={false} aria-label="이메일 아이디" aria-invalid={Boolean(fieldErrors.email)} /><EmailAt>@</EmailAt><EmailInput type="text" value={SIGNUP_EMAIL_DOMAIN} readOnly tabIndex={-1} aria-label="고정 이메일 도메인" /></EmailInputRow>{fieldErrors.email && <FieldError>{fieldErrors.email}</FieldError>}</Field>
               <FieldDropdown label="부서" value={form.departmentId} options={departments.map((department) => ({ value: String(department.id), label: department.name }))} placeholder={departmentsLoading ? '부서 목록을 불러오는 중...' : '부서를 선택하세요'} searchable disabled={departmentsLoading || Boolean(departmentsError)} invalid={Boolean(fieldErrors.departmentId)} error={fieldErrors.departmentId} onChange={(value) => update('departmentId', value)} />
               <FieldDropdown label="직급" value={form.position} options={positions} placeholder="직급을 선택하세요" invalid={Boolean(fieldErrors.position)} error={fieldErrors.position} onChange={(value) => update('position', value)} />
             </FormGrid>
