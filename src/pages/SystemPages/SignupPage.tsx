@@ -287,9 +287,9 @@ export default function SignupPage() {
           {departmentsError && <ErrorText role="alert">{departmentsError} <button type="button" onClick={() => void loadDepartments()}>다시 시도</button></ErrorText>}
           <SignupNote>비밀번호는 대문자·소문자·숫자·특수문자를 각각 포함해야 합니다.</SignupNote>
           <ConsentBox>
-            <ConsentLabel><input type="checkbox" checked={form.terms} onChange={(event) => update('terms', event.target.checked)} /> <span><strong>[필수]</strong> 서비스 이용약관에 동의합니다.</span> <LegalLink to="/legal/terms">전문 보기</LegalLink></ConsentLabel>
+            <ConsentLabel><input type="checkbox" checked={form.terms} onChange={(event) => update('terms', event.target.checked)} /> <span><strong>[필수]</strong> 서비스 이용약관에 동의합니다.</span> <LegalLink to="/legal/terms?standalone=1" target="_blank" rel="noopener noreferrer">전문 보기</LegalLink></ConsentLabel>
             <ConsentDetails>서비스 이용 조건, 계정 관리, 관리자 승인, 권한 범위 및 이용 제한을 안내합니다.</ConsentDetails>
-            <ConsentLabel><input type="checkbox" checked={form.privacy} onChange={(event) => update('privacy', event.target.checked)} /> <span><strong>[필수]</strong> 개인정보 수집·이용에 동의합니다.</span> <LegalLink to="/legal/privacy">전문 보기</LegalLink></ConsentLabel>
+            <ConsentLabel><input type="checkbox" checked={form.privacy} onChange={(event) => update('privacy', event.target.checked)} /> <span><strong>[필수]</strong> 개인정보 수집·이용에 동의합니다.</span> <LegalLink to="/legal/privacy?standalone=1" target="_blank" rel="noopener noreferrer">전문 보기</LegalLink></ConsentLabel>
             <ConsentDetails>항목: 이름·회사 이메일·휴대폰·부서·직급·동의 IP · 근거: 필수 동의·서비스 이용계약 · 목적: 가입 심사·계정 인증·권한·보안 운영 · 보유기간: 신청 1년, 계정·동의 이력 3년 · 거부 시 회원가입 제한</ConsentDetails>
           </ConsentBox>
           {error && <ErrorText role="alert">{error}</ErrorText>}

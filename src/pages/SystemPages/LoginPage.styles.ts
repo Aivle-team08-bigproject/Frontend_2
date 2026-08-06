@@ -1,4 +1,5 @@
 import styled from 'styled-components'
+import { Link } from 'react-router-dom'
 
 export const LoginScreen = styled.main`
   min-height: 100vh;
@@ -41,7 +42,7 @@ export const Title = styled.h1`
 `
 
 export const Subtitle = styled.p`
-  margin: 0;
+  margin: 12px 0 0;
   color: #495057;
   font-size: 14px;
   font-weight: 500;
@@ -165,6 +166,20 @@ export const ErrorText = styled.p`
   color: #dc2626;
   font-size: 12px;
   text-align: center;
+`
+
+export const HelperText = styled.p`
+  margin: 0;
+  text-align: center;
+  color: #adb5bd;
+  font-size: 12px;
+`
+
+export const LegalLink = styled(Link)`
+  color: #008485;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 `
 
 export const SuccessText = styled.p`

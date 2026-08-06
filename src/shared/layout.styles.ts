@@ -13,6 +13,7 @@ export const PageWrapper = styled.div`
 export const MainContent = styled.main`
   display: flex;
   flex-direction: column;
+  flex: 1 0 auto;
   gap: 32px;
   width: 100%;
   padding: 40px;
@@ -120,6 +121,7 @@ export const OutlineButton = styled.button<{ $color?: string }>`
 export const FlowContentArea = styled.div`
   display: flex;
   flex-direction: column;
+  flex: 1 0 auto;
   gap: 24px;
   width: 100%;
   padding: 40px;

@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import Footer from '../../shared/Footer'
 import Logo from '../../shared/Logo'
 import {
@@ -72,25 +72,31 @@ function LegalTable({ table }: { table: NonNullable<SectionData['table']> }) {
 
 export default function LegalPage({ type }: { type: LegalType }) {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const isStandaloneTab = searchParams.get('standalone') === '1'
+  const withStandalone = (path: string) => (isStandaloneTab ? `${path}?standalone=1` : path)
   const sections = type === 'terms' ? termsSections : privacySections
   const title = type === 'terms' ? '서비스 이용약관' : '개인정보 처리방침'
   const version = type === 'terms' ? 'TERMS-2026-08' : 'PRIVACY-2026-08'
   return (
     <DocumentLayout>
       <DocumentHeader>
-        <button type="button" onClick={() => navigate(-1)}>← 이전</button>
+        {isStandaloneTab ? (
+          <button type="button" onClick={() => window.close()}>✕ 닫기</button>
+        ) : (
+          <button type="button" onClick={() => navigate(-1)}>← 이전</button>
+        )}
         <Logo size="sm" to="/login" />
         <span>PUBLIC INFORMATION</span>
       </DocumentHeader>
       <DocumentBody>
-        <DocumentNav><Link to="/legal/terms" className={type === 'terms' ? 'active' : ''}>서비스 이용약관</Link><Link to="/legal/privacy" className={type === 'privacy' ? 'active' : ''}>개인정보 처리방침</Link><PrintButton type="button" onClick={() => window.print()}>인쇄</PrintButton></DocumentNav>
+        <DocumentNav><Link to={withStandalone('/legal/terms')} className={type === 'terms' ? 'active' : ''}>서비스 이용약관</Link><Link to={withStandalone('/legal/privacy')} className={type === 'privacy' ? 'active' : ''}>개인정보 처리방침</Link><PrintButton type="button" onClick={() => window.print()}>인쇄</PrintButton></DocumentNav>
         <DocumentTitle>{title}</DocumentTitle>
-        <DocumentMeta>문서 버전 {version} · 시행일 2026년 8월 1일 · 최종 수정일 2026년 8월 1일 · <Link to="#document-history">이전 버전 보기</Link></DocumentMeta>
+        <DocumentMeta>문서 버전 {version} · 시행일 2026년 8월 1일 · 최종 수정일 2026년 8월 1일 · <a href="#document-history">이전 버전 보기</a></DocumentMeta>
         {type === 'privacy' && <DocumentFacts><FactRow><strong>처리자</strong><span>포트폴리오 데모 서비스</span></FactRow><FactRow><strong>보유기간</strong><span>신청·로그 1년 · 계정·동의·감사 이력 3년</span></FactRow><FactRow><strong>제3자 제공</strong><span>원칙적으로 없음</span></FactRow><FactRow><strong>위탁·국외 이전</strong><span>Neon Cloud PostgreSQL·AWS·사내 인프라 / 미국 저장·백업</span></FactRow><FactRow><strong>문의</strong><span>privacy@example.com · 02-0000-0000</span></FactRow></DocumentFacts>}
         <TableOfContents aria-label="문서 목차"><strong>문서 목차</strong>{sections.map((section) => <a key={section.id} href={`#${section.id}`}>{section.title}</a>)}</TableOfContents>
         {sections.map((section) => <Section id={section.id} key={section.id}><SectionTitle>{section.title}</SectionTitle><SectionBody>{section.body}</SectionBody>{section.table && <LegalTable table={section.table} />}</Section>)}
         <DocumentFooter id="document-history"><strong>이전 버전 및 문서 문의</strong><span>이전 버전은 개인정보보호 담당부서에 요청할 수 있습니다. 문의: privacy@example.com / 02-0000-0000</span></DocumentFooter>
-        <button className="return-button" type="button" onClick={() => navigate('/signup')}>회원가입 신청으로 돌아가기</button>
       </DocumentBody>
       <Footer />
     </DocumentLayout>
