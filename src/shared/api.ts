@@ -279,6 +279,15 @@ export type DashboardDeadlineTask = {
   detail_route: string
 }
 
+export type DashboardCalendarEvent = {
+  request_no: string
+  title: string
+  client: string
+  event_type: 'CONTRACT_START' | 'CONTRACT_END' | 'DELIVERY_DUE'
+  event_date: string
+  detail_route: string
+}
+
 export type DashboardScope = 'mine' | 'all'
 
 export type PersonalDashboardSummary = {
@@ -313,6 +322,7 @@ export type DashboardResponse = {
   popular_products_unavailable_message: string
   approval_tasks: DashboardTaskItem[]
   deadline_tasks: DashboardDeadlineTask[]
+  calendar_events: DashboardCalendarEvent[]
   active_task_count: number
 }
 

@@ -1,5 +1,11 @@
 import type { SubNavItem } from '../../shared/SubNav'
-import { fetchDashboard, type DashboardResponse, type DashboardTaskItem, type PriorityCode } from '../../shared/api'
+import {
+  fetchDashboard,
+  type DashboardCalendarEvent,
+  type DashboardResponse,
+  type DashboardTaskItem,
+  type PriorityCode,
+} from '../../shared/api'
 import { colors } from '../../shared/theme'
 
 /** 전체 작업/작업 리스트/내 작업 현황 세 페이지가 공유하는 SubNav 탭. 페이지마다 따로 하드코딩하면 하나 바꿀 때 나머지가 안 맞음. */
@@ -57,6 +63,21 @@ export type DeadlineItem = {
   route: string
 }
 
+export type QueueItem = {
+  requestNo: string
+  client: string
+  title: string
+  stageLabel: string
+  priorityLabel: string
+  priorityBg: string
+  priorityColor: string
+  actionLabel: string
+  dueAt: string | null
+  route: string
+}
+
+export type CalendarItem = DashboardCalendarEvent
+
 export const TASK_STATUSES = [
   '요구사항 분석',
   '요구사항 분석 진행',
@@ -113,6 +134,8 @@ export type PractitionerDashboardData = {
   preferredItems: RankedItem[]
   supplementItems: SupplementItem[]
   deadlineItems: DeadlineItem[]
+  queueItems: QueueItem[]
+  calendarItems: CalendarItem[]
 }
 
 const priorityColors = {
@@ -179,11 +202,43 @@ export const EMPTY_PRACTITIONER_DASHBOARD: PractitionerDashboardData = {
   preferredItems: [],
   supplementItems: [],
   deadlineItems: [],
+  queueItems: [],
+  calendarItems: [],
+}
+
+const PRIORITY_ORDER: Record<PriorityCode, number> = { REQUIREMENT: 0, SAMPLE: 1, FINAL: 2 }
+
+function queueItemFromTask(item: DashboardTaskItem): QueueItem {
+  const priority = item.priority_code ?? 'FINAL'
+  const palette = priorityColors[priority]
+  return {
+    requestNo: item.request_no,
+    client: item.client,
+    title: item.title,
+    stageLabel: item.stage_label,
+    priorityLabel: PRIORITY_LABELS[priority],
+    priorityBg: palette.bg,
+    priorityColor: palette.color,
+    actionLabel: item.decision_status === 'pending' ? '검토하기' : '작업 확인',
+    dueAt: item.due_at,
+    route: item.detail_route,
+  }
 }
 
 export async function fetchPractitionerDashboardData(): Promise<PractitionerDashboardData> {
   const data = await fetchDashboard()
   const actions = dashboardTasks(data)
+  const queueItems = actions
+    .filter((item) => item.requires_action)
+    .sort((a, b) => {
+      const priorityDifference = PRIORITY_ORDER[a.priority_code ?? 'FINAL'] - PRIORITY_ORDER[b.priority_code ?? 'FINAL']
+      if (priorityDifference !== 0) return priorityDifference
+      if (!a.due_at && !b.due_at) return a.created_at.localeCompare(b.created_at)
+      if (!a.due_at) return 1
+      if (!b.due_at) return -1
+      return a.due_at.localeCompare(b.due_at)
+    })
+    .map(queueItemFromTask)
   return {
     statCards: [
       ...data.priority_cards.map((card, index) => ({
@@ -223,5 +278,7 @@ export async function fetchPractitionerDashboardData(): Promise<PractitionerDash
         }]
       : [],
     deadlineItems: data.deadline_tasks.slice(0, 5).map(deadlineItemFromTask),
+    queueItems,
+    calendarItems: data.calendar_events,
   }
 }
