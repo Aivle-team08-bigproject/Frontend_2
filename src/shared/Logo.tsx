@@ -4,8 +4,8 @@ import { logoWordmarkSrc } from './brand'
 import { colors } from './theme'
 
 const sizeHeight = {
-  sm: 22,
-  md: 32,
+  sm: 30,
+  md: 40,
 }
 
 const LogoLink = styled(Link)`

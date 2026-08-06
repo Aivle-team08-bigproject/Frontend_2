@@ -71,25 +71,24 @@ export const SampleTable = styled.div`
 
 export const SampleHeaderRow = styled.div`
   display: flex;
-  width: 100%;
+  width: max-content;
+  min-width: 100%;
   padding: 12px 16px;
   background: ${colors.bg};
   border-bottom: 1px solid ${colors.border};
   font-size: 13px;
   font-weight: 700;
   color: ${colors.textSecondary};
-  min-width: 620px;
-  white-space: nowrap;
 `
 
 export const SampleRowEl = styled.div`
   display: flex;
-  width: 100%;
+  width: max-content;
+  min-width: 100%;
   padding: 14px 16px;
   border-bottom: 1px solid ${colors.border};
   font-size: 14px;
   color: ${colors.text};
-  min-width: 620px;
 
   &:last-child {
     border-bottom: none;
@@ -98,8 +97,10 @@ export const SampleRowEl = styled.div`
 
 export const SampleCell = styled.p<{ $strong?: boolean }>`
   margin: 0;
-  flex: 1 0 0;
-  min-width: 0;
+  flex: 0 0 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-weight: ${({ $strong }) => ($strong ? 600 : 400)};
 `
 

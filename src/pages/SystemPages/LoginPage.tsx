@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { ApiError, login } from '../../shared/api'
 import { saveAccessToken } from '../../shared/auth'
-import Footer from '../../shared/Footer'
 import Logo from '../../shared/Logo'
 import {
   Brand,
@@ -10,9 +9,11 @@ import {
   Field,
   Form,
   FormMeta,
+  HelperText,
   Icon,
   Input,
   InputWrap,
+  LegalLink,
   LoginBody,
   LoginButton,
   LoginCard,
@@ -91,10 +92,10 @@ export default function LoginPage() {
             {error && <ErrorText role="alert">{error}</ErrorText>}
             <LoginButton type="submit" disabled={submitting || !email.trim() || !password}>{submitting ? '로그인 중...' : '로그인'}</LoginButton>
             <SignupLink type="button" onClick={() => navigate('/signup')}>회원가입 신청</SignupLink>
+            <HelperText><LegalLink to="/legal/terms">서비스 이용약관</LegalLink> · <LegalLink to="/legal/privacy">개인정보 처리방침</LegalLink></HelperText>
           </Form>
         </LoginCard>
       </LoginBody>
-      <Footer />
     </LoginScreen>
   )
 }
