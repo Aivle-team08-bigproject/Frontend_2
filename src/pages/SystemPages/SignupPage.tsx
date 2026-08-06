@@ -34,6 +34,7 @@ import {
   EmailInputRow,
   SignupHeader,
   SignupNote,
+  SuccessAction,
   SuccessBox,
   Title,
   LegalLink,
@@ -243,7 +244,7 @@ export default function SignupPage() {
               <p>{signupResult.message}</p>
               <p>신청 번호: {signupResult.employee_code} · {signupResult.email}</p>
             </SuccessBox>
-            <PrimaryButton type="button" onClick={() => navigate('/login')}>로그인으로 돌아가기</PrimaryButton>
+            <SuccessAction type="button" onClick={() => navigate('/login')}>로그인으로 돌아가기</SuccessAction>
           </LoginCard>
         </LoginBody>
         <Footer />

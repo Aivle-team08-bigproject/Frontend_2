@@ -37,6 +37,7 @@ export const ConsentLabel = styled.label`display:flex; align-items:center; gap:8
 export const ConsentDetails = styled.p`margin:-5px 0 0 25px; color:#6c757d; font-size:11px; line-height:1.6;`
 export const LegalLink = styled(Link)`margin-left:auto; color:#008485; font-size:12px; font-weight:700; white-space:nowrap;`
 export const PrimaryButton = styled.button`height:48px; border:0; border-radius:11px; background:#008c8d; color:#fff; font-size:15px; font-weight:800; cursor:pointer; &:hover{background:#007879;} &:disabled{opacity:.6; cursor:wait;}`
+export const SuccessAction = styled(PrimaryButton)`display:block; margin:0 auto;`
 export const ErrorText = styled.p`margin:0; color:#dc2626; font-size:12px; text-align:center; button{margin-left:6px; padding:0; border:0; border-bottom:1px solid currentColor; background:transparent; color:inherit; font:inherit; font-weight:700; cursor:pointer;}`
 export const FieldError = styled.span`margin-top:-2px; color:#c92a2a; font-size:11px; font-weight:600; line-height:1.4;`
 export const FieldHint = styled.span`margin-top:-2px; color:#868e96; font-size:11px; font-weight:400; line-height:1.4;`
