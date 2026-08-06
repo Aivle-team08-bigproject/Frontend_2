@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import GNB from '../../shared/GNB'
 import Footer from '../../shared/Footer'
@@ -9,6 +9,7 @@ import { MainContent, PageWrapper, SectionHeader, SectionTitle } from '../../sha
 import { EMPTY_PRACTITIONER_DASHBOARD, fetchPractitionerDashboardData, PRACTITIONER_NAV_ITEMS } from './data'
 import {
   CalendarDay,
+  CalendarDayCell,
   CalendarEventDot,
   CalendarEventDots,
   CalendarGrid,
@@ -17,6 +18,14 @@ import {
   CalendarMonth,
   CalendarNav,
   CalendarNavButton,
+  CalendarPopover,
+  CalendarPopoverDot,
+  CalendarPopoverHeader,
+  CalendarPopoverItem,
+  CalendarPopoverLabel,
+  CalendarPopoverMeta,
+  CalendarPopoverText,
+  CalendarPopoverTitle,
   CalendarWeekday,
   EmptyState,
   FootNote,
@@ -52,6 +61,18 @@ const EVENT_COLORS = {
   DELIVERY_DUE: '#dc2626',
 } as const
 
+const WEEKDAY_LABELS = ['일', '월', '화', '수', '목', '금', '토']
+
+function dDayLabel(eventDate: string): string {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const target = new Date(eventDate)
+  target.setHours(0, 0, 0, 0)
+  const diffDays = Math.round((target.getTime() - today.getTime()) / (24 * 60 * 60 * 1000))
+  if (diffDays === 0) return 'D-day'
+  return diffDays > 0 ? `D-${diffDays}` : `D+${Math.abs(diffDays)}`
+}
+
 function dateKey(date: Date): string {
   const month = String(date.getMonth() + 1).padStart(2, '0')
   const day = String(date.getDate()).padStart(2, '0')
@@ -74,7 +95,18 @@ export default function PractitionerDashboardMain() {
   const view = data ?? EMPTY_PRACTITIONER_DASHBOARD
   const navigate = useNavigate()
   const [calendarMonth, setCalendarMonth] = useState(() => new Date())
+  const [openDateKey, setOpenDateKey] = useState<string | null>(null)
+  const calendarGridRef = useRef<HTMLDivElement>(null)
   const cells = useMemo(() => calendarCells(calendarMonth), [calendarMonth])
+
+  useEffect(() => {
+    function closeOnOutsideClick(event: MouseEvent) {
+      if (!calendarGridRef.current?.contains(event.target as Node)) setOpenDateKey(null)
+    }
+    document.addEventListener('mousedown', closeOnOutsideClick)
+    return () => document.removeEventListener('mousedown', closeOnOutsideClick)
+  }, [])
+
   const eventsByDate = useMemo(() => {
     const grouped = new Map<string, typeof view.calendarItems>()
     for (const event of view.calendarItems) {
@@ -155,25 +187,56 @@ export default function PractitionerDashboardMain() {
                 <CalendarNavButton type="button" aria-label="다음 달" onClick={() => setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 1))}>›</CalendarNavButton>
               </CalendarNav>
             </CalendarHeader>
-            <CalendarGrid>
-              {['일', '월', '화', '수', '목', '금', '토'].map((weekday) => <CalendarWeekday key={weekday}>{weekday}</CalendarWeekday>)}
+            <CalendarGrid ref={calendarGridRef}>
+              {WEEKDAY_LABELS.map((weekday) => <CalendarWeekday key={weekday}>{weekday}</CalendarWeekday>)}
               {cells.map((cell, index) => {
                 if (!cell) return <span key={`empty-${index}`} />
-                const events = eventsByDate.get(dateKey(cell)) ?? []
-                const isToday = dateKey(cell) === dateKey(new Date())
+                const key = dateKey(cell)
+                const events = eventsByDate.get(key) ?? []
+                const isToday = key === dateKey(new Date())
+                const isOpen = openDateKey === key && events.length > 0
+                const rowIndex = Math.floor(index / 7)
+                const totalRows = cells.length / 7
+                const flipUp = rowIndex >= totalRows - 2
+                const alignRight = index % 7 >= 5
                 return (
-                  <CalendarDay
-                    key={dateKey(cell)}
-                    type="button"
-                    $today={isToday}
-                    $hasEvent={events.length > 0}
-                    aria-label={events.length ? `${cell.getDate()}일 ${events.map((event) => EVENT_LABELS[event.event_type]).join(', ')}` : `${cell.getDate()}일`}
-                    title={events.map((event) => `${EVENT_LABELS[event.event_type]}: ${event.client} · ${event.title}`).join('\n')}
-                    onClick={() => events[0] && navigate(events[0].detail_route)}
-                  >
-                    {cell.getDate()}
-                    {events.length > 0 && <CalendarEventDots>{events.slice(0, 3).map((event) => <CalendarEventDot key={`${event.request_no}-${event.event_type}`} $color={EVENT_COLORS[event.event_type]} />)}</CalendarEventDots>}
-                  </CalendarDay>
+                  <CalendarDayCell key={key}>
+                    <CalendarDay
+                      type="button"
+                      $today={isToday}
+                      $hasEvent={events.length > 0}
+                      aria-label={events.length ? `${cell.getDate()}일 ${events.map((event) => EVENT_LABELS[event.event_type]).join(', ')}` : `${cell.getDate()}일`}
+                      onMouseEnter={() => events.length > 0 && setOpenDateKey(key)}
+                      onMouseLeave={() => setOpenDateKey((current) => (current === key ? null : current))}
+                      onFocus={() => events.length > 0 && setOpenDateKey(key)}
+                      onClick={() => {
+                        if (events.length === 1) navigate(events[0].detail_route)
+                        else if (events.length > 1) setOpenDateKey((current) => (current === key ? null : key))
+                      }}
+                    >
+                      {cell.getDate()}
+                      {events.length > 0 && <CalendarEventDots>{events.slice(0, 3).map((event) => <CalendarEventDot key={`${event.request_no}-${event.event_type}`} $color={EVENT_COLORS[event.event_type]} />)}</CalendarEventDots>}
+                    </CalendarDay>
+                    {isOpen && (
+                      <CalendarPopover $flipUp={flipUp} $alignRight={alignRight} role="dialog" aria-label={`${cell.getDate()}일 작업 목록`}>
+                        <CalendarPopoverHeader>{cell.getMonth() + 1}월 {cell.getDate()}일 ({WEEKDAY_LABELS[cell.getDay()]})</CalendarPopoverHeader>
+                        {events.map((event) => (
+                          <CalendarPopoverItem
+                            key={`${event.request_no}-${event.event_type}`}
+                            type="button"
+                            onClick={() => navigate(event.detail_route)}
+                          >
+                            <CalendarPopoverDot $color={EVENT_COLORS[event.event_type]} />
+                            <CalendarPopoverText>
+                              <CalendarPopoverLabel>{EVENT_LABELS[event.event_type]}</CalendarPopoverLabel>
+                              <CalendarPopoverTitle>{event.title}</CalendarPopoverTitle>
+                              <CalendarPopoverMeta>{event.client} · {dDayLabel(event.event_date)}</CalendarPopoverMeta>
+                            </CalendarPopoverText>
+                          </CalendarPopoverItem>
+                        ))}
+                      </CalendarPopover>
+                    )}
+                  </CalendarDayCell>
                 )
               })}
             </CalendarGrid>

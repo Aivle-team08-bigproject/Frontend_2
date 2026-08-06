@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import { colors } from '../../shared/theme'
+import { colors, shadow } from '../../shared/theme'
 
 export const StatsRow = styled.div`
   display: flex;
@@ -401,7 +401,12 @@ export const CalendarWeekday = styled.span`
   text-align: center;
 `
 
+export const CalendarDayCell = styled.div`
+  position: relative;
+`
+
 export const CalendarDay = styled.button<{ $muted?: boolean; $today?: boolean; $hasEvent?: boolean }>`
+  width: 100%;
   position: relative;
   min-height: 48px;
   padding: 7px 5px;
@@ -431,6 +436,84 @@ export const CalendarEventDot = styled.span<{ $color: string }>`
   height: 5px;
   border-radius: 50%;
   background: ${({ $color }) => $color};
+`
+
+export const CalendarPopover = styled.div<{ $flipUp?: boolean; $alignRight?: boolean }>`
+  position: absolute;
+  z-index: 20;
+  ${({ $flipUp }) => ($flipUp ? 'bottom: 100%; margin-bottom: 6px;' : 'top: 100%; margin-top: 6px;')}
+  ${({ $alignRight }) => ($alignRight ? 'right: 0;' : 'left: 0;')}
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 220px;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid ${colors.border};
+  background: ${colors.white};
+  box-shadow: ${shadow.card};
+`
+
+export const CalendarPopoverHeader = styled.p`
+  margin: 0 0 2px;
+  font-size: 12px;
+  font-weight: 800;
+  color: ${colors.text};
+`
+
+export const CalendarPopoverItem = styled.button`
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  width: 100%;
+  padding: 6px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    background: ${colors.bg};
+    outline: none;
+  }
+`
+
+export const CalendarPopoverDot = styled.span<{ $color: string }>`
+  flex-shrink: 0;
+  margin-top: 5px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: ${({ $color }) => $color};
+`
+
+export const CalendarPopoverText = styled.span`
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+`
+
+export const CalendarPopoverLabel = styled.span`
+  font-size: 11px;
+  font-weight: 700;
+  color: ${colors.textMuted};
+`
+
+export const CalendarPopoverTitle = styled.span`
+  font-size: 12px;
+  font-weight: 700;
+  color: ${colors.text};
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`
+
+export const CalendarPopoverMeta = styled.span`
+  font-size: 11px;
+  color: ${colors.textSecondary};
 `
 
 export const CalendarLegend = styled.div`
