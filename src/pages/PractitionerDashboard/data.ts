@@ -25,16 +25,6 @@ export type StatCard = {
   linkTo?: string
 }
 
-export type WarningCard = {
-  title: string
-  countLabel: string
-  countBg: string
-  countColor: string
-  description: string
-  footNote: string
-  actionTo: string
-}
-
 export type RankedItem = {
   rank: number
   title: string
@@ -129,8 +119,6 @@ export type TaskRow = {
 
 export type PractitionerDashboardData = {
   statCards: StatCard[]
-  alertBannerCount: number
-  warningCards: WarningCard[]
   preferredItems: RankedItem[]
   supplementItems: SupplementItem[]
   deadlineItems: DeadlineItem[]
@@ -178,27 +166,8 @@ function dashboardTasks(data: DashboardResponse): DashboardTaskItem[] {
   return [...uniqueItems.values()]
 }
 
-function warningCardFromPriority(
-  card: DashboardResponse['priority_cards'][number],
-  actions: DashboardTaskItem[],
-): WarningCard {
-  const palette = priorityColors[card.priority_code]
-  const action = actions.find((item) => item.priority_code === card.priority_code)
-  return {
-    title: card.label,
-    countLabel: `${card.count}건`,
-    countBg: palette.bg,
-    countColor: palette.color,
-    description: action?.title ?? `${card.count}건의 작업이 조치를 기다리고 있습니다.`,
-    footNote: card.count > 0 ? '상세 조치가 필요합니다.' : '현재 조치 대기 작업이 없습니다.',
-    actionTo: card.detail_route,
-  }
-}
-
 export const EMPTY_PRACTITIONER_DASHBOARD: PractitionerDashboardData = {
   statCards: [],
-  alertBannerCount: 0,
-  warningCards: [],
   preferredItems: [],
   supplementItems: [],
   deadlineItems: [],
@@ -257,8 +226,6 @@ export async function fetchPractitionerDashboardData(): Promise<PractitionerDash
         linkTo: '/dashboard/tasks',
       },
     ],
-    alertBannerCount: actions.length,
-    warningCards: data.priority_cards.map((card) => warningCardFromPriority(card, actions)),
     preferredItems: data.popular_products.map((item, index) => ({
       rank: index + 1,
       title: item.product_name,

@@ -71,17 +71,6 @@ export const Right = styled.div`
   }
 `
 
-export const AlarmBadge = styled.img`
-  width: 34px;
-  height: 34px;
-`
-
-export const Divider = styled.div`
-  width: 1px;
-  height: 24px;
-  background: ${colors.border};
-`
-
 export const ProfileMenuWrap = styled.div`
   position: relative;
 `
