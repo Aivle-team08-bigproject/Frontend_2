@@ -68,10 +68,27 @@ export type CreateDataRequestPayload = {
   raw_requirement: string
   title?: string
   requester_name?: string
+  client?: {
+    company_name: string
+    business_registration_number?: string
+    contact_name?: string
+    contact_email?: string
+    contact_phone?: string
+  }
+  contract?: {
+    contract_no?: string
+    start_date?: string
+    end_date?: string
+    delivery_due_at?: string
+  }
+  structured_requirement?: Record<string, unknown>
+  source_data_status?: 'READY' | 'PREPARING' | 'UNKNOWN'
+  data_sensitivity?: 'NONE' | 'POSSIBLE' | 'UNKNOWN'
 }
 
 export type CreateDataRequestResponse = {
   request_no: string
+  contract_no?: string | null
   run_id: number
   request_status: string
   run_status: string
