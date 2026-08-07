@@ -82,7 +82,6 @@ export type CreateDataRequestPayload = {
     delivery_due_at?: string
   }
   structured_requirement?: Record<string, unknown>
-  source_data_status?: 'READY' | 'PREPARING' | 'UNKNOWN'
   data_sensitivity?: 'NONE' | 'POSSIBLE' | 'UNKNOWN'
 }
 
