@@ -2,7 +2,7 @@ import { clearAccessToken, getAccessToken, remembersLogin, saveAccessToken } fro
 
 // 빌드 시 VITE_API_BASE_URL을 안 넘기면 Docker ARG가 "안 정해짐"이 아니라 빈 문자열로
 // 들어온다. ??는 null/undefined만 잡고 빈 문자열은 안 잡아서 || 로 둘 다 처리해야 한다.
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000').replace(/\/$/, '')
+export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000').replace(/\/$/, '')
 let refreshPromise: Promise<string> | null = null
 
 /** `GET /api/auth/me`와 `POST /api/auth/login`이 공유하는 EmployeeSummary 스키마. */
@@ -81,7 +81,6 @@ export type CreateDataRequestPayload = {
     end_date?: string
     delivery_due_at?: string
   }
-  structured_requirement?: Record<string, unknown>
   data_sensitivity?: 'NONE' | 'POSSIBLE' | 'UNKNOWN'
 }
 
@@ -437,7 +436,7 @@ export type TaskViewResponse<T extends object> = {
   payload: T
 }
 
-async function refreshAccessToken(): Promise<string> {
+export async function refreshAccessToken(): Promise<string> {
   if (!refreshPromise) {
     refreshPromise = fetch(`${API_BASE_URL}/api/auth/refresh`, {
       method: 'POST',
