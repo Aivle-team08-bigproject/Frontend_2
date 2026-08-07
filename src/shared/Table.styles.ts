@@ -77,8 +77,8 @@ export const Cell = styled.p<{ $width?: number; $flex?: boolean }>`
   width: ${({ $width, $flex }) => ($flex ? undefined : $width ? `${$width}px` : undefined)};
   flex: ${({ $flex }) => ($flex ? '1 0 0' : undefined)};
   min-width: ${({ $flex }) => ($flex ? '0' : undefined)};
-  overflow: ${({ $flex }) => ($flex ? 'hidden' : undefined)};
-  text-overflow: ${({ $flex }) => ($flex ? 'ellipsis' : undefined)};
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
   font-size: 13px;
   color: ${colors.textSecondary};

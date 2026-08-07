@@ -1,4 +1,7 @@
 import { colors } from './theme'
+import { formatTime } from './datetime'
+import type { PipelineStreamItem } from './pipelineEventStream'
+import type { TimelineItem, TimelineStepState } from './Timeline'
 
 /**
  * Back의 canonical code를 화면 표시용 라벨·색으로 바꾼다.
@@ -106,10 +109,93 @@ export function stageScreenPath(
   if (runStatus === 'COMPLETED') return `${base}/complete`
   const reviewPath = REVIEW_ROUTE_BY_RUN_STATUS[runStatus]
   if (reviewPath) return `${base}/${reviewPath}`
-  if (runStatus === 'RUNNING' || runStatus === 'QUEUED') {
+  if (runStatus === 'RUNNING' || runStatus === 'QUEUED' || runStatus === 'FAILED') {
     const progressPath = currentStage ? PROGRESS_ROUTE_BY_STAGE[currentStage] : undefined
     return `${base}/${progressPath ?? 'analyzing'}`
   }
-  // FAILED·CANCELLED는 단계 화면 대신 통합 상세에서 원인과 이력을 본다.
+  // CANCELLED는 실행 중인 단계가 확정되지 않을 수 있어 통합 상세에서 본다.
   return `${base}/detail`
+}
+
+export type StepDef = { code: string; title: string }
+
+/** app/domains/pipeline/analysis_steps.py ANALYSIS_STEP_ORDER와 대응. */
+export const ANALYSIS_STEPS: StepDef[] = [
+  { code: 'REQUEST_ANALYSIS', title: '요청 분석' },
+  { code: 'REQUEST_STRUCTURING', title: '요청 구조화' },
+  { code: 'DATA_CATEGORIZATION', title: '데이터 범주화' },
+]
+
+/** app/domains/pipeline/selection_steps.py SELECTION_STEP_ORDER와 대응. */
+export const SELECTION_STEPS: StepDef[] = [
+  { code: 'SOURCE_COLUMN_SELECTION', title: '원본 컬럼 선별' },
+  { code: 'DERIVED_COLUMN_DESIGN', title: '파생 컬럼 정의' },
+  { code: 'SYNTHETIC_SAMPLE_GENERATION', title: '합성 샘플 생성' },
+]
+
+/** app/domains/pipeline/processing_steps.py PROCESSING_STEP_ORDER와 대응. */
+export const PROCESSING_STEPS: StepDef[] = [
+  { code: 'DEDUPLICATION_PLAN', title: '중복 제거 계획' },
+  { code: 'MISSING_VALUE_PLAN', title: '결측 처리 계획' },
+  { code: 'DERIVED_COLUMN_ORDER', title: '파생 컬럼 생성 순서' },
+  { code: 'FINAL_COLUMN_VALIDATION', title: '최종 컬럼·품질 검증' },
+  { code: 'SOURCE_DATA_RETRIEVAL', title: '원천 데이터 조회' },
+  { code: 'DETERMINISTIC_PROCESSING', title: '데이터 가공·품질 검증' },
+  { code: 'OUTPUT_VALIDATION', title: '최종 산출물 검증' },
+  { code: 'RESULT_FILE_GENERATION', title: '결과 파일 생성' },
+]
+
+function stepTimelineState(status: string | undefined): TimelineStepState {
+  if (status === 'COMPLETED') return 'done'
+  if (status === 'RUNNING' || status === 'FAILED') return 'active'
+  return 'pending'
+}
+
+const FALLBACK_STEP_DESCRIPTION: Record<string, string> = {
+  PENDING: '대기하고 있습니다.',
+  RUNNING: '진행하고 있습니다.',
+  COMPLETED: '완료되었습니다.',
+  FAILED: '실패했습니다.',
+  ROLLED_BACK: '롤백되었습니다.',
+}
+
+/**
+ * SSE로 받은 서브스텝 배열을 Timeline이 그리는 형태로 바꾼다.
+ * `messages`는 실시간 status 이벤트에서 모아둔 item_code별 최신 안내 문구로,
+ * 있으면 그걸 우선 쓰고 없으면(snapshot 직후 등) 상태 기반 기본 문구를 쓴다.
+ */
+export function buildStepTimelineItems(
+  items: PipelineStreamItem[],
+  steps: StepDef[],
+  messages?: Record<string, string>,
+): TimelineItem[] {
+  const byCode = new Map(items.map((item) => [item.item_code, item]))
+  return steps.map((step) => {
+    const item = byCode.get(step.code)
+    const status = item?.status
+    const time = item?.completed_at
+      ? formatTime(item.completed_at)
+      : item?.started_at
+        ? formatTime(item.started_at)
+        : '-'
+    const description =
+      messages?.[step.code] ??
+      (status === 'FAILED' && item?.error_message ? item.error_message : undefined) ??
+      FALLBACK_STEP_DESCRIPTION[status ?? 'PENDING']
+    return {
+      title: step.title,
+      time,
+      description,
+      state: stepTimelineState(status),
+    }
+  })
+}
+
+/** 서브스텝 배열 전체로 상위 stage의 대표 상태를 판단한다(카드 헤더 배지용). */
+export function aggregateStepStatus(items: PipelineStreamItem[]): 'PENDING' | 'RUNNING' | 'COMPLETED' | 'FAILED' {
+  if (items.length === 0) return 'PENDING'
+  if (items.some((item) => item.status === 'FAILED')) return 'FAILED'
+  if (items.every((item) => item.status === 'COMPLETED')) return 'COMPLETED'
+  if (items.some((item) => item.status === 'RUNNING' || item.status === 'COMPLETED')) return 'RUNNING'
+  return 'PENDING'
 }

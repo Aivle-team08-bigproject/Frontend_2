@@ -104,12 +104,19 @@ export const AgentTag = styled.p<{ $color: string }>`
   color: ${({ $color }) => $color};
 `
 
-export const LogMessage = styled.p`
+/** 어두운 터미널 배경 기준 색이라 theme.ts의 밝은 배경용 팔레트를 쓰지 않는다. */
+const LOG_LEVEL_COLORS = {
+  INFO: '#e1e1e1',
+  WARN: '#fbbf24',
+  ERROR: '#f87171',
+} as const
+
+export const LogMessage = styled.p<{ $level?: keyof typeof LOG_LEVEL_COLORS }>`
   margin: 0;
   width: 100%;
   font-size: 12px;
   line-height: 1.4;
-  color: #e1e1e1;
+  color: ${({ $level }) => LOG_LEVEL_COLORS[$level ?? 'INFO']};
 `
 
 export const ProgressActions = styled.div`

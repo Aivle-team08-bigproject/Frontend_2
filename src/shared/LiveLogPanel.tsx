@@ -26,6 +26,8 @@ export type LiveLogLine = {
   agent: string
   agentColor: string
   message: string
+  /** 없으면 INFO로 본다. WARN/ERROR는 본문 색을 달리해서 눈에 띄게 한다. */
+  level?: 'INFO' | 'WARN' | 'ERROR'
 }
 
 type LiveLogPanelProps = {
@@ -55,7 +57,7 @@ export default function LiveLogPanel({ lines, refreshNotice = '10초마다 자�
                 <LogTime>{line.time}</LogTime>
                 <AgentTag $color={line.agentColor}>[{line.agent}]</AgentTag>
               </MetaRow>
-              <LogMessage>{line.message}</LogMessage>
+              <LogMessage $level={line.level}>{line.message}</LogMessage>
             </LogLine>
           ))}
         </Terminal>
