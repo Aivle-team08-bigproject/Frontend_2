@@ -109,11 +109,11 @@ export function stageScreenPath(
   if (runStatus === 'COMPLETED') return `${base}/complete`
   const reviewPath = REVIEW_ROUTE_BY_RUN_STATUS[runStatus]
   if (reviewPath) return `${base}/${reviewPath}`
-  if (runStatus === 'RUNNING' || runStatus === 'QUEUED') {
+  if (runStatus === 'RUNNING' || runStatus === 'QUEUED' || runStatus === 'FAILED') {
     const progressPath = currentStage ? PROGRESS_ROUTE_BY_STAGE[currentStage] : undefined
     return `${base}/${progressPath ?? 'analyzing'}`
   }
-  // FAILED·CANCELLED는 단계 화면 대신 통합 상세에서 원인과 이력을 본다.
+  // CANCELLED는 실행 중인 단계가 확정되지 않을 수 있어 통합 상세에서 본다.
   return `${base}/detail`
 }
 
@@ -139,6 +139,10 @@ export const PROCESSING_STEPS: StepDef[] = [
   { code: 'MISSING_VALUE_PLAN', title: '결측 처리 계획' },
   { code: 'DERIVED_COLUMN_ORDER', title: '파생 컬럼 생성 순서' },
   { code: 'FINAL_COLUMN_VALIDATION', title: '최종 컬럼·품질 검증' },
+  { code: 'SOURCE_DATA_RETRIEVAL', title: '원천 데이터 조회' },
+  { code: 'DETERMINISTIC_PROCESSING', title: '데이터 가공·품질 검증' },
+  { code: 'OUTPUT_VALIDATION', title: '최종 산출물 검증' },
+  { code: 'RESULT_FILE_GENERATION', title: '결과 파일 생성' },
 ]
 
 function stepTimelineState(status: string | undefined): TimelineStepState {
