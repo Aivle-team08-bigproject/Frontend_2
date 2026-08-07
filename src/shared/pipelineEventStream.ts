@@ -31,6 +31,9 @@ export type PipelineSnapshotFrame = {
 export type PipelineStatusFrame = {
   event_id: number | null
   run_id: number
+  /** status = 단계·진행률 전이(Timeline 갱신), agent_log = 에이전트 기술 로그(로그 패널 전용). */
+  event_kind?: 'status' | 'agent_log'
+  log_level?: 'INFO' | 'WARN' | 'ERROR' | null
   run_status: string | null
   current_stage: string | null
   stage_run_id: number | null
