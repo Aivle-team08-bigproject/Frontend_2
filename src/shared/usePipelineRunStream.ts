@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import {
   subscribePipelineRunEvents,
+  type PipelineSnapshotFrame,
   type PipelineStatusFrame,
   type PipelineStreamItem,
 } from './pipelineEventStream'
@@ -68,6 +69,23 @@ function agentColorFor(runStatus: string | null): string {
   return colors.flowPrimary
 }
 
+function failureLogLines(frame: PipelineSnapshotFrame): LiveLogLine[] {
+  if (frame.run_status !== 'FAILED') return []
+  const time = formatTime(frame.occurred_at)
+  const agent = stageLabel(frame.current_stage)
+  const message = frame.error_message ?? '파이프라인 실행에 실패했습니다.'
+  return [
+    { time, agent, agentColor: colors.danger, message, level: 'ERROR' },
+    ...failureReasons(frame.failure).map((reason) => ({
+      time,
+      agent,
+      agentColor: colors.danger,
+      message: reason,
+      level: 'ERROR' as const,
+    })),
+  ]
+}
+
 /**
  * run_id 하나의 파이프라인 진행 상태를 SSE로 구독한다.
  * `stepField`는 이 화면이 관심 있는 서브스텝 종류(요구사항 분석/선별/가공)를 가리키며,
@@ -90,14 +108,19 @@ export function usePipelineRunStream(
         setState((prev) => ({ ...prev, connectionState: 'connected', errorMessage: null }))
       },
       onSnapshot: (frame) => {
-        setState((prev) => ({
-          ...prev,
-          connectionState: 'connected',
-          runStatus: frame.run_status,
-          currentStage: frame.current_stage,
-          progressPercent: frame.progress_percent,
-          items: frame.items,
-        }))
+        setState((prev) => {
+          const snapshotFailureLogs = failureLogLines(frame)
+          return {
+            ...prev,
+            connectionState: 'connected',
+            runStatus: frame.run_status,
+            currentStage: frame.current_stage,
+            progressPercent: frame.progress_percent,
+            items: frame.items,
+            errorMessage: frame.run_status === 'FAILED' ? frame.error_message : null,
+            logLines: snapshotFailureLogs.length > 0 ? snapshotFailureLogs : prev.logLines,
+          }
+        })
       },
       onStatus: (frame: PipelineStatusFrame) => {
         setState((prev) => {
