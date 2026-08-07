@@ -169,7 +169,6 @@ export default function RequirementAnalysisRegister() {
           end_date: endDate || undefined,
           delivery_due_at: deliveryDueDate ? `${deliveryDueDate}T18:00:00+09:00` : undefined,
         },
-        structured_requirement: { data_sensitivity: dataSensitivity },
         data_sensitivity: dataSensitivity,
       })
       navigate(`/tasks/${created.request_no}/runs/${created.run_id}/analyzing`)
