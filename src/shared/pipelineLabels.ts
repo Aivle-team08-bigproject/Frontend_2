@@ -147,7 +147,8 @@ export const PROCESSING_STEPS: StepDef[] = [
 
 function stepTimelineState(status: string | undefined): TimelineStepState {
   if (status === 'COMPLETED') return 'done'
-  if (status === 'RUNNING' || status === 'FAILED') return 'active'
+  if (status === 'FAILED') return 'failed'
+  if (status === 'RUNNING') return 'active'
   return 'pending'
 }
 
