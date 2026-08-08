@@ -275,6 +275,55 @@ export const WorkPanel = styled.section`
   background: ${colors.white};
 `
 
+export const LatestNoticeBanner = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-width: 0;
+  padding: 14px 18px;
+  border: 1px solid #b7dddd;
+  border-radius: 12px;
+  background: #eef9f8;
+  color: ${colors.text};
+  text-align: left;
+  cursor: pointer;
+
+  &:hover, &:focus-visible { border-color: ${colors.primary}; outline: none; }
+`
+
+export const LatestNoticeLabel = styled.span`
+  flex: 0 0 auto;
+  color: ${colors.primary};
+  font-size: 12px;
+  font-weight: 800;
+`
+
+export const LatestNoticeTitle = styled.span`
+  min-width: 0;
+  overflow: hidden;
+  flex: 1 1 auto;
+  font-size: 14px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`
+
+export const LatestNoticeDate = styled.span`
+  flex: 0 0 auto;
+  color: ${colors.textMuted};
+  font-size: 12px;
+  white-space: nowrap;
+`
+
+export const LatestNoticeMore = styled.span`
+  flex: 0 0 auto;
+  color: ${colors.primary};
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+`
+
 export const QueueList = styled.div`
   display: flex;
   min-height: 240px;

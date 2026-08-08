@@ -254,6 +254,60 @@ export type DashboardTaskItem = {
   updated_at: string
 }
 
+export type NoticeStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED'
+
+export type NoticeListItem = {
+  id: number
+  title: string
+  author_name: string
+  published_at: string
+}
+
+export type NoticeDetail = NoticeListItem & { content: string }
+
+export type NoticeListResponse = {
+  items: NoticeListItem[]
+  total_count: number
+  page: number
+  page_size: number
+}
+
+export type NoticeLatestResponse = { item: NoticeListItem | null }
+
+export type NoticeWritePayload = {
+  title: string
+  content: string
+  status: NoticeStatus
+}
+
+export type NoticeUpdatePayload = Partial<NoticeWritePayload>
+
+export function fetchNotices(page = 1, pageSize = 20): Promise<NoticeListResponse> {
+  return request<NoticeListResponse>(`/api/v1/notices?page=${page}&page_size=${pageSize}`)
+}
+
+export function fetchLatestNotice(): Promise<NoticeLatestResponse> {
+  return request<NoticeLatestResponse>('/api/v1/notices/latest')
+}
+
+export function fetchNotice(noticeId: number): Promise<NoticeDetail> {
+  return request<NoticeDetail>(`/api/v1/notices/${noticeId}`)
+}
+
+export function createNotice(payload: NoticeWritePayload): Promise<NoticeDetail> {
+  return request<NoticeDetail>('/api/v1/admin/notices', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+}
+
+export function updateNotice(noticeId: number, payload: NoticeUpdatePayload): Promise<NoticeDetail> {
+  return request<NoticeDetail>(`/api/v1/admin/notices/${noticeId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  })
+}
+
 export type DashboardPriorityCard = {
   priority_code: PriorityCode
   label: string
