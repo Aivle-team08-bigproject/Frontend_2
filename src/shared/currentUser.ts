@@ -1,8 +1,9 @@
-import { fetchCurrentEmployee, type EmployeePermissionCode } from './api'
+import { fetchCurrentEmployee, type EmployeePermissionCode, type EmployeeRole } from './api'
 
 export type CurrentUser = {
   name: string
   role: string
+  roleCode: EmployeeRole | null
   employeeCode: string
   permissions: EmployeePermissionCode[]
 }
@@ -10,6 +11,7 @@ export type CurrentUser = {
 export const EMPTY_CURRENT_USER: CurrentUser = {
   name: '사용자 정보 없음',
   role: '-',
+  roleCode: null,
   employeeCode: '',
   permissions: [],
 }
@@ -19,6 +21,7 @@ export async function fetchCurrentUser(): Promise<CurrentUser> {
   return {
     name: employee.name,
     role: employee.department_name ?? '소속 미지정',
+    roleCode: employee.role,
     employeeCode: employee.employee_code,
     permissions: employee.permissions,
   }
