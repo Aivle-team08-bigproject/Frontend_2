@@ -73,17 +73,21 @@ function failureLogLines(frame: PipelineSnapshotFrame): LiveLogLine[] {
   if (frame.run_status !== 'FAILED') return []
   const time = formatTime(frame.occurred_at)
   const agent = stageLabel(frame.current_stage)
-  const message = frame.error_message ?? '파이프라인 실행에 실패했습니다.'
-  return [
-    { time, agent, agentColor: colors.danger, message, level: 'ERROR' },
-    ...failureReasons(frame.failure).map((reason) => ({
-      time,
-      agent,
-      agentColor: colors.danger,
-      message: reason,
-      level: 'ERROR' as const,
-    })),
+  const messages = [
+    ...new Set(
+      [frame.error_message, ...failureReasons(frame.failure)].filter(
+        (message): message is string => Boolean(message),
+      ),
+    ),
   ]
+  if (messages.length === 0) messages.push('파이프라인 실행에 실패했습니다.')
+  return messages.map((message) => ({
+    time,
+    agent,
+    agentColor: colors.danger,
+    message,
+    level: 'ERROR' as const,
+  }))
 }
 
 /**
@@ -117,7 +121,9 @@ export function usePipelineRunStream(
             currentStage: frame.current_stage,
             progressPercent: frame.progress_percent,
             items: frame.items,
-            errorMessage: frame.run_status === 'FAILED' ? frame.error_message : null,
+            // 실행 실패는 타임라인과 로그에만 표시한다. 이 배너는 SSE 연결 실패처럼
+            // 사용자가 복구할 수 있는 화면 통신 오류만 알린다.
+            errorMessage: null,
             logLines: snapshotFailureLogs.length > 0 ? snapshotFailureLogs : prev.logLines,
           }
         })

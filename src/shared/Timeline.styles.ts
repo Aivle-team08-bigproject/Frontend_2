@@ -104,10 +104,29 @@ export const ActiveDot = styled.div`
 `
 
 export const FailedMark = styled.span`
-  color: ${colors.white};
-  font-size: 16px;
-  font-weight: 800;
-  line-height: 1;
+  position: relative;
+  width: 10px;
+  height: 10px;
+
+  &::before,
+  &::after {
+    position: absolute;
+    top: 4px;
+    left: 0;
+    width: 10px;
+    height: 2px;
+    border-radius: 1px;
+    background: ${colors.white};
+    content: '';
+  }
+
+  &::before {
+    transform: rotate(45deg);
+  }
+
+  &::after {
+    transform: rotate(-45deg);
+  }
 `
 
 export const ConnectorLine = styled.div`

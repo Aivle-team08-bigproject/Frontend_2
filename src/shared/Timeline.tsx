@@ -57,7 +57,7 @@ export default function Timeline({ sectionTitle, statusLabel, statusBg, statusCo
               <Circle $state={item.state}>
                 {item.state === 'done' && <CheckIcon src={checkSmSrc} alt="완료" />}
                 {item.state === 'active' && <ActiveDot />}
-                {item.state === 'failed' && <FailedMark aria-label="실패">×</FailedMark>}
+                {item.state === 'failed' && <FailedMark role="img" aria-label="실패" />}
               </Circle>
               {index < items.length - 1 && <ConnectorLine />}
             </IndicatorCol>
