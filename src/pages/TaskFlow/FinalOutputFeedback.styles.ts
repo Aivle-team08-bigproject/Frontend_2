@@ -90,7 +90,8 @@ export const DataTable = styled.div`
 
 export const THead = styled.div`
   display: flex;
-  width: 100%;
+  width: max-content;
+  min-width: 100%;
   padding: 12px 16px;
   background: ${colors.bg};
   border-bottom: 1px solid ${colors.border};
@@ -101,7 +102,8 @@ export const THead = styled.div`
 
 export const TRow = styled.div`
   display: flex;
-  width: 100%;
+  width: max-content;
+  min-width: 100%;
   padding: 14px 16px;
   border-bottom: 1px solid ${colors.border};
   font-size: 14px;
@@ -115,8 +117,9 @@ export const TRow = styled.div`
 
 export const TCell = styled.p<{ $strong?: boolean }>`
   margin: 0;
-  flex: 1 0 0;
-  min-width: 0;
+  flex: 0 0 180px;
+  width: 180px;
+  overflow-wrap: anywhere;
   font-weight: ${({ $strong }) => ($strong ? 600 : 400)};
 `
 
