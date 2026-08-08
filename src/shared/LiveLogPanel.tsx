@@ -1,7 +1,6 @@
-import { liveDotSrc, refreshCwSmSrc, refreshCwSrc } from './icons'
+import { liveDotSrc, refreshCwSrc } from './icons'
 import {
   AgentTag,
-  CancelButton,
   LiveDot,
   LogCardEl,
   LogHeader,
@@ -9,12 +8,9 @@ import {
   LogMessage,
   LogTime,
   MetaRow,
-  ProgressActions,
   RefreshGroup,
   RefreshIcon,
   RefreshLabel,
-  RefreshNotice,
-  RefreshNoticeLabel,
   RightPanel,
   Terminal,
   TitleGroup,
@@ -32,11 +28,9 @@ export type LiveLogLine = {
 
 type LiveLogPanelProps = {
   lines: LiveLogLine[]
-  refreshNotice?: string
-  onCancel?: () => void
 }
 
-export default function LiveLogPanel({ lines, refreshNotice = '10초마다 자동 새로고침 중', onCancel }: LiveLogPanelProps) {
+export default function LiveLogPanel({ lines }: LiveLogPanelProps) {
   return (
     <RightPanel>
       <LogCardEl>
@@ -62,15 +56,6 @@ export default function LiveLogPanel({ lines, refreshNotice = '10초마다 자�
           ))}
         </Terminal>
       </LogCardEl>
-      <ProgressActions>
-        <RefreshNotice>
-          <RefreshIcon src={refreshCwSmSrc} alt="" />
-          <RefreshNoticeLabel>{refreshNotice}</RefreshNoticeLabel>
-        </RefreshNotice>
-        <CancelButton type="button" onClick={onCancel}>
-          작업 취소
-        </CancelButton>
-      </ProgressActions>
     </RightPanel>
   )
 }
