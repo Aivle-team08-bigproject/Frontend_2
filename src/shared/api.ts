@@ -2,7 +2,9 @@ import { clearAccessToken, getAccessToken, remembersLogin, saveAccessToken } fro
 
 // 빌드 시 VITE_API_BASE_URL을 안 넘기면 Docker ARG가 "안 정해짐"이 아니라 빈 문자열로
 // 들어온다. ??는 null/undefined만 잡고 빈 문자열은 안 잡아서 || 로 둘 다 처리해야 한다.
-export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000').replace(/\/$/, '')
+const configuredApiBaseUrl = import.meta.env.VITE_API_BASE_URL
+const defaultApiBaseUrl = import.meta.env.DEV ? 'http://localhost:8000' : window.location.origin
+export const API_BASE_URL = (configuredApiBaseUrl || defaultApiBaseUrl).replace(/\/$/, '')
 let refreshPromise: Promise<string> | null = null
 
 /** `GET /api/auth/me`와 `POST /api/auth/login`이 공유하는 EmployeeSummary 스키마. */
@@ -265,8 +267,26 @@ export type NoticeListItem = {
 
 export type NoticeDetail = NoticeListItem & { content: string }
 
+export type NoticeAdminItem = {
+  id: number
+  title: string
+  content: string
+  status: NoticeStatus
+  author_name: string
+  published_at: string | null
+  created_at: string
+  updated_at: string
+}
+
 export type NoticeListResponse = {
   items: NoticeListItem[]
+  total_count: number
+  page: number
+  page_size: number
+}
+
+export type NoticeAdminListResponse = {
+  items: NoticeAdminItem[]
   total_count: number
   page: number
   page_size: number
@@ -288,6 +308,16 @@ export function fetchNotices(page = 1, pageSize = 20): Promise<NoticeListRespons
 
 export function fetchLatestNotice(): Promise<NoticeLatestResponse> {
   return request<NoticeLatestResponse>('/api/v1/notices/latest')
+}
+
+export function fetchAdminNotices(page = 1, pageSize = 20, status?: NoticeStatus): Promise<NoticeAdminListResponse> {
+  const params = new URLSearchParams({ page: String(page), page_size: String(pageSize) })
+  if (status) params.set('status', status)
+  return request<NoticeAdminListResponse>(`/api/v1/admin/notices?${params.toString()}`)
+}
+
+export function fetchAdminNotice(noticeId: number): Promise<NoticeAdminItem> {
+  return request<NoticeAdminItem>(`/api/v1/admin/notices/${noticeId}`)
 }
 
 export function fetchNotice(noticeId: number): Promise<NoticeDetail> {

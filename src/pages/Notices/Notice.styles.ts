@@ -137,6 +137,48 @@ export const NoticeTextarea = styled.textarea`
   resize: vertical;
 `
 
+export const NoticeFieldLabel = styled.label`
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  color: ${colors.textSecondary};
+  font-size: 13px;
+  font-weight: 700;
+`
+
+export const NoticeSelect = styled.select`
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid ${colors.border};
+  border-radius: 8px;
+  background: ${colors.white};
+  color: ${colors.text};
+  font: inherit;
+`
+
+export const NoticePageIntro = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+`
+
+export const NoticeDescription = styled.p`
+  margin: 0;
+  color: ${colors.textMuted};
+  font-size: 13px;
+`
+
+export const NoticeStatusBadge = styled.span<{ $status: string }>`
+  display: inline-flex;
+  width: fit-content;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: ${({ $status }) => ($status === 'PUBLISHED' ? '#e6f3f3' : $status === 'DRAFT' ? '#fff7e6' : '#f0f1f3')};
+  color: ${({ $status }) => ($status === 'PUBLISHED' ? colors.primary : $status === 'DRAFT' ? '#a15c00' : colors.textMuted)};
+  font-size: 11px;
+  font-weight: 800;
+`
+
 export const SecondaryButton = styled.button`
   padding: 10px 16px;
   border: 1px solid ${colors.border};

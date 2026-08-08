@@ -73,7 +73,7 @@ export default function NoticeDetailPage() {
             <NoticeMeta>{data.author_name} · {new Date(data.published_at).toLocaleDateString('ko-KR')}</NoticeMeta>
             <NoticeContent>{data.content}</NoticeContent>
             {isAdmin && <NoticeActions>
-              <SecondaryButton type="button" onClick={() => setEditing(true)}>수정</SecondaryButton>
+              <SecondaryButton type="button" onClick={() => navigate(`/notices/${id}/edit`)}>수정</SecondaryButton>
               <SecondaryButton type="button" onClick={archive}>보관</SecondaryButton>
             </NoticeActions>}
           </NoticeDetailCard>
