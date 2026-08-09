@@ -20,6 +20,11 @@ import SignupPage from './pages/SystemPages/SignupPage'
 import LegalPage from './pages/SystemPages/LegalPage'
 import { NotFoundPage, ServerErrorPage } from './pages/SystemPages/ErrorPage'
 import ProtectedRoute from './shared/ProtectedRoute'
+import NoticeListPage from './pages/Notices/NoticeListPage'
+import NoticeDetailPage from './pages/Notices/NoticeDetailPage'
+import NoticeCreatePage from './pages/Notices/NoticeCreatePage'
+import NoticeEditPage from './pages/Notices/NoticeEditPage'
+import NoticeManagePage from './pages/Notices/NoticeManagePage'
 
 function protectedPage(page: ReactNode) {
   return <ProtectedRoute>{page}</ProtectedRoute>
@@ -40,6 +45,11 @@ function App() {
         <Route path="/dashboard/tasks" element={protectedPage(<TaskList />)} />
         <Route path="/dashboard/task-lookup" element={protectedPage(<TaskLookup />)} />
         <Route path="/dashboard/overview" element={protectedPage(<AdminDashboard />)} />
+        <Route path="/notices" element={protectedPage(<NoticeListPage />)} />
+        <Route path="/notices/manage" element={protectedPage(<NoticeManagePage />)} />
+        <Route path="/notices/new" element={protectedPage(<NoticeCreatePage />)} />
+        <Route path="/notices/:noticeId/edit" element={protectedPage(<NoticeEditPage />)} />
+        <Route path="/notices/:noticeId" element={protectedPage(<NoticeDetailPage />)} />
         <Route path="/dev-dashboard" element={protectedPage(<DeveloperDashboardMain />)} />
         <Route path="/dev-dashboard/members" element={protectedPage(<MemberManagement />)} />
         <Route path="/tasks/register" element={protectedPage(<RequirementAnalysisRegister />)} />

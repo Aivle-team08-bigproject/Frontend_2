@@ -1,9 +1,10 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import GNB from '../../shared/GNB'
 import Footer from '../../shared/Footer'
 import SubNav from '../../shared/SubNav'
 import { useAsyncData } from '../../shared/hooks'
+import { fetchLatestNotice } from '../../shared/api'
 import DataStateNotice from '../../shared/DataStateNotice'
 import { MainContent, PageWrapper, SectionHeader, SectionTitle } from '../../shared/layout.styles'
 import { EMPTY_PRACTITIONER_DASHBOARD, fetchPractitionerDashboardData, PRACTITIONER_NAV_ITEMS } from './data'
@@ -47,6 +48,11 @@ import {
   StatsRow,
   WorkArea,
   WorkPanel,
+  LatestNoticeBanner,
+  LatestNoticeDate,
+  LatestNoticeLabel,
+  LatestNoticeMore,
+  LatestNoticeTitle,
 } from './PractitionerDashboardMain.styles'
 
 const EVENT_LABELS = {
@@ -94,6 +100,8 @@ function calendarCells(month: Date): Array<Date | null> {
 
 export default function PractitionerDashboardMain() {
   const { data, loading, error } = useAsyncData(fetchPractitionerDashboardData)
+  const latestNoticeFetcher = useCallback(() => fetchLatestNotice(), [])
+  const { data: latestNotice } = useAsyncData(latestNoticeFetcher)
   const view = data ?? EMPTY_PRACTITIONER_DASHBOARD
   const navigate = useNavigate()
   const [calendarMonth, setCalendarMonth] = useState(() => new Date())
@@ -177,6 +185,14 @@ export default function PractitionerDashboardMain() {
       <GNB />
       <SubNav activeTo="/dashboard" items={PRACTITIONER_NAV_ITEMS} />
       <MainContent>
+        {latestNotice?.item && (
+          <LatestNoticeBanner type="button" onClick={() => navigate(`/notices/${latestNotice.item!.id}`)} aria-label={`최신 공지사항: ${latestNotice.item.title}`}>
+            <LatestNoticeLabel>공지</LatestNoticeLabel>
+            <LatestNoticeTitle>{latestNotice.item.title}</LatestNoticeTitle>
+            <LatestNoticeDate>{new Date(latestNotice.item.published_at).toLocaleDateString('ko-KR')}</LatestNoticeDate>
+            <LatestNoticeMore>전체보기 →</LatestNoticeMore>
+          </LatestNoticeBanner>
+        )}
         <DataStateNotice loading={loading} error={error} empty={!loading && !error && view.statCards.length === 0} subject="대시보드 데이터" />
         <StatsRow>
           {view.statCards.map((stat) => (

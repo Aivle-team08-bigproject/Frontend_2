@@ -12,6 +12,7 @@ import { colors } from '../../shared/theme'
 export const PRACTITIONER_NAV_ITEMS: SubNavItem[] = [
   { label: '전체 작업', to: '/dashboard' },
   { label: '작업 리스트', to: '/dashboard/tasks' },
+  { label: '공지사항', to: '/notices' },
 ]
 
 export type StatCard = {
