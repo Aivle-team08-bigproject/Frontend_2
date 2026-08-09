@@ -73,7 +73,7 @@ export const IndicatorCol = styled.div`
   flex-shrink: 0;
 `
 
-export const Circle = styled.div<{ $state: 'done' | 'active' | 'pending' }>`
+export const Circle = styled.div<{ $state: 'done' | 'active' | 'failed' | 'pending' }>`
   display: flex;
   flex-shrink: 0;
   align-items: center;
@@ -82,7 +82,13 @@ export const Circle = styled.div<{ $state: 'done' | 'active' | 'pending' }>`
   height: 20px;
   border-radius: 10px;
   background: ${({ $state }) =>
-    $state === 'done' ? '#22c55e' : $state === 'active' ? '#eab308' : colors.border};
+    $state === 'done'
+      ? '#22c55e'
+      : $state === 'active'
+        ? '#eab308'
+        : $state === 'failed'
+          ? colors.danger
+          : colors.border};
 `
 
 export const CheckIcon = styled.img`
@@ -95,6 +101,32 @@ export const ActiveDot = styled.div`
   height: 8px;
   border-radius: 50%;
   background: ${colors.white};
+`
+
+export const FailedMark = styled.span`
+  position: relative;
+  width: 10px;
+  height: 10px;
+
+  &::before,
+  &::after {
+    position: absolute;
+    top: 4px;
+    left: 0;
+    width: 10px;
+    height: 2px;
+    border-radius: 1px;
+    background: ${colors.white};
+    content: '';
+  }
+
+  &::before {
+    transform: rotate(45deg);
+  }
+
+  &::after {
+    transform: rotate(-45deg);
+  }
 `
 
 export const ConnectorLine = styled.div`

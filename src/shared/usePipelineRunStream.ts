@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import {
   subscribePipelineRunEvents,
+  type PipelineSnapshotFrame,
   type PipelineStatusFrame,
   type PipelineStreamItem,
 } from './pipelineEventStream'
@@ -68,6 +69,27 @@ function agentColorFor(runStatus: string | null): string {
   return colors.flowPrimary
 }
 
+function failureLogLines(frame: PipelineSnapshotFrame): LiveLogLine[] {
+  if (frame.run_status !== 'FAILED') return []
+  const time = formatTime(frame.occurred_at)
+  const agent = stageLabel(frame.current_stage)
+  const messages = [
+    ...new Set(
+      [frame.error_message, ...failureReasons(frame.failure)].filter(
+        (message): message is string => Boolean(message),
+      ),
+    ),
+  ]
+  if (messages.length === 0) messages.push('파이프라인 실행에 실패했습니다.')
+  return messages.map((message) => ({
+    time,
+    agent,
+    agentColor: colors.danger,
+    message,
+    level: 'ERROR' as const,
+  }))
+}
+
 /**
  * run_id 하나의 파이프라인 진행 상태를 SSE로 구독한다.
  * `stepField`는 이 화면이 관심 있는 서브스텝 종류(요구사항 분석/선별/가공)를 가리키며,
@@ -90,14 +112,21 @@ export function usePipelineRunStream(
         setState((prev) => ({ ...prev, connectionState: 'connected', errorMessage: null }))
       },
       onSnapshot: (frame) => {
-        setState((prev) => ({
-          ...prev,
-          connectionState: 'connected',
-          runStatus: frame.run_status,
-          currentStage: frame.current_stage,
-          progressPercent: frame.progress_percent,
-          items: frame.items,
-        }))
+        setState((prev) => {
+          const snapshotFailureLogs = failureLogLines(frame)
+          return {
+            ...prev,
+            connectionState: 'connected',
+            runStatus: frame.run_status,
+            currentStage: frame.current_stage,
+            progressPercent: frame.progress_percent,
+            items: frame.items,
+            // 실행 실패는 타임라인과 로그에만 표시한다. 이 배너는 SSE 연결 실패처럼
+            // 사용자가 복구할 수 있는 화면 통신 오류만 알린다.
+            errorMessage: null,
+            logLines: snapshotFailureLogs.length > 0 ? snapshotFailureLogs : prev.logLines,
+          }
+        })
       },
       onStatus: (frame: PipelineStatusFrame) => {
         setState((prev) => {

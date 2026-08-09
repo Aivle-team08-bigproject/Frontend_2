@@ -64,10 +64,7 @@ export default function AnalysisInProgress() {
               items={buildStepTimelineItems(displayItems, ANALYSIS_STEPS, stream.stepMessages)}
             />
           </LeftPanel>
-          <LiveLogPanel
-            lines={stream.logLines}
-            refreshNotice={stream.connectionState === 'connected' ? '실시간 스트리밍 중' : '재연결 대기 중'}
-          />
+          <LiveLogPanel lines={stream.logLines} />
         </SplitGrid>
       </FlowContentArea>
       <Footer />

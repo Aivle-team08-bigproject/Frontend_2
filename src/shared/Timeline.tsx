@@ -5,6 +5,7 @@ import {
   CheckIcon,
   Circle,
   ConnectorLine,
+  FailedMark,
   IndicatorCol,
   ItemDescription,
   ItemTime,
@@ -20,7 +21,7 @@ import {
   TitleGroup,
 } from './Timeline.styles'
 
-export type TimelineStepState = 'done' | 'active' | 'pending'
+export type TimelineStepState = 'done' | 'active' | 'failed' | 'pending'
 
 export type TimelineItem = {
   title: string
@@ -56,6 +57,7 @@ export default function Timeline({ sectionTitle, statusLabel, statusBg, statusCo
               <Circle $state={item.state}>
                 {item.state === 'done' && <CheckIcon src={checkSmSrc} alt="완료" />}
                 {item.state === 'active' && <ActiveDot />}
+                {item.state === 'failed' && <FailedMark role="img" aria-label="실패" />}
               </Circle>
               {index < items.length - 1 && <ConnectorLine />}
             </IndicatorCol>
