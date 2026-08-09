@@ -26,7 +26,7 @@ export default function NoticeCreatePage() {
     setError('')
     try {
       const created = await createNotice(payload)
-      navigate(`/notices/${created.id}`)
+      navigate(payload.status === 'PUBLISHED' ? `/notices/${created.id}` : `/notices/${created.id}/edit`)
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : '공지사항을 저장하지 못했습니다.')
     } finally {

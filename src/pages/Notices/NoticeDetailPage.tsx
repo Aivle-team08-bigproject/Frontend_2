@@ -1,17 +1,16 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react'
+import { useCallback, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import Footer from '../../shared/Footer'
 import GNB from '../../shared/GNB'
 import SubNav from '../../shared/SubNav'
 import DataStateNotice from '../../shared/DataStateNotice'
-import { PrimaryButton } from '../../shared/layout.styles'
 import { useAsyncData } from '../../shared/hooks'
-import { fetchNotice, updateNotice } from '../../shared/api'
+import { deleteNotice, fetchNotice } from '../../shared/api'
 import { fetchCurrentUser } from '../../shared/currentUser'
 import { PRACTITIONER_NAV_ITEMS } from '../PractitionerDashboard/data'
 import {
-  FormActions, NoticeContent, NoticeDetailCard, NoticeDetailTitle, NoticeForm, NoticeInput,
-  NoticeMain, NoticeMeta, NoticePage, NoticeTextarea, NoticeActions, SecondaryButton,
+  NoticeContent, NoticeDetailCard, NoticeDetailTitle, NoticeMain, NoticeMeta, NoticePage,
+  NoticeActions, SecondaryButton,
 } from './Notice.styles'
 
 export default function NoticeDetailPage() {
@@ -21,42 +20,17 @@ export default function NoticeDetailPage() {
   const fetcher = useCallback(() => fetchNotice(id), [id])
   const { data, loading, error } = useAsyncData(fetcher)
   const currentUser = useAsyncData(fetchCurrentUser)
-  const [editing, setEditing] = useState(false)
-  const [title, setTitle] = useState('')
-  const [content, setContent] = useState('')
-  const [saving, setSaving] = useState(false)
-  const [formError, setFormError] = useState('')
+  const [actionError, setActionError] = useState('')
   const isAdmin = currentUser.data?.roleCode === 'ADMIN'
 
-  useEffect(() => {
-    if (data) {
-      setTitle(data.title)
-      setContent(data.content)
-    }
-  }, [data])
-
-  async function save(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    setSaving(true)
-    setFormError('')
+  async function remove() {
+    if (!window.confirm('이 공지사항을 삭제할까요? 삭제된 공지는 관리자 목록에서 보관 상태로 유지됩니다.')) return
+    setActionError('')
     try {
-      await updateNotice(id, { title: title.trim(), content: content.trim() })
-      setEditing(false)
-      window.location.reload()
-    } catch (caught) {
-      setFormError(caught instanceof Error ? caught.message : '공지사항을 수정하지 못했습니다.')
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  async function archive() {
-    if (!window.confirm('이 공지사항을 보관 처리할까요?')) return
-    try {
-      await updateNotice(id, { status: 'ARCHIVED' })
+      await deleteNotice(id)
       navigate('/notices')
     } catch (caught) {
-      setFormError(caught instanceof Error ? caught.message : '공지사항을 보관하지 못했습니다.')
+      setActionError(caught instanceof Error ? caught.message : '공지사항을 삭제하지 못했습니다.')
     }
   }
 
@@ -67,28 +41,18 @@ export default function NoticeDetailPage() {
       <NoticeMain>
         <Link to="/notices">← 공지사항 목록</Link>
         <DataStateNotice loading={loading} error={error} empty={!loading && !error && !data} subject="공지사항" />
-        {data && !editing && (
+        {data && (
           <NoticeDetailCard>
             <NoticeDetailTitle>{data.title}</NoticeDetailTitle>
             <NoticeMeta>{data.author_name} · {new Date(data.published_at).toLocaleDateString('ko-KR')}</NoticeMeta>
             <NoticeContent>{data.content}</NoticeContent>
             {isAdmin && <NoticeActions>
               <SecondaryButton type="button" onClick={() => navigate(`/notices/${id}/edit`)}>수정</SecondaryButton>
-              <SecondaryButton type="button" onClick={archive}>보관</SecondaryButton>
+              <SecondaryButton type="button" onClick={remove}>삭제</SecondaryButton>
             </NoticeActions>}
           </NoticeDetailCard>
         )}
-        {data && editing && (
-          <NoticeForm onSubmit={save}>
-            <NoticeInput aria-label="공지 제목" value={title} onChange={(event) => setTitle(event.target.value)} maxLength={200} required />
-            <NoticeTextarea aria-label="공지 내용" value={content} onChange={(event) => setContent(event.target.value)} maxLength={20000} required />
-            {formError && <div role="alert">{formError}</div>}
-            <FormActions>
-              <SecondaryButton type="button" onClick={() => setEditing(false)}>취소</SecondaryButton>
-              <PrimaryButton type="submit" disabled={saving}>{saving ? '저장 중...' : '저장'}</PrimaryButton>
-            </FormActions>
-          </NoticeForm>
-        )}
+        {actionError && <div role="alert">{actionError}</div>}
       </NoticeMain>
       <Footer />
     </NoticePage>
