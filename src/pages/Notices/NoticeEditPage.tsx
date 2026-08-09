@@ -21,6 +21,7 @@ export default function NoticeEditPage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const isAdmin = currentUser.data?.roleCode === 'ADMIN'
+  const cancelTarget = notice.data?.status === 'PUBLISHED' ? `/notices/${id}` : '/notices/manage'
 
   useEffect(() => {
     if (!currentUser.loading && !isAdmin) navigate('/notices', { replace: true })
@@ -31,7 +32,9 @@ export default function NoticeEditPage() {
     setError('')
     try {
       await updateNotice(id, payload)
-      navigate(`/notices/${id}`)
+      if (payload.status === 'PUBLISHED') navigate(`/notices/${id}`)
+      else if (payload.status === 'DRAFT') navigate(`/notices/${id}/edit`)
+      else navigate('/notices/manage')
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : '공지사항을 수정하지 못했습니다.')
     } finally {
@@ -48,7 +51,7 @@ export default function NoticeEditPage() {
           <NoticePageIntro><NoticeTitle>공지사항 수정</NoticeTitle></NoticePageIntro>
         </NoticeHeader>
         <DataStateNotice loading={notice.loading} error={notice.error} empty={!notice.loading && !notice.error && !notice.data} subject="공지사항" />
-        {isAdmin && notice.data && <NoticeEditor mode="edit" initial={notice.data} saving={saving} error={error} onCancel={() => navigate(`/notices/${id}`)} onSubmit={submit} />}
+        {isAdmin && notice.data && <NoticeEditor mode="edit" initial={notice.data} saving={saving} error={error} onCancel={() => navigate(cancelTarget)} onSubmit={submit} />}
       </NoticeMain>
       <Footer />
     </NoticePage>

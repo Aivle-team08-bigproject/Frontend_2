@@ -3,13 +3,14 @@
 ## 대상 브랜치
 
 - Source: `feature/notices-frontend`
-- Target: `develop`
+- Target: `feature/pipeline-sse-progress`
 
 ## 변경 내용
 
 - Dashboard에 최신 공지 한 줄 배너 추가
 - 공지사항 목록/상세 페이지 추가
 - 관리자 공지 관리/작성/수정 페이지 분리
+- 관리자 삭제 버튼 및 논리 삭제 API 연동
 - 관리자 메뉴와 라우팅 권한 제어 추가
 - Docker Compose same-origin API 연동 반영
 

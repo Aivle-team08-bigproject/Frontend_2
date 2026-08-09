@@ -338,6 +338,10 @@ export function updateNotice(noticeId: number, payload: NoticeUpdatePayload): Pr
   })
 }
 
+export function deleteNotice(noticeId: number): Promise<void> {
+  return request<void>(`/api/v1/admin/notices/${noticeId}`, { method: 'DELETE' })
+}
+
 export type DashboardPriorityCard = {
   priority_code: PriorityCode
   label: string

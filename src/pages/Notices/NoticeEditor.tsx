@@ -15,10 +15,24 @@ type Props = {
   onSubmit: (payload: NoticeWritePayload) => Promise<void>
 }
 
+const STATUS_LABEL: Record<NoticeStatus, string> = {
+  DRAFT: '임시 저장',
+  PUBLISHED: '게시',
+  ARCHIVED: '보관',
+}
+
+function availableStatuses(mode: Props['mode'], current: NoticeStatus): NoticeStatus[] {
+  if (mode === 'create') return ['DRAFT', 'PUBLISHED']
+  if (current === 'DRAFT') return ['DRAFT', 'PUBLISHED', 'ARCHIVED']
+  if (current === 'PUBLISHED') return ['PUBLISHED', 'ARCHIVED']
+  return ['ARCHIVED']
+}
+
 export default function NoticeEditor({ mode, initial, saving, error, onCancel, onSubmit }: Props) {
   const [title, setTitle] = useState(initial?.title ?? '')
   const [content, setContent] = useState(initial?.content ?? '')
   const [status, setStatus] = useState<NoticeStatus>(initial?.status ?? 'DRAFT')
+  const statuses = availableStatuses(mode, initial?.status ?? 'DRAFT')
 
   useEffect(() => {
     setTitle(initial?.title ?? '')
@@ -44,9 +58,7 @@ export default function NoticeEditor({ mode, initial, saving, error, onCancel, o
       <NoticeFieldLabel>
         게시 상태
         <NoticeSelect value={status} onChange={(event) => setStatus(event.target.value as NoticeStatus)}>
-          <option value="DRAFT">임시 저장</option>
-          <option value="PUBLISHED">게시</option>
-          {mode === 'edit' && <option value="ARCHIVED">보관</option>}
+          {statuses.map((value) => <option key={value} value={value}>{STATUS_LABEL[value]}</option>)}
         </NoticeSelect>
       </NoticeFieldLabel>
       <NoticePageIntro>
