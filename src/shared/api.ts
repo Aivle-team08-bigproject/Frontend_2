@@ -166,6 +166,30 @@ export type SamplePreviewResponse = {
   }
 }
 
+export type EmailDeliveryResponse = {
+  delivery_id: string
+  run_id: number
+  stage_attempt_no: number
+  delivery_type: 'SELECTION_SAMPLE' | string
+  recipient: string
+  status: string
+  idempotency_key: string
+  sample_sha256: string
+  template_version: string
+  provider_message_id: string | null
+  failure_code: string | null
+  created_at: string
+  updated_at: string
+}
+
+export type SampleEmailDeliveryPayload = {
+  recipient: string
+  delivery_type?: 'SELECTION_SAMPLE' | 'FINAL_ARTIFACT'
+  template_version?: string
+  api_endpoint_url?: string
+  api_key?: string
+}
+
 export type ProcessingResultResponse = {
   run_id: number
   stage: string
@@ -196,11 +220,17 @@ export type FailureCode =
 export type ReviewDecision = 'APPROVED' | 'CHANGES_REQUESTED'
 
 /** POST /api/v1/runs/{run_id}/review 요청 바디. */
+export type DeliveryChannel = 'email' | 'api'
+export type OutputFormat = 'csv' | 'visualization' | 'report'
+
 export type StageReviewPayload = {
   approved: boolean
   retry?: boolean
   feedback?: string | null
   failure_code?: FailureCode | null
+  /** 요구사항 분석 단계 승인 시에만 사용. AI 판단값을 실무자가 덮어쓸 때 채운다. */
+  delivery_channel?: DeliveryChannel
+  output_formats?: OutputFormat[]
 }
 
 export type StageReviewResponse = {
@@ -644,8 +674,39 @@ export function fetchSamplePreview(runId: number): Promise<SamplePreviewResponse
   return request(`/api/v1/runs/${runId}/sample-preview`)
 }
 
+export function requestSampleEmailDelivery(
+  runId: number,
+  payload: SampleEmailDeliveryPayload,
+): Promise<EmailDeliveryResponse> {
+  return request<EmailDeliveryResponse>(`/api/v1/runs/${runId}/email-deliveries`, {
+    method: 'POST',
+    headers: { 'Idempotency-Key': crypto.randomUUID() },
+    body: JSON.stringify({
+      recipient: payload.recipient,
+      delivery_type: payload.delivery_type ?? 'SELECTION_SAMPLE',
+      template_version: payload.template_version ?? 'v1',
+      api_endpoint_url: payload.api_endpoint_url,
+      api_key: payload.api_key,
+    }),
+  })
+}
+
 export function fetchProcessingResult(runId: number): Promise<ProcessingResultResponse> {
   return request(`/api/v1/runs/${runId}/processing-result`)
+}
+
+export type CustomerApiKeyResponse = {
+  endpoint_url: string
+  api_key: string
+  key_last4: string
+  contract_no: string
+}
+
+/** 고객용 산출물 재다운로드 API 키를 발급한다. 평문 키는 이 응답에서만 내려온다. */
+export function issueCustomerApiKey(runId: number): Promise<CustomerApiKeyResponse> {
+  return request<CustomerApiKeyResponse>(`/api/v1/runs/${runId}/api-key`, {
+    method: 'POST',
+  })
 }
 
 /** 인증 쿠키 기반 결과 파일 다운로드 주소. */

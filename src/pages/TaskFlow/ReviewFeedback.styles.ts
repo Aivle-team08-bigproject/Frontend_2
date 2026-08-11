@@ -84,26 +84,6 @@ export const ColumnDescription = styled.p`
   color: ${colors.textSecondary};
 `
 
-export const ScaleRow = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  white-space: nowrap;
-`
-
-export const ScaleLabel = styled.p`
-  margin: 0;
-  font-size: 13px;
-  color: ${colors.textMuted};
-`
-
-export const ScaleValue = styled.p`
-  margin: 0;
-  font-size: 16px;
-  font-weight: 700;
-  color: ${colors.text};
-`
-
 export const OptionGroup = styled.div`
   display: flex;
   flex-direction: column;
@@ -128,7 +108,17 @@ export const OptionRow = styled.label`
   display: flex;
   align-items: center;
   gap: 10px;
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  text-align: left;
   cursor: pointer;
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
 `
 
 export const RadioIcon = styled.img`

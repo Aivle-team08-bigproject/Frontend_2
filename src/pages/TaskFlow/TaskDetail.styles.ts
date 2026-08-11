@@ -99,6 +99,42 @@ export const ActionRow = styled.div`
   flex-wrap: wrap;
 `
 
+export const RetryFeedbackBlock = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+`
+
+export const RetryFeedbackLabel = styled.p`
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: ${colors.textSecondary};
+`
+
+export const RetryFeedbackTextarea = styled.textarea`
+  width: 100%;
+  height: 72px;
+  padding: 12px 14px;
+  border-radius: ${radius.sm}px;
+  border: 1px solid ${colors.border};
+  background: ${colors.bg};
+  font-family: inherit;
+  font-size: 13px;
+  color: ${colors.text};
+  resize: vertical;
+
+  &::placeholder {
+    color: ${colors.textMuted};
+  }
+
+  &:focus {
+    outline: none;
+    border-color: ${colors.flowPrimary};
+  }
+`
+
 export const PrimaryAction = styled.button`
   display: flex;
   align-items: center;

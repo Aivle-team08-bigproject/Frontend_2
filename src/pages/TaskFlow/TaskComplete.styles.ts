@@ -20,84 +20,6 @@ export const CardTitle = styled.p`
   white-space: nowrap;
 `
 
-export const MilestoneList = styled.div`
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-`
-
-export const MilestoneRow = styled.div`
-  display: flex;
-  gap: 24px;
-  align-items: flex-start;
-  width: 100%;
-`
-
-export const IndicatorCol = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 24px;
-  flex-shrink: 0;
-`
-
-export const Circle = styled.div`
-  display: flex;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  border-radius: 12px;
-  background: #22c55e;
-`
-
-export const CheckIcon = styled.img`
-  width: 14px;
-  height: 14px;
-`
-
-export const ConnectorLine = styled.div`
-  width: 2px;
-  flex: 1 0 0;
-  min-height: 16px;
-  background: ${colors.border};
-  margin-top: 4px;
-`
-
-export const MilestoneText = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding-bottom: 24px;
-  white-space: nowrap;
-`
-
-export const MilestoneTop = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-`
-
-export const MilestoneTitle = styled.p`
-  margin: 0;
-  font-size: 15px;
-  font-weight: 700;
-  color: ${colors.text};
-`
-
-export const MilestoneTime = styled.p`
-  margin: 0;
-  font-size: 12px;
-  color: ${colors.textMuted};
-`
-
-export const MilestoneDescription = styled.p`
-  margin: 0;
-  font-size: 13px;
-  color: ${colors.textSecondary};
-`
-
 export const DeliveryRow = styled.div`
   display: flex;
   gap: 16px;
@@ -160,8 +82,16 @@ export const FileRow = styled.div`
   justify-content: space-between;
   width: 100%;
   padding: 12px;
+  border: none;
   border-radius: 8px;
   background: ${colors.bg};
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover {
+    background: ${colors.border};
+  }
 `
 
 export const FileInfo = styled.div`
@@ -224,9 +154,9 @@ export const FieldValue = styled.p`
   margin: 0;
   flex: 1 0 0;
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  white-space: normal;
   font-size: 12px;
   color: ${colors.text};
 `
