@@ -1,5 +1,5 @@
 import { type FormEvent, useEffect, useRef, useState } from 'react'
-import { fetchCurrentEmployee, requestSampleEmailDelivery } from './api'
+import { fetchCurrentEmployee, issueCustomerApiKey, requestSampleEmailDelivery, type CustomerApiKeyResponse } from './api'
 import { subscribeEmailDeliveryStatus, type EmailDeliveryStatusFrame } from './emailDeliveryStream'
 import {
   EmailCancelButton,
@@ -33,10 +33,12 @@ type EmailDeliveryModalProps = {
   hint: string
   open: boolean
   onClose: () => void
+  apiCredentials?: CustomerApiKeyResponse | null
+  onApiCredentialsIssued?: (credentials: CustomerApiKeyResponse) => void
 }
 
 /** 샘플/최종 산출물 메일 발송 공용 모달. 제출 → SSE 추적 → 완료/실패 표시까지 담당한다. */
-export default function EmailDeliveryModal({ runId, deliveryType, title, hint, open, onClose }: EmailDeliveryModalProps) {
+export default function EmailDeliveryModal({ runId, deliveryType, title, hint, open, onClose, apiCredentials, onApiCredentialsIssued }: EmailDeliveryModalProps) {
   const [emailRecipient, setEmailRecipient] = useState('')
   const [emailPhase, setEmailPhase] = useState<EmailPhase>('form')
   const [emailError, setEmailError] = useState<string | null>(null)
@@ -99,7 +101,17 @@ export default function EmailDeliveryModal({ runId, deliveryType, title, hint, o
     setEmailError(null)
     setEmailFailureCode(null)
     try {
-      const result = await requestSampleEmailDelivery(runId, { recipient: emailRecipient.trim(), delivery_type: deliveryType })
+      let credentials = apiCredentials
+      if (deliveryType === 'FINAL_ARTIFACT' && !credentials) {
+        credentials = await issueCustomerApiKey(runId)
+        onApiCredentialsIssued?.(credentials)
+      }
+      const result = await requestSampleEmailDelivery(runId, {
+        recipient: emailRecipient.trim(),
+        delivery_type: deliveryType,
+        api_endpoint_url: credentials?.endpoint_url,
+        api_key: credentials?.api_key,
+      })
       if (EMAIL_SUCCESS_STATUSES.has(result.status)) {
         setEmailPhase('success')
       } else if (EMAIL_FAILURE_STATUSES.has(result.status)) {
