@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import GNB from '../../shared/GNB'
 import Footer from '../../shared/Footer'
@@ -9,7 +9,7 @@ import SectionCard from '../../shared/SectionCard'
 import { radioSelectedSrc } from '../../shared/icons'
 import { useAsyncData } from '../../shared/hooks'
 import DataStateNotice from '../../shared/DataStateNotice'
-import { fetchPipelineRun, submitReview } from '../../shared/api'
+import { fetchPipelineRun, submitReview, type DeliveryChannel, type OutputFormat } from '../../shared/api'
 import { DataNotice, FlowContentArea, LeftPanel, PageWrapper, SplitGrid } from '../../shared/layout.styles'
 import { EMPTY_REVIEW_FEEDBACK } from './reviewFeedbackData'
 import {
@@ -36,9 +36,6 @@ import {
   Row,
   RowLabel,
   RowValue,
-  ScaleLabel,
-  ScaleRow,
-  ScaleValue,
   SummaryGrid,
 } from './ReviewFeedback.styles'
 
@@ -48,6 +45,17 @@ const STAGE_PROGRESS_ROUTE: Record<string, string> = {
   DATA_SELECTION: 'selection',
   DATA_PROCESSING: 'processing',
 }
+
+const DELIVERY_CHANNEL_OPTIONS: Array<{ value: DeliveryChannel; label: string }> = [
+  { value: 'api', label: 'api' },
+  { value: 'email', label: '이메일' },
+]
+
+const OUTPUT_FORMAT_OPTIONS: Array<{ value: OutputFormat; label: string }> = [
+  { value: 'csv', label: 'csv' },
+  { value: 'visualization', label: '시각화 대시보드' },
+  { value: 'report', label: '보고서' },
+]
 
 export default function ReviewFeedback() {
   const { requestNo, runId } = useParams()
@@ -72,14 +80,20 @@ export default function ReviewFeedback() {
     usagePurpose: analysis?.usage_purpose ?? EMPTY_REVIEW_FEEDBACK.usagePurpose,
     dataDescription: analysis?.requested_data_sentence ?? EMPTY_REVIEW_FEEDBACK.dataDescription,
     columns: analysisColumns,
-    deliveryMedium: analysis?.delivery_channel ?? EMPTY_REVIEW_FEEDBACK.deliveryMedium,
-    outputFormat: analysis?.output_formats.join(', ') ?? EMPTY_REVIEW_FEEDBACK.outputFormat,
   }
   const runNotReady = !runLoading && run !== null && run.run_status !== 'WAITING_REQUIREMENT_REVIEW'
 
   const [feedback, setFeedback] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const [deliveryChannel, setDeliveryChannel] = useState<DeliveryChannel | null>(null)
+  const [outputFormat, setOutputFormat] = useState<OutputFormat | null>(null)
+
+  useEffect(() => {
+    if (!analysis) return
+    setDeliveryChannel((current) => current ?? (analysis.delivery_channel as DeliveryChannel))
+    setOutputFormat((current) => current ?? (analysis.output_formats[0] as OutputFormat | undefined) ?? null)
+  }, [analysis])
 
   async function handleDecision(approved: boolean) {
     if (invalidRoute || submitting) return
@@ -90,6 +104,12 @@ export default function ReviewFeedback() {
       const result = await submitReview(numericRunId, {
         approved,
         feedback: approved ? null : feedback.trim(),
+        ...(approved
+          ? {
+              delivery_channel: deliveryChannel ?? undefined,
+              output_formats: outputFormat ? [outputFormat] : undefined,
+            }
+          : {}),
       })
       const targetStage = result.next_stage ?? result.rollback_to_stage
       if (result.run_status === 'COMPLETED') {
@@ -151,10 +171,6 @@ export default function ReviewFeedback() {
                     ))}
                   </ColumnList>
                 </Row>
-                <ScaleRow>
-                  <ScaleLabel>예상 데이터 건수:</ScaleLabel>
-                  <ScaleValue>{view.estimatedCount}</ScaleValue>
-                </ScaleRow>
               </SummaryGrid>
             </SectionCard>
           </LeftPanel>
@@ -164,31 +180,35 @@ export default function ReviewFeedback() {
               <OptionGroup>
                 <OptionGroupLabel>데이터 전달 매체</OptionGroupLabel>
                 <OptionList>
-                  <OptionRow>
-                    <RadioIcon src={radioSelectedSrc} alt="" />
-                    <OptionLabel $selected>{view.deliveryMedium}</OptionLabel>
-                  </OptionRow>
-                  <OptionRow>
-                    <RadioEmpty />
-                    <OptionLabel $selected={false}>이메일</OptionLabel>
-                  </OptionRow>
+                  {DELIVERY_CHANNEL_OPTIONS.map((option) => (
+                    <OptionRow
+                      key={option.value}
+                      as="button"
+                      type="button"
+                      onClick={() => setDeliveryChannel(option.value)}
+                      disabled={submitting}
+                    >
+                      {deliveryChannel === option.value ? <RadioIcon src={radioSelectedSrc} alt="" /> : <RadioEmpty />}
+                      <OptionLabel $selected={deliveryChannel === option.value}>{option.label}</OptionLabel>
+                    </OptionRow>
+                  ))}
                 </OptionList>
               </OptionGroup>
               <OptionGroup>
                 <OptionGroupLabel>원하는 산출물 형식</OptionGroupLabel>
                 <OptionList>
-                  <OptionRow>
-                    <RadioIcon src={radioSelectedSrc} alt="" />
-                    <OptionLabel $selected>{view.outputFormat}</OptionLabel>
-                  </OptionRow>
-                  <OptionRow>
-                    <RadioEmpty />
-                    <OptionLabel $selected={false}>시각화 대시보드</OptionLabel>
-                  </OptionRow>
-                  <OptionRow>
-                    <RadioEmpty />
-                    <OptionLabel $selected={false}>보고서</OptionLabel>
-                  </OptionRow>
+                  {OUTPUT_FORMAT_OPTIONS.map((option) => (
+                    <OptionRow
+                      key={option.value}
+                      as="button"
+                      type="button"
+                      onClick={() => setOutputFormat(option.value)}
+                      disabled={submitting}
+                    >
+                      {outputFormat === option.value ? <RadioIcon src={radioSelectedSrc} alt="" /> : <RadioEmpty />}
+                      <OptionLabel $selected={outputFormat === option.value}>{option.label}</OptionLabel>
+                    </OptionRow>
+                  ))}
                 </OptionList>
               </OptionGroup>
               <ReviewActions>

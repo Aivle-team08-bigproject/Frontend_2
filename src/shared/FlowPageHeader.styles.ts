@@ -22,6 +22,25 @@ export const Header = styled.header`
   }
 `
 
+export const BackButton = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: 1px solid ${colors.border};
+  border-radius: 8px;
+  background: ${colors.white};
+  color: ${colors.textSecondary};
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+
+  &:hover {
+    background: ${colors.bg};
+  }
+`
+
 export const TitleGroup = styled.div`
   display: flex;
   align-items: center;

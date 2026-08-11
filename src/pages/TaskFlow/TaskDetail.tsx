@@ -31,6 +31,9 @@ import {
   ProgressTrack,
   ProgressValue,
   ProgressWrap,
+  RetryFeedbackBlock,
+  RetryFeedbackLabel,
+  RetryFeedbackTextarea,
   SecondaryAction,
   StageCard,
   StageErrorText,
@@ -65,6 +68,7 @@ export default function TaskDetail() {
   const fetcher = useCallback(() => fetchTaskDetail(requestNo!, numericRunId), [requestNo, numericRunId])
   const { data, loading, error } = useAsyncData(fetcher, { intervalMs: 10_000 })
   const [retrying, setRetrying] = useState(false)
+  const [retryFeedback, setRetryFeedback] = useState('')
 
   const tone = runStatusTone(data?.run_status)
   const canReview = (data?.available_actions ?? []).some(
@@ -82,7 +86,12 @@ export default function TaskDetail() {
     if (!data || !requestNo || retrying) return
     setRetrying(true)
     try {
-      const response = await submitReview(data.run_id, { approved: false, retry: true })
+      const response = await submitReview(data.run_id, {
+        approved: false,
+        retry: true,
+        feedback: retryFeedback.trim() || null,
+      })
+      setRetryFeedback('')
       navigate(stageScreenPath(requestNo, data.run_id, response.run_status, response.next_stage))
     } catch (retryError) {
       window.alert(retryError instanceof Error ? retryError.message : '실패 작업 재시도에 실패했습니다.')
@@ -149,6 +158,18 @@ export default function TaskDetail() {
                 </DataNotice>
               )}
               {data.error_message && <StageErrorText>{data.error_message}</StageErrorText>}
+
+              {canRetry && (
+                <RetryFeedbackBlock>
+                  <RetryFeedbackLabel>재시도 시 에이전트에 전달할 의견 (선택)</RetryFeedbackLabel>
+                  <RetryFeedbackTextarea
+                    value={retryFeedback}
+                    onChange={(event) => setRetryFeedback(event.target.value)}
+                    placeholder="예: merchant_id가 없는 거래는 지역 집계에서 제외하고 다시 가공해주세요."
+                    disabled={retrying}
+                  />
+                </RetryFeedbackBlock>
+              )}
 
               <ActionRow>
                 {canReview && (

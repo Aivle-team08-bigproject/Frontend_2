@@ -12,9 +12,6 @@ export type ReviewFeedbackData = {
   usagePurpose: string
   dataDescription: string
   columns: DataColumn[]
-  estimatedCount: string
-  deliveryMedium: string
-  outputFormat: string
   feedbackPlaceholder: string
 }
 
@@ -24,9 +21,6 @@ export const EMPTY_REVIEW_FEEDBACK: ReviewFeedbackData = {
   usagePurpose: '-',
   dataDescription: '-',
   columns: [],
-  estimatedCount: '-',
-  deliveryMedium: '-',
-  outputFormat: '-',
   feedbackPlaceholder: '',
 }
 

@@ -48,7 +48,11 @@ export default function DataProcessingInProgress() {
   return (
     <PageWrapper>
       <GNB />
-      <FlowPageHeader title="실시간 데이터 가공 진행" badgeLabel="데이터 가공" />
+      <FlowPageHeader
+        title="실시간 데이터 가공 진행"
+        badgeLabel="데이터 가공"
+        onBack={validRoute ? () => navigate(`/tasks/${requestNo}/runs/${runId}/detail`) : undefined}
+      />
       <FlowContentArea>
         {stream.errorMessage && <DataNotice $error role="alert">{stream.errorMessage}</DataNotice>}
         {stream.connectionState === 'reconnecting' && (

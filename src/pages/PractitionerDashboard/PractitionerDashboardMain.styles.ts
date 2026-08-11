@@ -59,6 +59,12 @@ export const FootNote = styled.p`
   color: ${colors.textMuted};
 `
 
+export const FootNoteRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+`
+
 export const InsightRow = styled.div`
   display: flex;
   gap: 20px;

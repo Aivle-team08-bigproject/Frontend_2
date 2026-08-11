@@ -65,6 +65,12 @@ export const CardTitle = styled.p`
   white-space: nowrap;
 `
 
+export const HeaderActions = styled.div`
+  display: flex;
+  gap: 8px;
+  align-items: center;
+`
+
 export const DownloadLink = styled.button`
   display: flex;
   padding: 6px 12px;
@@ -77,6 +83,7 @@ export const DownloadLink = styled.button`
   white-space: nowrap;
   cursor: pointer;
 `
+
 
 export const DataTable = styled.div`
   display: flex;

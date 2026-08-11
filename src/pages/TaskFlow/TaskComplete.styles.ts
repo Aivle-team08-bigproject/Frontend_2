@@ -160,8 +160,16 @@ export const FileRow = styled.div`
   justify-content: space-between;
   width: 100%;
   padding: 12px;
+  border: none;
   border-radius: 8px;
   background: ${colors.bg};
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover {
+    background: ${colors.border};
+  }
 `
 
 export const FileInfo = styled.div`
