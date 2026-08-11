@@ -186,6 +186,8 @@ export type SampleEmailDeliveryPayload = {
   recipient: string
   delivery_type?: 'SELECTION_SAMPLE' | 'FINAL_ARTIFACT'
   template_version?: string
+  api_endpoint_url?: string
+  api_key?: string
 }
 
 export type ProcessingResultResponse = {
@@ -683,6 +685,8 @@ export function requestSampleEmailDelivery(
       recipient: payload.recipient,
       delivery_type: payload.delivery_type ?? 'SELECTION_SAMPLE',
       template_version: payload.template_version ?? 'v1',
+      api_endpoint_url: payload.api_endpoint_url,
+      api_key: payload.api_key,
     }),
   })
 }

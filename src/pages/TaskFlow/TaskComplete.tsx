@@ -6,7 +6,6 @@ import FlowPageHeader from '../../shared/FlowPageHeader'
 import RequestHeaderCard from '../../shared/RequestHeaderCard'
 import StepProgressBar from '../../shared/StepProgressBar'
 import {
-  checkSmSrc,
   copySrc,
   databaseSrc,
   downloadSrc,
@@ -24,11 +23,8 @@ import {
   BottomActions,
   Card,
   CardTitle,
-  Circle,
-  CheckIcon,
   ColHeader,
   ColTitle,
-  ConnectorLine,
   CopyIcon,
   DeliveryCol,
   DeliveryRow,
@@ -46,14 +42,6 @@ import {
   GoDashboardButton,
   IconBadge,
   IconImg,
-  IndicatorCol,
-  MilestoneDescription,
-  MilestoneList,
-  MilestoneRow,
-  MilestoneText,
-  MilestoneTime,
-  MilestoneTitle,
-  MilestoneTop,
   NewTaskButton,
   RegisteredBadge,
   SendButton,
@@ -73,23 +61,23 @@ export default function TaskComplete() {
   const numericRunId = Number(runId)
   const detailFetcher = useCallback(() => fetchTaskDetail(requestNo!, numericRunId), [requestNo, numericRunId])
   const { data: detail, loading, error } = useAsyncData(detailFetcher)
-  const view = { ...EMPTY_TASK_COMPLETE, reqId: detail?.request_no ?? EMPTY_TASK_COMPLETE.reqId, requestTitle: detail?.title ?? EMPTY_TASK_COMPLETE.requestTitle }
-  const finalArtifact = detail?.stages
-    .find((stage) => stage.stage_code === 'DATA_PROCESSING')
-    ?.artifacts.find((artifact) => artifact.artifact_type === 'FINAL')
-  const files = finalArtifact
-    ? [{
-      name: `${detail!.request_no}-run-${detail!.run_id}-result.csv`,
-      size: formatFileSize(finalArtifact.size_bytes),
-      kind: 'csv' as const,
-    }]
-    : []
   const navigate = useNavigate()
   const [emailModalOpen, setEmailModalOpen] = useState(false)
   const [issuedApiKey, setIssuedApiKey] = useState<CustomerApiKeyResponse | null>(null)
   const [apiKeyIssuing, setApiKeyIssuing] = useState(false)
   const [apiKeyError, setApiKeyError] = useState<string | null>(null)
   const [apiKeyCopied, setApiKeyCopied] = useState(false)
+  const view = { ...EMPTY_TASK_COMPLETE, reqId: detail?.request_no ?? EMPTY_TASK_COMPLETE.reqId, requestTitle: detail?.title ?? EMPTY_TASK_COMPLETE.requestTitle }
+  const finalArtifact = detail?.stages
+    .find((stage) => stage.stage_code === 'DATA_PROCESSING')
+    ?.artifacts.find((artifact) => artifact.artifact_type === 'FINAL')
+  const files = finalArtifact || issuedApiKey
+    ? [{
+      name: `${detail!.request_no}-run-${detail!.run_id}-result.csv`,
+      size: formatFileSize(finalArtifact?.size_bytes ?? null),
+      kind: 'csv' as const,
+    }]
+    : []
 
   async function handleIssueApiKey() {
     if (apiKeyIssuing) return
@@ -112,6 +100,32 @@ export default function TaskComplete() {
     setTimeout(() => setApiKeyCopied(false), 2000)
   }
 
+  async function handleCopyApiUrl() {
+    if (!issuedApiKey) return
+    await navigator.clipboard.writeText(issuedApiKey.endpoint_url)
+    setApiKeyCopied(true)
+    setTimeout(() => setApiKeyCopied(false), 2000)
+  }
+
+  function csvCell(value: string): string {
+    return `"${value.replace(/"/g, '""')}"`
+  }
+
+  function handleDownloadApiCredentials() {
+    if (!issuedApiKey) return
+    const csv = [
+      ['endpoint_url', 'api_key'],
+      [issuedApiKey.endpoint_url, issuedApiKey.api_key],
+    ].map((row) => row.map(csvCell).join(',')).join('\r\n') + '\r\n'
+    const blob = new Blob([`\ufeff${csv}`], { type: 'text/csv;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const anchor = document.createElement('a')
+    anchor.href = url
+    anchor.download = `${detail?.request_no ?? 'customer'}-api-credentials.csv`
+    anchor.click()
+    URL.revokeObjectURL(url)
+  }
+
 
   return (
     <PageWrapper>
@@ -121,29 +135,6 @@ export default function TaskComplete() {
         <DataStateNotice loading={loading} error={error} subject="작업 완료 정보" />
         <RequestHeaderCard reqId={view.reqId} title={view.requestTitle} />
         <StepProgressBar currentStep={4} />
-
-        <Card>
-          <CardTitle>프로세스 결과 요약</CardTitle>
-          <MilestoneList>
-            {view.milestones.map((item, index) => (
-              <MilestoneRow key={item.title}>
-                <IndicatorCol>
-                  <Circle>
-                    <CheckIcon src={checkSmSrc} alt="완료" />
-                  </Circle>
-                  {index < view.milestones.length - 1 && <ConnectorLine />}
-                </IndicatorCol>
-                <MilestoneText>
-                  <MilestoneTop>
-                    <MilestoneTitle>{item.title}</MilestoneTitle>
-                    <MilestoneTime>{item.time}</MilestoneTime>
-                  </MilestoneTop>
-                  <MilestoneDescription>{item.description}</MilestoneDescription>
-                </MilestoneText>
-              </MilestoneRow>
-            ))}
-          </MilestoneList>
-        </Card>
 
         <Card>
           <CardTitle>산출물 제공 및 연동</CardTitle>
@@ -190,16 +181,20 @@ export default function TaskComplete() {
                     <FieldBlock>
                       <FieldLabel>Endpoint URL</FieldLabel>
                       <FieldValueBox>
-                        <FieldValue>{issuedApiKey.endpoint_url}</FieldValue>
+                        <FieldValue title={issuedApiKey.endpoint_url}>{issuedApiKey.endpoint_url}</FieldValue>
+                        <CopyIcon src={copySrc} alt="URL 복사" onClick={handleCopyApiUrl} />
                       </FieldValueBox>
                     </FieldBlock>
                     <FieldBlock>
                       <FieldLabel>API Key — 지금만 표시됩니다, 지금 복사하세요</FieldLabel>
                       <FieldValueBox>
-                        <FieldValue>{issuedApiKey.api_key}</FieldValue>
+                        <FieldValue title={issuedApiKey.api_key}>{issuedApiKey.api_key}</FieldValue>
                         <CopyIcon src={copySrc} alt="복사" onClick={handleCopyApiKey} />
                       </FieldValueBox>
                     </FieldBlock>
+                    <SendButton type="button" onClick={handleDownloadApiCredentials}>
+                      API URL·Key CSV 다운로드
+                    </SendButton>
                     <RegisteredBadge>{apiKeyCopied ? '복사됨' : '연동 등록됨'}</RegisteredBadge>
                   </>
                 ) : (
@@ -245,9 +240,11 @@ export default function TaskComplete() {
           runId={numericRunId}
           deliveryType="FINAL_ARTIFACT"
           title="최종 산출물 메일 발송"
-          hint="본인 계정 이메일이 자동으로 채워집니다. 필요하면 수정 후 발송하세요. 다운로드 링크는 발송 시점 기준 3일간 유효합니다."
+          hint="메일 발송 시 API URL·Key를 자동 발급해 최종 산출물 다운로드 링크와 함께 보냅니다. 다운로드 링크는 발송 시점 기준 3일간 유효합니다."
           open={emailModalOpen}
           onClose={() => setEmailModalOpen(false)}
+          apiCredentials={issuedApiKey}
+          onApiCredentialsIssued={setIssuedApiKey}
         />
       )}
     <Footer />
