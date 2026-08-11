@@ -1,31 +1,33 @@
-import type { ReactNode } from 'react'
+import { lazy, Suspense, type ReactNode } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
-import PractitionerDashboardMain from './pages/PractitionerDashboard/PractitionerDashboardMain'
-import TaskList from './pages/PractitionerDashboard/TaskList'
-import TaskLookup from './pages/PractitionerDashboard/TaskLookup'
-import AdminDashboard from './pages/PractitionerDashboard/AdminDashboard'
-import DeveloperDashboardMain from './pages/DeveloperDashboard/DeveloperDashboardMain'
-import MemberManagement from './pages/DeveloperDashboard/MemberManagement'
-import RequirementAnalysisRegister from './pages/TaskFlow/RequirementAnalysisRegister'
-import AnalysisInProgress from './pages/TaskFlow/AnalysisInProgress'
-import TaskDetail from './pages/TaskFlow/TaskDetail'
-import ReviewFeedback from './pages/TaskFlow/ReviewFeedback'
-import DataSelectionInProgress from './pages/TaskFlow/DataSelectionInProgress'
-import SampleDataFeedback from './pages/TaskFlow/SampleDataFeedback'
-import DataProcessingInProgress from './pages/TaskFlow/DataProcessingInProgress'
-import FinalOutputFeedback from './pages/TaskFlow/FinalOutputFeedback'
-import FinalOutputFull from './pages/TaskFlow/FinalOutputFull'
-import TaskComplete from './pages/TaskFlow/TaskComplete'
-import LoginPage from './pages/SystemPages/LoginPage'
-import SignupPage from './pages/SystemPages/SignupPage'
-import LegalPage from './pages/SystemPages/LegalPage'
-import { NotFoundPage, ServerErrorPage } from './pages/SystemPages/ErrorPage'
 import ProtectedRoute from './shared/ProtectedRoute'
-import NoticeListPage from './pages/Notices/NoticeListPage'
-import NoticeDetailPage from './pages/Notices/NoticeDetailPage'
-import NoticeCreatePage from './pages/Notices/NoticeCreatePage'
-import NoticeEditPage from './pages/Notices/NoticeEditPage'
-import NoticeManagePage from './pages/Notices/NoticeManagePage'
+
+const PractitionerDashboardMain = lazy(() => import('./pages/PractitionerDashboard/PractitionerDashboardMain'))
+const TaskList = lazy(() => import('./pages/PractitionerDashboard/TaskList'))
+const TaskLookup = lazy(() => import('./pages/PractitionerDashboard/TaskLookup'))
+const AdminDashboard = lazy(() => import('./pages/PractitionerDashboard/AdminDashboard'))
+const DeveloperDashboardMain = lazy(() => import('./pages/DeveloperDashboard/DeveloperDashboardMain'))
+const MemberManagement = lazy(() => import('./pages/DeveloperDashboard/MemberManagement'))
+const RequirementAnalysisRegister = lazy(() => import('./pages/TaskFlow/RequirementAnalysisRegister'))
+const AnalysisInProgress = lazy(() => import('./pages/TaskFlow/AnalysisInProgress'))
+const TaskDetail = lazy(() => import('./pages/TaskFlow/TaskDetail'))
+const ReviewFeedback = lazy(() => import('./pages/TaskFlow/ReviewFeedback'))
+const DataSelectionInProgress = lazy(() => import('./pages/TaskFlow/DataSelectionInProgress'))
+const SampleDataFeedback = lazy(() => import('./pages/TaskFlow/SampleDataFeedback'))
+const DataProcessingInProgress = lazy(() => import('./pages/TaskFlow/DataProcessingInProgress'))
+const FinalOutputFeedback = lazy(() => import('./pages/TaskFlow/FinalOutputFeedback'))
+const FinalOutputFull = lazy(() => import('./pages/TaskFlow/FinalOutputFull'))
+const TaskComplete = lazy(() => import('./pages/TaskFlow/TaskComplete'))
+const LoginPage = lazy(() => import('./pages/SystemPages/LoginPage'))
+const SignupPage = lazy(() => import('./pages/SystemPages/SignupPage'))
+const LegalPage = lazy(() => import('./pages/SystemPages/LegalPage'))
+const NotFoundPage = lazy(async () => ({ default: (await import('./pages/SystemPages/ErrorPage')).NotFoundPage }))
+const ServerErrorPage = lazy(async () => ({ default: (await import('./pages/SystemPages/ErrorPage')).ServerErrorPage }))
+const NoticeListPage = lazy(() => import('./pages/Notices/NoticeListPage'))
+const NoticeDetailPage = lazy(() => import('./pages/Notices/NoticeDetailPage'))
+const NoticeCreatePage = lazy(() => import('./pages/Notices/NoticeCreatePage'))
+const NoticeEditPage = lazy(() => import('./pages/Notices/NoticeEditPage'))
+const NoticeManagePage = lazy(() => import('./pages/Notices/NoticeManagePage'))
 
 function protectedPage(page: ReactNode) {
   return <ProtectedRoute>{page}</ProtectedRoute>
@@ -34,7 +36,8 @@ function protectedPage(page: ReactNode) {
 function App() {
   return (
     <BrowserRouter>
-      <Routes>
+      <Suspense fallback={<div role="status">페이지를 불러오는 중입니다.</div>}>
+        <Routes>
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
@@ -65,7 +68,8 @@ function App() {
         <Route path="/tasks/:requestNo/runs/:runId/final-feedback/full" element={protectedPage(<FinalOutputFull />)} />
         <Route path="/tasks/:requestNo/runs/:runId/complete" element={protectedPage(<TaskComplete />)} />
         <Route path="*" element={<NotFoundPage />} />
-      </Routes>
+        </Routes>
+      </Suspense>
     </BrowserRouter>
   )
 }

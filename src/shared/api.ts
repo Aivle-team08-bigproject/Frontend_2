@@ -1,10 +1,23 @@
 import { clearAccessToken, getAccessToken, remembersLogin, saveAccessToken } from './auth'
 
-// 빌드 시 VITE_API_BASE_URL을 안 넘기면 Docker ARG가 "안 정해짐"이 아니라 빈 문자열로
-// 들어온다. ??는 null/undefined만 잡고 빈 문자열은 안 잡아서 || 로 둘 다 처리해야 한다.
-const configuredApiBaseUrl = import.meta.env.VITE_API_BASE_URL
-const defaultApiBaseUrl = import.meta.env.DEV ? 'http://localhost:8000' : window.location.origin
-export const API_BASE_URL = (configuredApiBaseUrl || defaultApiBaseUrl).replace(/\/$/, '')
+/**
+ * 개발 서버만 localhost를 기본값으로 사용한다. 운영 Docker 빌드는 빈 값으로 두어
+ * 같은 origin의 Nginx `/api/` 프록시를 거치게 한다.
+ */
+export function resolveApiBaseUrl(
+  configuredApiBaseUrl: string | undefined,
+  isDevelopment: boolean,
+  origin: string,
+) {
+  const defaultApiBaseUrl = isDevelopment ? 'http://localhost:8000' : origin
+  return (configuredApiBaseUrl || defaultApiBaseUrl).replace(/\/$/, '')
+}
+
+export const API_BASE_URL = resolveApiBaseUrl(
+  import.meta.env.VITE_API_BASE_URL,
+  import.meta.env.DEV,
+  window.location.origin,
+)
 let refreshPromise: Promise<string> | null = null
 
 /** `GET /api/auth/me`와 `POST /api/auth/login`이 공유하는 EmployeeSummary 스키마. */

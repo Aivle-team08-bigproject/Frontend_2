@@ -5,7 +5,7 @@
 ## 실행
 
 ```bash
-npm install
+npm ci
 cp .env.example .env
 npm run dev
 ```
@@ -16,8 +16,22 @@ npm run dev
 
 ```bash
 npm run lint
+npm test
 npm run build
 ```
+
+## Docker 운영 실행
+
+운영 이미지는 기본적으로 same-origin의 `/api/`를 사용한다. 따라서 브라우저에서 API 주소를 별도로 설정하지 않으며, Nginx가 `BACKEND_API_UPSTREAM`으로 지정된 FastAPI upstream에 프록시한다.
+
+```bash
+docker build --build-arg VITE_API_BASE_URL="" -t frontend .
+docker run --rm -p 8080:80 \
+  -e BACKEND_API_UPSTREAM=backend-api:8000 \
+  frontend
+```
+
+FastAPI가 별도 EC2 또는 내부 ALB에 있으면 `BACKEND_API_UPSTREAM`에 해당 내부 DNS와 포트를 넣는다. 컨테이너 health check 경로는 `GET /health`다.
 
 ## 화면 경로
 
