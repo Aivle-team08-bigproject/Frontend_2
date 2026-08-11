@@ -27,6 +27,7 @@ import {
   DownloadLink,
   FeedbackActions,
   FeedbackTextarea,
+  HeaderActions,
   InfoGrid,
   InfoLabel,
   InfoRowEl,
@@ -65,6 +66,10 @@ export default function FinalOutputFeedback() {
   const view = { ...EMPTY_FINAL_OUTPUT_FEEDBACK, reqId: run?.request_no ?? EMPTY_FINAL_OUTPUT_FEEDBACK.reqId, requestTitle: run?.request_title ?? EMPTY_FINAL_OUTPUT_FEEDBACK.requestTitle }
   const outputRows = processingResult?.api_result.items ?? []
   const outputColumns = processingResult?.processed_columns ?? Object.keys(outputRows[0] ?? {})
+  // api_result.items는 delivery_channel === 'api'일 때만 채워진다(processor.py 설계).
+  // 이메일/CSV 배송 요청은 여기가 항상 비어 있어도 산출물 자체는 정상 생성된 것이라
+  // 다운로드로 유도하는 안내가 필요하다.
+  const previewUnavailable = outputRows.length === 0 && Number(processingResult?.quality_report.output_row_count ?? 0) > 0
   const report = processingResult?.report
   const reportTitle = typeof report?.title === 'string' ? report.title : '최종 가공 결과'
   const reportSummary = [
@@ -127,13 +132,28 @@ export default function FinalOutputFeedback() {
             <Card>
               <CardHeaderRow>
                 <CardTitle>산출물 데이터 (Top 10)</CardTitle>
-                <DownloadLink type="button" onClick={() => window.open(pipelineResultDownloadUrl(numericRunId), '_blank', 'noopener')} disabled={invalidRoute}>CSV 다운로드</DownloadLink>
+                <HeaderActions>
+                  <DownloadLink
+                    type="button"
+                    onClick={() => navigate(`/tasks/${requestNo}/runs/${runId}/final-feedback/full`)}
+                    disabled={invalidRoute || outputRows.length === 0}
+                  >
+                    전체 보기
+                  </DownloadLink>
+                  <DownloadLink type="button" onClick={() => window.open(pipelineResultDownloadUrl(numericRunId), '_blank', 'noopener')} disabled={invalidRoute}>CSV 다운로드</DownloadLink>
+                </HeaderActions>
               </CardHeaderRow>
+              {previewUnavailable && (
+                <DataNotice role="status">
+                  이 요청은 API 미리보기 대상이 아니라 화면에 표시할 데이터가 없습니다. 산출물은{' '}
+                  {Number(processingResult?.quality_report.output_row_count ?? 0)}건 정상 생성됐습니다 — CSV 다운로드로 확인해주세요.
+                </DataNotice>
+              )}
               <DataTable>
                 <THead>
                   {outputColumns.map((column) => <TCell key={column} $strong>{column}</TCell>)}
                 </THead>
-                {outputRows.map((row, index) => (
+                {outputRows.slice(0, 10).map((row, index) => (
                   <TRow key={index}>
                     {outputColumns.map((column) => <TCell key={column}>{String(row[column] ?? '-')}</TCell>)}
                   </TRow>

@@ -14,6 +14,7 @@ import DataSelectionInProgress from './pages/TaskFlow/DataSelectionInProgress'
 import SampleDataFeedback from './pages/TaskFlow/SampleDataFeedback'
 import DataProcessingInProgress from './pages/TaskFlow/DataProcessingInProgress'
 import FinalOutputFeedback from './pages/TaskFlow/FinalOutputFeedback'
+import FinalOutputFull from './pages/TaskFlow/FinalOutputFull'
 import TaskComplete from './pages/TaskFlow/TaskComplete'
 import LoginPage from './pages/SystemPages/LoginPage'
 import SignupPage from './pages/SystemPages/SignupPage'
@@ -61,6 +62,7 @@ function App() {
         <Route path="/tasks/:requestNo/runs/:runId/sample-feedback" element={protectedPage(<SampleDataFeedback />)} />
         <Route path="/tasks/:requestNo/runs/:runId/processing" element={protectedPage(<DataProcessingInProgress />)} />
         <Route path="/tasks/:requestNo/runs/:runId/final-feedback" element={protectedPage(<FinalOutputFeedback />)} />
+        <Route path="/tasks/:requestNo/runs/:runId/final-feedback/full" element={protectedPage(<FinalOutputFull />)} />
         <Route path="/tasks/:requestNo/runs/:runId/complete" element={protectedPage(<TaskComplete />)} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>

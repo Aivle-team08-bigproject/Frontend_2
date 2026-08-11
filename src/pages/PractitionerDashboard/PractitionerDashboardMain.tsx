@@ -6,6 +6,8 @@ import SubNav from '../../shared/SubNav'
 import { useAsyncData } from '../../shared/hooks'
 import { fetchLatestNotice } from '../../shared/api'
 import DataStateNotice from '../../shared/DataStateNotice'
+import InfoTooltip from '../../shared/InfoTooltip'
+import { TooltipBody, TooltipList, TooltipTitle } from '../../shared/InfoTooltip.styles'
 import { MainContent, PageWrapper, SectionHeader, SectionTitle } from '../../shared/layout.styles'
 import { EMPTY_PRACTITIONER_DASHBOARD, fetchPractitionerDashboardData, PRACTITIONER_NAV_ITEMS } from './data'
 import {
@@ -30,6 +32,7 @@ import {
   CalendarWeekday,
   EmptyState,
   FootNote,
+  FootNoteRow,
   LegendDot,
   LegendItem,
   QueueAction,
@@ -229,7 +232,19 @@ export default function PractitionerDashboardMain() {
           <WorkPanel>
             <SectionHeader>
               <SectionTitle>통합 작업 큐</SectionTitle>
-              <FootNote>우선순위와 마감일 기준</FootNote>
+              <FootNoteRow>
+                <FootNote>우선순위와 마감일 기준</FootNote>
+                <InfoTooltip label="통합 작업 큐 설명">
+                  <TooltipTitle>통합 작업 큐란?</TooltipTitle>
+                  <TooltipBody>
+                    요구사항 분석·샘플 검토·최종 산출물 승인 등 지금 담당자가 조치해야 하는 작업을 한 곳에 모아 보여줍니다.
+                  </TooltipBody>
+                  <TooltipList>
+                    <li>단계 우선순위: 요구사항 분석 → 샘플 검토 → 최종 산출물 순</li>
+                    <li>같은 단계면 마감일이 가까운 작업이 먼저 (마감일 없으면 뒤로)</li>
+                  </TooltipList>
+                </InfoTooltip>
+              </FootNoteRow>
             </SectionHeader>
             <QueueList>
               {view.queueItems.length === 0 ? (

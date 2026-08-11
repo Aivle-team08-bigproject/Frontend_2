@@ -9,6 +9,7 @@ import { infoSrc } from '../../shared/icons'
 import { useAsyncData } from '../../shared/hooks'
 import DataStateNotice from '../../shared/DataStateNotice'
 import { fetchPipelineRun, fetchSamplePreview, pipelineResultDownloadUrl, submitReview } from '../../shared/api'
+import EmailDeliveryModal from '../../shared/EmailDeliveryModal'
 import { DataNotice, FlowContentArea, PageWrapper } from '../../shared/layout.styles'
 import { EMPTY_SAMPLE_DATA_FEEDBACK } from './sampleDataFeedbackData'
 import {
@@ -59,6 +60,7 @@ export default function SampleDataFeedback() {
   const [prompt, setPrompt] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const [emailModalOpen, setEmailModalOpen] = useState(false)
   const navigate = useNavigate()
 
   async function handleDecision(approved: boolean) {
@@ -103,7 +105,7 @@ export default function SampleDataFeedback() {
               <DownloadButton type="button" onClick={() => window.open(pipelineResultDownloadUrl(numericRunId), '_blank', 'noopener')} disabled={invalidRoute}>
                 CSV 다운로드
               </DownloadButton>
-              <EmailButton type="button">
+              <EmailButton type="button" onClick={() => setEmailModalOpen(true)} disabled={invalidRoute || runNotReady}>
                 <span>✉</span>
                 메일로 전송
               </EmailButton>
@@ -176,6 +178,14 @@ export default function SampleDataFeedback() {
           </DisabledButton>
         </ActionsRow>
       </FlowContentArea>
+      <EmailDeliveryModal
+        runId={numericRunId}
+        deliveryType="SELECTION_SAMPLE"
+        title="샘플 데이터 메일 발송"
+        hint="본인 계정 이메일이 자동으로 채워집니다. 필요하면 수정 후 발송하세요."
+        open={emailModalOpen}
+        onClose={() => setEmailModalOpen(false)}
+      />
     <Footer />
     </PageWrapper>
   )

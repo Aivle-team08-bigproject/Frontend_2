@@ -48,7 +48,11 @@ export default function DataSelectionInProgress() {
   return (
     <PageWrapper>
       <GNB />
-      <FlowPageHeader title="실시간 데이터 선별 진행" badgeLabel="데이터 선별" />
+      <FlowPageHeader
+        title="실시간 데이터 선별 진행"
+        badgeLabel="데이터 선별"
+        onBack={validRoute ? () => navigate(`/tasks/${requestNo}/runs/${runId}/detail`) : undefined}
+      />
       <FlowContentArea>
         {stream.errorMessage && <DataNotice $error role="alert">{stream.errorMessage}</DataNotice>}
         {stream.connectionState === 'reconnecting' && (
