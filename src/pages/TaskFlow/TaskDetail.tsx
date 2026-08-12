@@ -76,6 +76,11 @@ export default function TaskDetail() {
   )
   const canRetry = (data?.available_actions ?? []).includes('RETRY')
   const canDownload = (data?.available_actions ?? []).includes('DOWNLOAD')
+  // 실행 전 단계는 아직 작업 이력이 아니다. 현재 단계와 이미 시작/종료된 단계만
+  // 보여야 진행 중인 요구사항 분석 화면에 선별·가공 카드가 섞이지 않는다.
+  const visibleStages = data?.stages.filter(
+    (stage) => stage.stage_code === data.current_stage || stage.status !== 'PENDING',
+  ) ?? []
 
   function goToStageScreen() {
     if (!data || !requestNo) return
@@ -198,8 +203,8 @@ export default function TaskDetail() {
 
             <SectionCard title="파이프라인 단계별 상태">
               <StagesGrid>
-                {data.stages.length === 0 && <EmptyText>표시할 단계 정보가 없습니다.</EmptyText>}
-                {data.stages.map((stage) => {
+                {visibleStages.length === 0 && <EmptyText>표시할 단계 정보가 없습니다.</EmptyText>}
+                {visibleStages.map((stage) => {
                   const stageTone = stageStatusTone(stage.status)
                   const stagePath = stage.status === 'COMPLETED'
                     ? stageContentPath(requestNo!, data.run_id, stage.stage_code)
