@@ -6,7 +6,7 @@ import FlowPageHeader from '../../shared/FlowPageHeader'
 import RequestHeaderCard from '../../shared/RequestHeaderCard'
 import { useAsyncData } from '../../shared/hooks'
 import DataStateNotice from '../../shared/DataStateNotice'
-import { fetchPipelineRun, fetchProcessingResult, pipelineResultDownloadUrl } from '../../shared/api'
+import { fetchPipelineRun, fetchProcessingResult, openResultDownload } from '../../shared/api'
 import { DataNotice, FlowContentArea, PageWrapper } from '../../shared/layout.styles'
 import { EMPTY_FINAL_OUTPUT_FEEDBACK } from './finalOutputFeedbackData'
 import { Card, CardHeaderRow, CardTitle, DataTable, DownloadLink, HeaderActions, TCell, THead, TRow } from './FinalOutputFeedback.styles'
@@ -46,7 +46,7 @@ export default function FinalOutputFull() {
           <CardHeaderRow>
             <CardTitle>산출물 데이터 (전체 {outputRows.length}건)</CardTitle>
             <HeaderActions>
-              <DownloadLink type="button" onClick={() => window.open(pipelineResultDownloadUrl(numericRunId), '_blank', 'noopener')} disabled={invalidRoute}>
+              <DownloadLink type="button" onClick={() => void openResultDownload(numericRunId)} disabled={invalidRoute}>
                 CSV 다운로드
               </DownloadLink>
             </HeaderActions>

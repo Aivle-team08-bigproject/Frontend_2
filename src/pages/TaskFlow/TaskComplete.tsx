@@ -15,7 +15,7 @@ import {
 } from '../../shared/icons'
 import { useAsyncData } from '../../shared/hooks'
 import DataStateNotice from '../../shared/DataStateNotice'
-import { fetchTaskDetail, issueCustomerApiKey, pipelineResultDownloadUrl, type CustomerApiKeyResponse } from '../../shared/api'
+import { fetchTaskDetail, issueCustomerApiKey, openResultDownload, type CustomerApiKeyResponse } from '../../shared/api'
 import EmailDeliveryModal from '../../shared/EmailDeliveryModal'
 import { DataNotice, FlowContentArea, PageWrapper } from '../../shared/layout.styles'
 import { EMPTY_TASK_COMPLETE } from './taskCompleteData'
@@ -155,7 +155,7 @@ export default function TaskComplete() {
                       key={file.name}
                       as="button"
                       type="button"
-                      onClick={() => window.open(pipelineResultDownloadUrl(numericRunId), '_blank', 'noopener')}
+                      onClick={() => void openResultDownload(numericRunId)}
                     >
                       <FileInfo>
                         <FileIcon src={fileIcons[file.kind]} alt="" />

@@ -9,7 +9,7 @@ import SectionCard from '../../shared/SectionCard'
 import { arrowLeftSrc, arrowRightSrc } from '../../shared/icons'
 import { useAsyncData } from '../../shared/hooks'
 import DataStateNotice from '../../shared/DataStateNotice'
-import { fetchPipelineRun, fetchProcessingResult, pipelineResultDownloadUrl, submitReview } from '../../shared/api'
+import { fetchPipelineRun, fetchProcessingResult, issueResultDownloadUrl, submitReview } from '../../shared/api'
 import { DataNotice, FlowContentArea, PageWrapper } from '../../shared/layout.styles'
 import { EMPTY_FINAL_OUTPUT_FEEDBACK } from './finalOutputFeedbackData'
 import {
@@ -70,6 +70,8 @@ export default function FinalOutputFeedback() {
   // 이메일/CSV 배송 요청은 여기가 항상 비어 있어도 산출물 자체는 정상 생성된 것이라
   // 다운로드로 유도하는 안내가 필요하다.
   const previewUnavailable = outputRows.length === 0 && Number(processingResult?.quality_report.output_row_count ?? 0) > 0
+  const isPreviewSubset =
+    outputRows.length > 0 && outputRows.length < Number(processingResult?.quality_report.output_row_count ?? 0)
   const report = processingResult?.report
   const reportTitle = typeof report?.title === 'string' ? report.title : '최종 가공 결과'
   const reportSummary = [
@@ -88,6 +90,19 @@ export default function FinalOutputFeedback() {
     )
     : []
   const maxChartValue = Math.max(...chartSeries.map((item) => item.value), 1)
+  const [downloadError, setDownloadError] = useState<string | null>(null)
+
+  async function handleDownload() {
+    setDownloadError(null)
+    try {
+      // 인증이 되는 호출로 주소를 먼저 받는다. 새 창은 Authorization 헤더를 싣지 못한다.
+      const { download_url } = await issueResultDownloadUrl(numericRunId)
+      window.open(download_url, '_blank', 'noopener')
+    } catch (err) {
+      setDownloadError(err instanceof Error ? err.message : '다운로드 주소를 받지 못했습니다.')
+    }
+  }
+
   const [feedback, setFeedback] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
@@ -140,15 +155,22 @@ export default function FinalOutputFeedback() {
                   >
                     전체 보기
                   </DownloadLink>
-                  <DownloadLink type="button" onClick={() => window.open(pipelineResultDownloadUrl(numericRunId), '_blank', 'noopener')} disabled={invalidRoute}>CSV 다운로드</DownloadLink>
+                  <DownloadLink type="button" onClick={handleDownload} disabled={invalidRoute}>CSV 다운로드</DownloadLink>
                 </HeaderActions>
               </CardHeaderRow>
               {previewUnavailable && (
                 <DataNotice role="status">
-                  이 요청은 API 미리보기 대상이 아니라 화면에 표시할 데이터가 없습니다. 산출물은{' '}
+                  화면에 표시할 미리보기 데이터가 없습니다. 산출물은{' '}
                   {Number(processingResult?.quality_report.output_row_count ?? 0)}건 정상 생성됐습니다 — CSV 다운로드로 확인해주세요.
                 </DataNotice>
               )}
+              {isPreviewSubset && (
+                <DataNotice role="status">
+                  전체 {Number(processingResult?.quality_report.output_row_count ?? 0)}건 중 상위{' '}
+                  {outputRows.length}건만 미리보기로 표시합니다. 전체 산출물은 CSV 다운로드로 확인해주세요.
+                </DataNotice>
+              )}
+              {downloadError && <DataNotice role="alert">{downloadError}</DataNotice>}
               <DataTable>
                 <THead>
                   {outputColumns.map((column) => <TCell key={column} $strong>{column}</TCell>)}

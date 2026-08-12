@@ -722,9 +722,21 @@ export function issueCustomerApiKey(runId: number): Promise<CustomerApiKeyRespon
   })
 }
 
-/** 인증 쿠키 기반 결과 파일 다운로드 주소. */
-export function pipelineResultDownloadUrl(runId: number): string {
-  return `${API_BASE_URL}/api/v1/runs/${runId}/result.csv`
+/** 결과 파일 다운로드 주소를 발급받는다.
+ *
+ * 파일은 새 창으로 열어야 브라우저가 저장 대화상자를 띄우는데, 그 요청에는
+ * Authorization 헤더가 실리지 않아 인증이 걸린 주소를 직접 열면 401이 난다.
+ * 인증이 되는 이 호출로 S3 presigned URL을 먼저 받고, 그 주소를 연다.
+ */
+export async function openResultDownload(runId: number): Promise<void> {
+  const { download_url } = await issueResultDownloadUrl(runId)
+  window.open(download_url, '_blank', 'noopener')
+}
+
+export function issueResultDownloadUrl(
+  runId: number,
+): Promise<{ download_url: string; filename: string; expires_in_seconds: number | null }> {
+  return request(`/api/v1/runs/${runId}/result-download-url`)
 }
 
 /** 단계 산출물 검토(HITL). 승인 시 다음 단계로, 반려 시 해당 단계로 되돌린다. */
