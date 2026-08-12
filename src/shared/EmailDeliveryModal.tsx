@@ -1,5 +1,5 @@
 import { type FormEvent, useEffect, useRef, useState } from 'react'
-import { fetchCurrentEmployee, issueCustomerApiKey, requestSampleEmailDelivery, type CustomerApiKeyResponse } from './api'
+import { issueCustomerApiKey, requestSampleEmailDelivery, type CustomerApiKeyResponse } from './api'
 import { subscribeEmailDeliveryStatus, type EmailDeliveryStatusFrame } from './emailDeliveryStream'
 import {
   EmailCancelButton,
@@ -33,12 +33,14 @@ type EmailDeliveryModalProps = {
   hint: string
   open: boolean
   onClose: () => void
+  /** 고객사 담당자 이메일. 없으면 빈 칸으로 두고 사용자가 직접 입력한다. */
+  defaultRecipient?: string | null
   apiCredentials?: CustomerApiKeyResponse | null
   onApiCredentialsIssued?: (credentials: CustomerApiKeyResponse) => void
 }
 
 /** 샘플/최종 산출물 메일 발송 공용 모달. 제출 → SSE 추적 → 완료/실패 표시까지 담당한다. */
-export default function EmailDeliveryModal({ runId, deliveryType, title, hint, open, onClose, apiCredentials, onApiCredentialsIssued }: EmailDeliveryModalProps) {
+export default function EmailDeliveryModal({ runId, deliveryType, title, hint, open, onClose, defaultRecipient, apiCredentials, onApiCredentialsIssued }: EmailDeliveryModalProps) {
   const [emailRecipient, setEmailRecipient] = useState('')
   const [emailPhase, setEmailPhase] = useState<EmailPhase>('form')
   const [emailError, setEmailError] = useState<string | null>(null)
@@ -55,15 +57,13 @@ export default function EmailDeliveryModal({ runId, deliveryType, title, hint, o
     setEmailError(null)
     setEmailFailureCode(null)
     setEmailPhase('form')
-    if (!emailRecipient.trim()) {
-      fetchCurrentEmployee()
-        .then((employee) => setEmailRecipient(employee.email))
-        .catch(() => {
-          // 자동 채우기 실패 시 사용자가 직접 입력하면 된다.
-        })
+    // 수신자 기본값은 고객사 담당자 이메일뿐이다. 등록돼 있지 않으면 빈 칸으로 둔다 —
+    // 로그인한 실무자 이메일로 채우면 고객에게 보낼 산출물을 자기 자신에게 보내게 된다.
+    if (!emailRecipient.trim() && defaultRecipient?.trim()) {
+      setEmailRecipient(defaultRecipient.trim())
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open])
+  }, [open, defaultRecipient])
 
   function trackDelivery(deliveryId: string) {
     stopTracking()

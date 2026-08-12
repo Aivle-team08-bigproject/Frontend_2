@@ -237,6 +237,7 @@ export default function TaskComplete() {
       </FlowContentArea>
       {detail && (
         <EmailDeliveryModal
+          defaultRecipient={detail?.client_contact_email ?? null}
           runId={numericRunId}
           deliveryType="FINAL_ARTIFACT"
           title="최종 산출물 메일 발송"

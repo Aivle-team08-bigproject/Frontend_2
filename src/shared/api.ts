@@ -127,6 +127,8 @@ export type PipelineEvent = {
 
 export type PipelineRunResponse = {
   run_id: number
+  /** 고객사 담당자 이메일. 등록돼 있을 때만 값이 온다. */
+  client_contact_email?: string | null
   request_no: string
   request_title: string
   raw_requirement: string
@@ -545,6 +547,8 @@ export type TaskDetailAction = 'APPROVE' | 'REQUEST_CHANGES' | 'RETRY' | 'DOWNLO
 /** `GET /api/v1/tasks/{request_no}/runs/{run_id}/detail` */
 export type TaskDetailResponse = {
   request_no: string
+  /** 고객사 담당자 이메일. 등록돼 있을 때만 값이 온다. */
+  client_contact_email?: string | null
   run_id: number
   title: string
   assignee_code: string | null

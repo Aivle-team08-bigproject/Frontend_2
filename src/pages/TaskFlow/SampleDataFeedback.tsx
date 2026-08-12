@@ -179,6 +179,7 @@ export default function SampleDataFeedback() {
         </ActionsRow>
       </FlowContentArea>
       <EmailDeliveryModal
+          defaultRecipient={run?.client_contact_email ?? null}
         runId={numericRunId}
         deliveryType="SELECTION_SAMPLE"
         title="샘플 데이터 메일 발송"
