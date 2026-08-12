@@ -95,6 +95,35 @@ function failureLogLines(frame: PipelineSnapshotFrame): LiveLogLine[] {
  * `stepField`는 이 화면이 관심 있는 서브스텝 종류(요구사항 분석/선별/가공)를 가리키며,
  * 다른 단계의 status 이벤트는 진행률·run_status만 반영하고 items는 건드리지 않는다.
  */
+
+/** 상태 이벤트 하나를 단계 목록에 반영한다.
+ *
+ * 이벤트에는 started_at/completed_at이 실리지 않으므로 occurred_at으로 채운다.
+ * 채우지 않으면 진행 화면의 시각이 계속 '-'로 남는다(2026-08-12 회귀).
+ * 서버 스냅샷을 다시 받으면 정본 값으로 덮인다.
+ */
+export function applyStepStatus(
+  items: PipelineStreamItem[],
+  stepCode: string | null | undefined,
+  stepStatus: string | null | undefined,
+  occurredAt: string,
+  message: string,
+): PipelineStreamItem[] {
+  if (!stepCode) return items
+  return items.map((item) => {
+    if (item.item_code !== stepCode) return item
+    const nextStatus = stepStatus ?? item.status
+    const isTerminal = nextStatus === 'COMPLETED' || nextStatus === 'FAILED'
+    return {
+      ...item,
+      status: nextStatus,
+      started_at: item.started_at ?? occurredAt,
+      completed_at: isTerminal ? (item.completed_at ?? occurredAt) : item.completed_at,
+      error_message: stepStatus === 'FAILED' ? message : item.error_message,
+    }
+  })
+}
+
 export function usePipelineRunStream(
   runId: number | null,
   stepField: PipelineStepField,
@@ -149,17 +178,7 @@ export function usePipelineRunStream(
 
           const stepCode = frame[stepField]
           const stepStatus = frame[stepStatusField]
-          const items = stepCode
-            ? prev.items.map((item) =>
-                item.item_code === stepCode
-                  ? {
-                      ...item,
-                      status: stepStatus ?? item.status,
-                      error_message: stepStatus === 'FAILED' ? frame.message : item.error_message,
-                    }
-                  : item,
-              )
-            : prev.items
+          const items = applyStepStatus(prev.items, stepCode, stepStatus, frame.occurred_at, frame.message)
           const stepMessages = stepCode ? { ...prev.stepMessages, [stepCode]: frame.message } : prev.stepMessages
           const time = formatTime(frame.occurred_at)
           const agent = stageLabel(frame.current_stage)
