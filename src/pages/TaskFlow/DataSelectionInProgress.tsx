@@ -43,7 +43,7 @@ export default function DataSelectionInProgress() {
   }, [validRoute, requestNo, numericRunId, stream.runStatus, stream.currentStage, navigate])
 
   const displayItems = withPendingDefaults(stream.items)
-  const tone = stageStatusTone(aggregateStepStatus(displayItems))
+  const tone = stageStatusTone(aggregateStepStatus(displayItems, stream.runStatus))
 
   return (
     <PageWrapper>

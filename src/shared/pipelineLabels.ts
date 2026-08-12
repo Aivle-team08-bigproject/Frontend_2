@@ -193,7 +193,13 @@ export function buildStepTimelineItems(
 }
 
 /** 서브스텝 배열 전체로 상위 stage의 대표 상태를 판단한다(카드 헤더 배지용). */
-export function aggregateStepStatus(items: PipelineStreamItem[]): 'PENDING' | 'RUNNING' | 'COMPLETED' | 'FAILED' {
+export function aggregateStepStatus(
+  items: PipelineStreamItem[],
+  runStatus?: string | null,
+): 'PENDING' | 'RUNNING' | 'COMPLETED' | 'FAILED' {
+  // AgentCore가 서브스텝을 모두 완료한 뒤 응답 직렬화·전송에서 실패할 수 있다.
+  // 이때 서브스텝의 녹색 상태와 별개로 stage 자체는 실패이므로 상위 run 상태를 우선한다.
+  if (runStatus === 'FAILED') return 'FAILED'
   if (items.length === 0) return 'PENDING'
   if (items.some((item) => item.status === 'FAILED')) return 'FAILED'
   if (items.every((item) => item.status === 'COMPLETED')) return 'COMPLETED'
