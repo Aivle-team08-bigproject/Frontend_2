@@ -8,7 +8,7 @@ import { useAsyncData } from '../../shared/hooks'
 import DataStateNotice from '../../shared/DataStateNotice'
 import { formatDateTime } from '../../shared/datetime'
 import { fetchTaskDetail, pipelineResultDownloadUrl, submitReview } from '../../shared/api'
-import { runStatusTone, stageContentPath, stageLabel, stageScreenPath, stageStatusTone } from '../../shared/pipelineLabels'
+import { runStatusTone, stageContentPath, stageLabel, stageScreenPath, stageStatusTone, STAGE_ORDER } from '../../shared/pipelineLabels'
 import { colors } from '../../shared/theme'
 import { DataNotice, FlowContentArea, PageWrapper } from '../../shared/layout.styles'
 import {
@@ -78,9 +78,11 @@ export default function TaskDetail() {
   const canDownload = (data?.available_actions ?? []).includes('DOWNLOAD')
   // 실행 전 단계는 아직 작업 이력이 아니다. 현재 단계와 이미 시작/종료된 단계만
   // 보여야 진행 중인 요구사항 분석 화면에 선별·가공 카드가 섞이지 않는다.
-  const visibleStages = data?.stages.filter(
-    (stage) => stage.stage_code === data.current_stage || stage.status !== 'PENDING',
-  ) ?? []
+  const currentStageIndex = data?.current_stage ? STAGE_ORDER.indexOf(data.current_stage as typeof STAGE_ORDER[number]) : -1
+  const visibleStages = data?.stages.filter((stage) => {
+    const stageIndex = STAGE_ORDER.indexOf(stage.stage_code as typeof STAGE_ORDER[number])
+    return currentStageIndex < 0 || stageIndex <= currentStageIndex
+  }) ?? []
 
   function goToStageScreen() {
     if (!data || !requestNo) return

@@ -14,6 +14,8 @@ export const STAGE_LABELS: Record<string, string> = {
   DATA_PROCESSING: '데이터 가공',
 }
 
+export const STAGE_ORDER = ['REQUIREMENT_ANALYSIS', 'DATA_SELECTION', 'DATA_PROCESSING'] as const
+
 export function stageLabel(code: string | null | undefined): string {
   if (!code) return '-'
   return STAGE_LABELS[code] ?? code
