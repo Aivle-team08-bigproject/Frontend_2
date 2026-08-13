@@ -6,7 +6,7 @@ import FlowPageHeader from '../../shared/FlowPageHeader'
 import RequestHeaderCard from '../../shared/RequestHeaderCard'
 import StepProgressBar from '../../shared/StepProgressBar'
 import SectionCard from '../../shared/SectionCard'
-import { arrowLeftSrc, arrowRightSrc } from '../../shared/icons'
+import { arrowLeftSrc } from '../../shared/icons'
 import { useAsyncData } from '../../shared/hooks'
 import DataStateNotice from '../../shared/DataStateNotice'
 import { fetchPipelineRun, fetchProcessingResult, issueResultDownloadUrl, submitReview } from '../../shared/api'
@@ -15,9 +15,6 @@ import { EMPTY_FINAL_OUTPUT_FEEDBACK } from './finalOutputFeedbackData'
 import {
   ApproveButton,
   ArrowIcon,
-  Bar,
-  BarColumn,
-  BarLabel,
   BackLink,
   BottomActionsRow,
   Card,
@@ -34,25 +31,18 @@ import {
   InfoStructuredValue,
   InfoValue,
   LeftCol,
-  MiniChart,
   RecutButton,
-  ReportBody,
-  ReportHeader,
-  ReportMeta,
-  ReportTitle,
-  ReportViewer,
   ResubmitButton,
   RightActions,
   RightCol,
   SplitGrid,
-  SummaryHeading,
-  SummaryLine,
-  SummaryText,
   TCell,
   THead,
   TRow,
-  ViewFullReport,
 } from './FinalOutputFeedback.styles'
+
+// 미리보기는 상위 일부만 보여주고 전체는 CSV로 유도한다.
+const PREVIEW_ROW_LIMIT = 15
 
 export default function FinalOutputFeedback() {
   const { requestNo, runId } = useParams()
@@ -69,27 +59,11 @@ export default function FinalOutputFeedback() {
   // api_result.items는 delivery_channel === 'api'일 때만 채워진다(processor.py 설계).
   // 이메일/CSV 배송 요청은 여기가 항상 비어 있어도 산출물 자체는 정상 생성된 것이라
   // 다운로드로 유도하는 안내가 필요하다.
+  const previewRows = outputRows.slice(0, PREVIEW_ROW_LIMIT)
   const previewUnavailable = outputRows.length === 0 && Number(processingResult?.quality_report.output_row_count ?? 0) > 0
   const isPreviewSubset =
-    outputRows.length > 0 && outputRows.length < Number(processingResult?.quality_report.output_row_count ?? 0)
-  const report = processingResult?.report
-  const reportTitle = typeof report?.title === 'string' ? report.title : '최종 가공 결과'
-  const reportSummary = [
-    typeof report?.summary === 'string' ? report.summary : null,
-    typeof processingResult?.processing_explanation.summary === 'string' ? processingResult.processing_explanation.summary : null,
-  ].filter((summary): summary is string => Boolean(summary))
+    previewRows.length > 0 && previewRows.length < Number(processingResult?.quality_report.output_row_count ?? 0)
   const qualityRows = Object.entries(processingResult?.quality_report ?? {})
-  const chartSeries = Array.isArray(processingResult?.visualization?.series)
-    ? processingResult.visualization.series.filter(
-      (item): item is { label: string; value: number } => (
-        typeof item === 'object'
-        && item !== null
-        && typeof item.label === 'string'
-        && typeof item.value === 'number'
-      ),
-    )
-    : []
-  const maxChartValue = Math.max(...chartSeries.map((item) => item.value), 1)
   const [downloadError, setDownloadError] = useState<string | null>(null)
 
   async function handleDownload() {
@@ -146,7 +120,7 @@ export default function FinalOutputFeedback() {
           <LeftCol>
             <Card>
               <CardHeaderRow>
-                <CardTitle>산출물 데이터 (Top 10)</CardTitle>
+                <CardTitle>산출물 데이터 (Top 15)</CardTitle>
                 <HeaderActions>
                   <DownloadLink
                     type="button"
@@ -167,7 +141,7 @@ export default function FinalOutputFeedback() {
               {isPreviewSubset && (
                 <DataNotice role="status">
                   전체 {Number(processingResult?.quality_report.output_row_count ?? 0)}건 중 상위{' '}
-                  {outputRows.length}건만 미리보기로 표시합니다. 전체 산출물은 CSV 다운로드로 확인해주세요.
+                  {previewRows.length}건만 미리보기로 표시합니다. 전체 산출물은 CSV 다운로드로 확인해주세요.
                 </DataNotice>
               )}
               {downloadError && <DataNotice role="alert">{downloadError}</DataNotice>}
@@ -175,7 +149,7 @@ export default function FinalOutputFeedback() {
                 <THead>
                   {outputColumns.map((column) => <TCell key={column} $strong>{column}</TCell>)}
                 </THead>
-                {outputRows.slice(0, 10).map((row, index) => (
+                {previewRows.map((row, index) => (
                   <TRow key={index}>
                     {outputColumns.map((column) => <TCell key={column}>{String(row[column] ?? '-')}</TCell>)}
                   </TRow>
@@ -183,35 +157,6 @@ export default function FinalOutputFeedback() {
               </DataTable>
             </Card>
 
-            <Card>
-              <CardTitle>보고서 미리보기</CardTitle>
-              <ReportViewer>
-                <ReportHeader>
-                    <ReportTitle>{reportTitle}</ReportTitle>
-                    <ReportMeta>{processingResult ? `${processingResult.quality_report.output_row_count ?? outputRows.length}건 · 시도 ${processingResult.attempt_no}` : view.reportMeta}</ReportMeta>
-                </ReportHeader>
-                <ReportBody>
-                  <SummaryText>
-                    <SummaryHeading>주요 트렌드 발견 (Insight Summary)</SummaryHeading>
-                    {reportSummary.map((line) => (
-                      <SummaryLine key={line}>{line}</SummaryLine>
-                    ))}
-                  </SummaryText>
-                  <MiniChart>
-                    {chartSeries.map((bar) => (
-                      <BarColumn key={bar.label}>
-                        <Bar $height={(bar.value / maxChartValue) * 100} $highlight={bar.value === maxChartValue} />
-                        <BarLabel>{bar.label}</BarLabel>
-                      </BarColumn>
-                    ))}
-                  </MiniChart>
-                </ReportBody>
-              </ReportViewer>
-              <ViewFullReport type="button">
-                전체 보고서 보기
-                <ArrowIcon src={arrowRightSrc} alt="" />
-              </ViewFullReport>
-            </Card>
           </LeftCol>
 
           <RightCol>
