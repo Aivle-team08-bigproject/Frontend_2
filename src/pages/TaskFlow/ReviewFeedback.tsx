@@ -9,7 +9,7 @@ import SectionCard from '../../shared/SectionCard'
 import { radioSelectedSrc } from '../../shared/icons'
 import { useAsyncData } from '../../shared/hooks'
 import DataStateNotice from '../../shared/DataStateNotice'
-import { fetchPipelineRun, submitReview, type DeliveryChannel, type OutputFormat } from '../../shared/api'
+import { fetchPipelineRun, submitReview, type DeliveryChannel } from '../../shared/api'
 import { DataNotice, FlowContentArea, LeftPanel, PageWrapper, SplitGrid } from '../../shared/layout.styles'
 import { EMPTY_REVIEW_FEEDBACK } from './reviewFeedbackData'
 import {
@@ -51,12 +51,6 @@ const DELIVERY_CHANNEL_OPTIONS: Array<{ value: DeliveryChannel; label: string }>
   { value: 'email', label: '이메일' },
 ]
 
-const OUTPUT_FORMAT_OPTIONS: Array<{ value: OutputFormat; label: string }> = [
-  { value: 'csv', label: 'csv' },
-  { value: 'visualization', label: '시각화 대시보드' },
-  { value: 'report', label: '보고서' },
-]
-
 export default function ReviewFeedback() {
   const { requestNo, runId } = useParams()
   const numericRunId = Number(runId)
@@ -87,12 +81,10 @@ export default function ReviewFeedback() {
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [deliveryChannel, setDeliveryChannel] = useState<DeliveryChannel | null>(null)
-  const [outputFormat, setOutputFormat] = useState<OutputFormat | null>(null)
 
   useEffect(() => {
     if (!analysis) return
     setDeliveryChannel((current) => current ?? (analysis.delivery_channel as DeliveryChannel))
-    setOutputFormat((current) => current ?? (analysis.output_formats[0] as OutputFormat | undefined) ?? null)
   }, [analysis])
 
   async function handleDecision(approved: boolean) {
@@ -107,7 +99,7 @@ export default function ReviewFeedback() {
         ...(approved
           ? {
               delivery_channel: deliveryChannel ?? undefined,
-              output_formats: outputFormat ? [outputFormat] : undefined,
+              output_formats: ['csv'],
             }
           : {}),
       })
@@ -190,23 +182,6 @@ export default function ReviewFeedback() {
                     >
                       {deliveryChannel === option.value ? <RadioIcon src={radioSelectedSrc} alt="" /> : <RadioEmpty />}
                       <OptionLabel $selected={deliveryChannel === option.value}>{option.label}</OptionLabel>
-                    </OptionRow>
-                  ))}
-                </OptionList>
-              </OptionGroup>
-              <OptionGroup>
-                <OptionGroupLabel>원하는 산출물 형식</OptionGroupLabel>
-                <OptionList>
-                  {OUTPUT_FORMAT_OPTIONS.map((option) => (
-                    <OptionRow
-                      key={option.value}
-                      as="button"
-                      type="button"
-                      onClick={() => setOutputFormat(option.value)}
-                      disabled={submitting}
-                    >
-                      {outputFormat === option.value ? <RadioIcon src={radioSelectedSrc} alt="" /> : <RadioEmpty />}
-                      <OptionLabel $selected={outputFormat === option.value}>{option.label}</OptionLabel>
                     </OptionRow>
                   ))}
                 </OptionList>

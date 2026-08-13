@@ -236,7 +236,7 @@ export type ReviewDecision = 'APPROVED' | 'CHANGES_REQUESTED'
 
 /** POST /api/v1/runs/{run_id}/review 요청 바디. */
 export type DeliveryChannel = 'email' | 'api'
-export type OutputFormat = 'csv' | 'visualization' | 'report'
+export type OutputFormat = 'csv'
 
 export type StageReviewPayload = {
   approved: boolean
