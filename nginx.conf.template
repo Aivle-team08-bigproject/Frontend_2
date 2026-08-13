@@ -33,6 +33,21 @@ server {
         add_header Cache-Control "no-store";
     }
 
+    # 고객용 산출물 재다운로드 API는 Spring이 서빙한다(CustomerDeliveryController,
+    # /api/external/v1/deliveries/{contractNo}). 아래 /api/ 블록보다 먼저 와야
+    # FastAPI로 새지 않는다. 발급 메일에 실리는 Endpoint URL이 이 경로다.
+    location /api/external/ {
+        resolver 127.0.0.11 ipv6=off valid=10s;
+        set $spring_api_upstream ${SPRING_API_UPSTREAM};
+        proxy_pass http://$spring_api_upstream;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 60s;
+    }
+
     # Docker Compose 기본값은 backend-api:8000이다. 다른 EC2 또는 내부 ALB를
     # 사용할 때는 BACKEND_API_UPSTREAM 환경변수로 host:port를 주입한다.
     location /api/ {
