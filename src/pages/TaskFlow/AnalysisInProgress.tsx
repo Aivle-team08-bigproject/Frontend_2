@@ -65,7 +65,7 @@ export default function AnalysisInProgress() {
               statusLabel={tone.label}
               statusBg={tone.bg}
               statusColor={tone.color}
-              items={buildStepTimelineItems(displayItems, ANALYSIS_STEPS, stream.stepMessages)}
+              items={buildStepTimelineItems(displayItems, ANALYSIS_STEPS, stream.stepMessages, stream.runStatus)}
             />
           </LeftPanel>
           <LiveLogPanel lines={stream.logLines} />

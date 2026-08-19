@@ -147,8 +147,9 @@ export const PROCESSING_STEPS: StepDef[] = [
   { code: 'RESULT_FILE_GENERATION', title: '결과 파일 생성' },
 ]
 
-function stepTimelineState(status: string | undefined): TimelineStepState {
+function stepTimelineState(status: string | undefined, isRetrying: boolean): TimelineStepState {
   if (status === 'COMPLETED') return 'done'
+  if (status === 'FAILED' && isRetrying) return 'active'
   if (status === 'FAILED') return 'failed'
   if (status === 'RUNNING') return 'active'
   return 'pending'
@@ -171,6 +172,7 @@ export function buildStepTimelineItems(
   items: PipelineStreamItem[],
   steps: StepDef[],
   messages?: Record<string, string>,
+  runStatus?: string | null,
 ): TimelineItem[] {
   const byCode = new Map(items.map((item) => [item.item_code, item]))
   return steps.map((step) => {
@@ -182,14 +184,16 @@ export function buildStepTimelineItems(
         ? formatTime(item.started_at)
         : '-'
     const description =
-      messages?.[step.code] ??
+      status === 'FAILED' && runStatus !== 'FAILED'
+        ? '재시도하고 있습니다.'
+        : messages?.[step.code] ??
       (status === 'FAILED' && item?.error_message ? item.error_message : undefined) ??
       FALLBACK_STEP_DESCRIPTION[status ?? 'PENDING']
     return {
       title: step.title,
       time,
       description,
-      state: stepTimelineState(status),
+      state: stepTimelineState(status, status === 'FAILED' && runStatus !== 'FAILED'),
     }
   })
 }
@@ -203,7 +207,10 @@ export function aggregateStepStatus(
   // 이때 서브스텝의 녹색 상태와 별개로 stage 자체는 실패이므로 상위 run 상태를 우선한다.
   if (runStatus === 'FAILED') return 'FAILED'
   if (items.length === 0) return 'PENDING'
-  if (items.some((item) => item.status === 'FAILED')) return 'FAILED'
+  // A failed attempt is not a failed stage while the run is still retrying.
+  // The backend emits FAILED only after the retry budget is exhausted; keep this
+  // guard as well so a replayed intermediate failure cannot flash as terminal.
+  if (items.some((item) => item.status === 'FAILED')) return runStatus === 'FAILED' ? 'FAILED' : 'RUNNING'
   if (items.every((item) => item.status === 'COMPLETED')) return 'COMPLETED'
   if (items.some((item) => item.status === 'RUNNING' || item.status === 'COMPLETED')) return 'RUNNING'
   return 'PENDING'

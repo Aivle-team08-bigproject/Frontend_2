@@ -20,3 +20,9 @@ export function clearAccessToken() {
   window.localStorage.removeItem(LOCAL_TOKEN_KEY)
   window.sessionStorage.removeItem(SESSION_TOKEN_KEY)
 }
+
+export function redirectToLoginForSessionExpiry(reason: 'max-session' | 'session-expired' = 'session-expired') {
+  const from = `${window.location.pathname}${window.location.search}${window.location.hash}`
+  const query = new URLSearchParams({ reason, from })
+  window.location.assign(`/login?${query.toString()}`)
+}

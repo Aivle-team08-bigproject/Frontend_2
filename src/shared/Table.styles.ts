@@ -84,6 +84,29 @@ export const Cell = styled.p<{ $width?: number; $flex?: boolean }>`
   color: ${colors.textSecondary};
 `
 
+export const SortHeaderButton = styled.button<{ $width?: number }>`
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  width: ${({ $width }) => `${$width ?? 110}px`};
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover { color: ${colors.primary}; }
+`
+
+export const SortDirectionIcon = styled.span<{ $ascending: boolean }>`
+  color: ${colors.primary};
+  font-size: 14px;
+  line-height: 1;
+`
+
 export const ReqIdCell = styled(Cell)`
   color: ${colors.primary};
   font-weight: 700;

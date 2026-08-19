@@ -16,6 +16,7 @@ import {
   Cell, MutedCell, NavIcon, PageNav, PageNumber, PageNumbers, Pagination, ReqIdCell,
   SortBar, SortChip, SortChipIcon, StatusCell, StatusPill, StrongCell as ClientCell,
   TableBody, TableContainer, TableHeaderRow, TableRowEl,
+  SortDirectionIcon, SortHeaderButton,
 } from '../../shared/Table.styles'
 import { PRACTITIONER_NAV_ITEMS, PRIORITY_LABELS } from './data'
 import { ClearFilters, EmptyState, FilterGroup, FilterMenu, FilterOption, FilterSummary, TableSection } from './PractitionerDashboardMain.styles'
@@ -60,15 +61,19 @@ export default function TaskList() {
   const status = params.get('status') as StatusGroupCode | null
   const assignee = params.get('assignee')
   const month = params.get('month')
+  const dueFrom = params.get('due_from')
+  const dueTo = params.get('due_to')
   const page = Math.max(1, Number(params.get('page') ?? 1) || 1)
   const pageSize = ([30, 50, 100].includes(Number(params.get('page_size'))) ? Number(params.get('page_size')) : 30) as DashboardPageSize
+  const createdSort = params.get('created_sort') === 'asc' ? 'asc' : 'desc'
 
   const fetcher = useCallback(
     () => fetchDashboardTasks({
       scope, search: params.get('search') || undefined, priority, stage: stage || undefined,
       status: status || undefined, assignee: assignee || undefined, ...monthRange(month), page, page_size: pageSize,
+      due_from: dueFrom || undefined, due_to: dueTo || undefined, created_sort: createdSort,
     }),
-    [assignee, month, page, pageSize, params, priority, scope, stage, status],
+    [assignee, dueFrom, dueTo, month, page, pageSize, params, priority, scope, stage, status],
   )
   const { data, loading, error } = useAsyncData(fetcher)
   const { data: user } = useAsyncData(fetchCurrentUser)
@@ -107,7 +112,11 @@ export default function TaskList() {
     setOpenFilter(null)
   }
 
-  const hasActiveFilter = Boolean(params.get('search') || priority || stage || status || assignee || month)
+  function toggleCreatedSort() {
+    updateQuery({ created_sort: createdSort === 'desc' ? 'asc' : 'desc' })
+  }
+
+  const hasActiveFilter = Boolean(params.get('search') || priority || stage || status || assignee || month || dueFrom || dueTo)
   const pageCount = Math.max(1, Math.ceil((data?.total_count ?? 0) / pageSize))
 
   return (
@@ -154,7 +163,7 @@ export default function TaskList() {
           </SectionHeader>
           <TableContainer>
             <TableHeaderRow>
-              <Cell $width={160}>요청번호</Cell><Cell $width={180}>고객사명</Cell><Cell $flex>작업명</Cell><Cell $width={120}>담당자</Cell><Cell $width={100}>진행률</Cell><Cell $width={110}>등록일</Cell><Cell $width={140}>상태</Cell>
+              <Cell $width={160}>요청번호</Cell><Cell $width={180}>고객사명</Cell><Cell $flex>작업명</Cell><Cell $width={120}>담당자</Cell><Cell $width={100}>진행률</Cell><SortHeaderButton type="button" $width={110} onClick={toggleCreatedSort} aria-label={`등록일 ${createdSort === 'desc' ? '오름차순' : '내림차순'}으로 정렬`}>등록일 <SortDirectionIcon $ascending={createdSort === 'asc'}>{createdSort === 'asc' ? '↑' : '↓'}</SortDirectionIcon></SortHeaderButton><Cell $width={140}>상태</Cell>
             </TableHeaderRow>
             <TableBody>
               {items.length === 0 && <EmptyState>선택한 조건에 해당하는 작업이 없습니다.</EmptyState>}

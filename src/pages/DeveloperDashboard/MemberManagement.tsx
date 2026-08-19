@@ -9,7 +9,7 @@ import { MainContent, PageWrapper } from '../../shared/layout.styles'
 import { NavIcon, PageNav, PageNumber, PageNumbers, Pagination, TableContainer } from '../../shared/Table.styles'
 import { fetchCurrentEmployee } from '../../shared/api'
 import { EMPTY_MEMBER_MANAGEMENT, fetchMemberManagementData, ROLE_OPTIONS, updateMemberActiveState, updateMemberRole } from './memberData'
-import { DEVELOPER_NAV_ITEMS } from './dashboardData'
+import { MEMBER_NAV_ITEMS } from './dashboardData'
 import {
   ActionNotice,
   ActionsCell,
@@ -84,15 +84,16 @@ export default function MemberManagement() {
       const matchesPart = partFilter === 'all' || member.part === partFilter
       const matchesSearch =
         !normalizedSearch ||
-        [member.name, member.userId, member.part, member.role].some((value) => value.toLowerCase().includes(normalizedSearch))
+        [member.name, member.email, member.userId, member.part, member.role].some((value) => value.toLowerCase().includes(normalizedSearch))
       return matchesStatus && matchesRole && matchesPart && matchesSearch
     })
   }, [partFilter, roleFilter, searchTerm, statusFilter, view.members])
 
   const totalPages = Math.max(1, Math.ceil(filteredMembers.length / PAGE_SIZE))
   const pagedMembers = filteredMembers.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
-  const canManagePermissions = currentEmployee?.permissions.includes('EMPLOYEE_PERMISSION_MANAGE') ?? false
-  const canUpdateEmployee = currentEmployee?.permissions.includes('EMPLOYEE_UPDATE') ?? false
+  const isAdminRole = currentEmployee?.role === 'ADMIN'
+  const canManagePermissions = isAdminRole || (currentEmployee?.permissions.includes('EMPLOYEE_PERMISSION_MANAGE') ?? false)
+  const canUpdateEmployee = isAdminRole || (currentEmployee?.permissions.includes('EMPLOYEE_UPDATE') ?? false)
   const canManageMembers = canManagePermissions || canUpdateEmployee
 
   const saveRole = async (userId: string) => {
@@ -133,7 +134,7 @@ export default function MemberManagement() {
   const navigation = (
     <>
       <GNB />
-      <SubNav activeTo="/dev-dashboard/members" items={DEVELOPER_NAV_ITEMS} />
+      <SubNav activeTo="/dev-dashboard/members" items={MEMBER_NAV_ITEMS} />
     </>
   )
 
@@ -199,7 +200,7 @@ export default function MemberManagement() {
         <TableContainer>
           <MemberTableHeaderRow>
             <MemberCell $width={160}>이름</MemberCell>
-            <MemberCell $width={160}>아이디</MemberCell>
+            <MemberCell $width={240}>이메일</MemberCell>
             <MemberCell $width={140}>권한 (역할)</MemberCell>
             <MemberCell $flex>소속 파트</MemberCell>
             <MemberCell $width={160}>최종 로그인일</MemberCell>
@@ -221,7 +222,7 @@ export default function MemberManagement() {
                     <AvatarSm src={memberAvatarPlaceholderSrc} alt="" />
                     <NameText>{member.name}</NameText>
                   </NameCell>
-                  <MemberCell $width={160}>{member.userId}</MemberCell>
+                  <MemberCell $width={240}>{member.email || '-'}</MemberCell>
                   <RolePillWrap>
                     <RolePill $bg={member.roleBg} $color={member.roleColor}>
                       {member.role}

@@ -1,5 +1,5 @@
-import { useRef, useState, type ChangeEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useRef, useState, type ChangeEvent } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import GNB from '../../shared/GNB'
 import Footer from '../../shared/Footer'
 import FlowPageHeader from '../../shared/FlowPageHeader'
@@ -7,7 +7,7 @@ import RequestHeaderCard from '../../shared/RequestHeaderCard'
 import StepProgressBar from '../../shared/StepProgressBar'
 import { PageWrapper } from '../../shared/layout.styles'
 import { REQUIREMENT_REGISTER_FORM } from './requirementRegisterData'
-import { ApiError, createDataRequest, extractDocumentText } from '../../shared/api'
+import { ApiError, createDataRequest, extractDocumentText, type RequirementDraft } from '../../shared/api'
 import { EmailAt, EmailInput, EmailInputRow } from '../SystemPages/SignupPage.styles'
 import {
   ActionsRow,
@@ -63,6 +63,8 @@ function sanitizeEmailDomain(value: string) {
 }
 
 export default function RequirementAnalysisRegister() {
+  const location = useLocation()
+  const prefill = (location.state as { prefill?: RequirementDraft; fromFailure?: boolean } | null)?.prefill
   const [value, setValue] = useState('')
   const [customerName, setCustomerName] = useState('')
   const [businessRegistrationNumber, setBusinessRegistrationNumber] = useState('')
@@ -85,6 +87,25 @@ export default function RequirementAnalysisRegister() {
   const contactEmail = contactEmailLocal || contactEmailDomain ? `${contactEmailLocal}@${contactEmailDomain}` : ''
   const fileInputRef = useRef<HTMLInputElement>(null)
   const navigate = useNavigate()
+  const [prefillApplied, setPrefillApplied] = useState(false)
+
+  useEffect(() => {
+    if (!prefill || prefillApplied) return
+    setValue(prefill.raw_requirement)
+    setCustomerName(prefill.customer_name)
+    setBusinessRegistrationNumber(prefill.business_registration_number ?? '')
+    setContactName(prefill.contact_name ?? '')
+    const [emailLocal = '', emailDomain = ''] = (prefill.contact_email ?? '').split('@')
+    setContactEmailLocal(emailLocal)
+    setContactEmailDomain(emailDomain)
+    setContactPhone(prefill.contact_phone ?? '')
+    setTitle(prefill.title)
+    setStartDate(prefill.start_date ?? '')
+    setEndDate(prefill.end_date ?? '')
+    setDeliveryDueDate(prefill.delivery_due_date ?? '')
+    setDataSensitivity((prefill.data_sensitivity as typeof dataSensitivity) || 'UNKNOWN')
+    setPrefillApplied(true)
+  }, [prefill, prefillApplied])
   const dateError = endDate && startDate && endDate < startDate
     ? '계약 종료일은 시작일보다 빠를 수 없습니다.'
     : deliveryDueDate && endDate && deliveryDueDate > endDate
@@ -187,8 +208,8 @@ export default function RequirementAnalysisRegister() {
         <StepProgressBar currentStep={1} />
         <InputSection>
           <InputHeader>
-            <InputTitle>새 작업을 등록해주세요</InputTitle>
-            <InputSubtitle>업무 목적과 필요한 데이터를 자유롭게 작성하면 AI가 요구사항을 분석합니다.</InputSubtitle>
+            <InputTitle>{prefill ? '요구사항을 수정해주세요' : '새 작업을 등록해주세요'}</InputTitle>
+            <InputSubtitle>{prefill ? '데이터가 없는 조건을 조정한 뒤 다시 제출해주세요.' : '업무 목적과 필요한 데이터를 자유롭게 작성하면 AI가 요구사항을 분석합니다.'}</InputSubtitle>
           </InputHeader>
           <FieldGrid>
             <SectionLabel>작업 기본 정보</SectionLabel>

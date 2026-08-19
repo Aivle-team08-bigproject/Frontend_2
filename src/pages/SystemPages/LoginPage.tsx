@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { ApiError, login } from '../../shared/api'
+import { ApiError, login, reviewAutoLogin } from '../../shared/api'
 import { saveAccessToken } from '../../shared/auth'
 import Logo from '../../shared/Logo'
 import {
@@ -39,12 +39,13 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [rememberMe, setRememberMe] = useState(true)
   const [submitting, setSubmitting] = useState(false)
+  const [reviewSubmitting, setReviewSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const destination = (location.state as { from?: string } | null)?.from ?? '/dashboard'
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (!email.trim() || !password || submitting) return
+    if (!email.trim() || !password || submitting || reviewSubmitting) return
     setSubmitting(true)
     setError(null)
     try {
@@ -65,6 +66,20 @@ export default function LoginPage() {
         setError(reason instanceof Error ? reason.message : '로그인에 실패했습니다.')
       }
       setSubmitting(false)
+    }
+  }
+
+  async function handleReviewLogin() {
+    if (submitting || reviewSubmitting) return
+    setReviewSubmitting(true)
+    setError(null)
+    try {
+      const response = await reviewAutoLogin()
+      saveAccessToken(response.access_token, true)
+      navigate(destination, { replace: true })
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : '심사용 로그인에 실패했습니다.')
+      setReviewSubmitting(false)
     }
   }
 
@@ -90,8 +105,9 @@ export default function LoginPage() {
               <TextButton type="button" onClick={() => setError('비밀번호 재설정은 관리자에게 문의해주세요.')}>비밀번호를 잊으셨나요?</TextButton>
             </FormMeta>
             {error && <ErrorText role="alert">{error}</ErrorText>}
-            <LoginButton type="submit" disabled={submitting || !email.trim() || !password}>{submitting ? '로그인 중...' : '로그인'}</LoginButton>
-            <SignupLink type="button" onClick={() => navigate('/signup')}>회원가입 신청</SignupLink>
+            <LoginButton type="submit" disabled={submitting || reviewSubmitting || !email.trim() || !password}>{submitting ? '로그인 중...' : '로그인'}</LoginButton>
+            <SignupLink type="button" disabled={submitting || reviewSubmitting} onClick={handleReviewLogin}>{reviewSubmitting ? '로그인 중...' : '바로 로그인하기'}</SignupLink>
+            <SignupLink type="button" disabled={submitting || reviewSubmitting} onClick={() => navigate('/signup')}>회원가입 신청</SignupLink>
             <HelperText><LegalLink to="/legal/terms">서비스 이용약관</LegalLink> · <LegalLink to="/legal/privacy">개인정보 처리방침</LegalLink></HelperText>
           </Form>
         </LoginCard>

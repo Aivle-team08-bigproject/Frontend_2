@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import GNB from '../../shared/GNB'
 import Footer from '../../shared/Footer'
@@ -7,7 +7,8 @@ import SectionCard from '../../shared/SectionCard'
 import { useAsyncData } from '../../shared/hooks'
 import DataStateNotice from '../../shared/DataStateNotice'
 import { formatDateTime } from '../../shared/datetime'
-import { fetchTaskDetail, openResultDownload, submitReview } from '../../shared/api'
+import { adminRecoverPipelineRun, fetchTaskDetail, openResultDownload, submitReview } from '../../shared/api'
+import { fetchCurrentUser } from '../../shared/currentUser'
 import { runStatusTone, stageContentPath, stageLabel, stageScreenPath, stageStatusTone, STAGE_ORDER } from '../../shared/pipelineLabels'
 import { colors } from '../../shared/theme'
 import { DataNotice, FlowContentArea, PageWrapper } from '../../shared/layout.styles'
@@ -16,6 +17,14 @@ import {
   ArtifactItem,
   ArtifactList,
   EmptyText,
+  FailureModal,
+  FailureModalText,
+  FailureModalTitle,
+  FailureNotice,
+  FailureNoticeAction,
+  FailureNoticeCopy,
+  FailureNoticeText,
+  FailureNoticeTitle,
   HistoryFeedback,
   HistoryList,
   HistoryMeta,
@@ -25,6 +34,10 @@ import {
   MetaLabel,
   MetaRow,
   MetaValue,
+  ModalActionRow,
+  ModalBackdrop,
+  AdminRecoveryButton,
+  RecoveryOption,
   PrimaryAction,
   ProgressFill,
   ProgressLabels,
@@ -69,6 +82,19 @@ export default function TaskDetail() {
   const { data, loading, error } = useAsyncData(fetcher, { intervalMs: 10_000 })
   const [retrying, setRetrying] = useState(false)
   const [retryFeedback, setRetryFeedback] = useState('')
+  const [showInsufficientDataModal, setShowInsufficientDataModal] = useState(false)
+  const [showAdminRecoveryModal, setShowAdminRecoveryModal] = useState(false)
+  const [recovering, setRecovering] = useState(false)
+  const { data: currentUser } = useAsyncData(fetchCurrentUser)
+  const isAdmin = currentUser?.roleCode === 'ADMIN'
+
+  const isInsufficientData = data?.failure_code === 'INSUFFICIENT_DATA'
+    || data?.error_message?.includes('선택한 조건에 해당하는 데이터가 없습니다')
+    || data?.error_message?.includes('필터 조건이나 대상 컬럼을 조정해야 합니다')
+
+  useEffect(() => {
+    if (isInsufficientData) setShowInsufficientDataModal(true)
+  }, [isInsufficientData])
 
   const tone = runStatusTone(data?.run_status)
   const canReview = (data?.available_actions ?? []).some(
@@ -104,6 +130,25 @@ export default function TaskDetail() {
       window.alert(retryError instanceof Error ? retryError.message : '실패 작업 재시도에 실패했습니다.')
     } finally {
       setRetrying(false)
+    }
+  }
+
+  function returnToRequirementEdit() {
+    if (!data) return
+    navigate('/tasks/register', { state: { prefill: data.requirement_draft, fromFailure: true } })
+  }
+
+  async function recoverAsAdmin(mode: 'RESTART' | 'REQUIREMENT_ANALYSIS') {
+    if (!data || recovering) return
+    setRecovering(true)
+    try {
+      const response = await adminRecoverPipelineRun(data.run_id, mode)
+      setShowAdminRecoveryModal(false)
+      navigate(stageScreenPath(requestNo!, data.run_id, response.run_status, response.next_stage))
+    } catch (recoveryError) {
+      window.alert(recoveryError instanceof Error ? recoveryError.message : '관리자 재실행에 실패했습니다.')
+    } finally {
+      setRecovering(false)
     }
   }
 
@@ -164,7 +209,17 @@ export default function TaskDetail() {
                   {stageLabel(data.rollback_to_stage)} 단계로 롤백되어 재실행 중입니다.
                 </DataNotice>
               )}
-              {data.error_message && <StageErrorText>{data.error_message}</StageErrorText>}
+              {isInsufficientData ? (
+                <FailureNotice role="alert">
+                  <FailureNoticeCopy>
+                    <FailureNoticeTitle>현재 조건에 맞는 데이터가 없습니다</FailureNoticeTitle>
+                    <FailureNoticeText>기존 입력값을 불러와 요구사항을 수정할 수 있습니다.</FailureNoticeText>
+                  </FailureNoticeCopy>
+                  <FailureNoticeAction type="button" onClick={returnToRequirementEdit}>
+                    요구사항 재입력
+                  </FailureNoticeAction>
+                </FailureNotice>
+              ) : data.error_message ? <StageErrorText>{data.error_message}</StageErrorText> : null}
 
               {canRetry && (
                 <RetryFeedbackBlock>
@@ -179,6 +234,11 @@ export default function TaskDetail() {
               )}
 
               <ActionRow>
+                {isAdmin && (
+                  <AdminRecoveryButton type="button" onClick={() => setShowAdminRecoveryModal(true)}>
+                    관리자 재실행
+                  </AdminRecoveryButton>
+                )}
                 {canReview && (
                   <PrimaryAction type="button" onClick={goToStageScreen}>
                     {ACTION_LABELS.APPROVE}
@@ -285,7 +345,43 @@ export default function TaskDetail() {
           </>
         )}
       </FlowContentArea>
-    <Footer />
+      <Footer />
+      {showInsufficientDataModal && data && (
+        <ModalBackdrop role="presentation" onClick={() => setShowInsufficientDataModal(false)}>
+          <FailureModal role="dialog" aria-modal="true" aria-labelledby="insufficient-data-title" onClick={(event) => event.stopPropagation()}>
+            <FailureModalTitle id="insufficient-data-title">조건에 맞는 데이터가 없습니다</FailureModalTitle>
+            <FailureModalText>
+              현재 요구사항의 필터 조건으로 조회되는 데이터가 없어 다음 단계로 진행할 수 없습니다.
+              요구사항을 수정하면 기존 입력 내용을 불러온 상태에서 다시 제출할 수 있습니다.
+            </FailureModalText>
+            <ModalActionRow>
+              <SecondaryAction type="button" onClick={() => setShowInsufficientDataModal(false)}>닫기</SecondaryAction>
+              <PrimaryAction type="button" onClick={returnToRequirementEdit}>요구사항 수정으로 돌아가기</PrimaryAction>
+            </ModalActionRow>
+          </FailureModal>
+        </ModalBackdrop>
+      )}
+      {showAdminRecoveryModal && data && (
+        <ModalBackdrop role="presentation" onClick={() => setShowAdminRecoveryModal(false)}>
+          <FailureModal role="dialog" aria-modal="true" aria-labelledby="admin-recovery-title" onClick={(event) => event.stopPropagation()}>
+            <FailureModalTitle id="admin-recovery-title">시연용 작업 재실행</FailureModalTitle>
+            <FailureModalText>
+              현재 단계 상태만 남아 있거나 실행이 멈춘 더미 작업을 관리자 권한으로 복구합니다. 기존 자연어 요구사항은 유지됩니다.
+            </FailureModalText>
+            <RecoveryOption type="button" onClick={() => void recoverAsAdmin('RESTART')} disabled={recovering}>
+              <strong>처음부터 다시 실행</strong>
+              <span>전체 파이프라인 단계를 초기화하고 요구사항 분석부터 다시 시작합니다.</span>
+            </RecoveryOption>
+            <RecoveryOption type="button" onClick={() => void recoverAsAdmin('REQUIREMENT_ANALYSIS')} disabled={recovering}>
+              <strong>요구사항 분석부터 실행</strong>
+              <span>기존 입력 내용을 기준으로 요구사항 분석 단계부터 다시 실행합니다.</span>
+            </RecoveryOption>
+            <ModalActionRow>
+              <SecondaryAction type="button" onClick={() => setShowAdminRecoveryModal(false)} disabled={recovering}>취소</SecondaryAction>
+            </ModalActionRow>
+          </FailureModal>
+        </ModalBackdrop>
+      )}
     </PageWrapper>
   )
 }

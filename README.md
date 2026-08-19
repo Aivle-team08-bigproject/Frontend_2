@@ -41,7 +41,6 @@ FastAPI가 별도 EC2 또는 내부 ALB에 있으면 `BACKEND_API_UPSTREAM`에 �
 | `/dashboard` | 전체 작업 대시보드 | `GET /api/v1/dashboard` + 클라이언트 필터/페이지네이션 |
 | `/dashboard/my-tasks` | 내 작업 현황 | `GET /api/v1/dashboard/my-tasks` |
 | `/dashboard/task-lookup` | 작업 조회 | `GET /api/v1/dashboard/task-lookup` |
-| `/dev-dashboard` | 개발자 대시보드 | `GET /api/v1/dashboard/developer?period=daily\|weekly\|monthly` |
 | `/dev-dashboard/members` | 회원 관리 | `GET /api/v1/dashboard/members` 및 관리자 변경 API |
 | `/tasks/register` | 요구사항 등록 | 화면 문구는 고정 상수, 등록 시 `POST /api/v1/data-requests` |
 | `/tasks/{requestNo}/runs/{runId}/analyzing` | 분석 실행 상태 | `GET /api/v1/runs/{runId}` 3초 폴링 |

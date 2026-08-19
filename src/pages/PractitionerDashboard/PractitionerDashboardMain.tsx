@@ -122,14 +122,6 @@ export default function PractitionerDashboardMain() {
   function closePopover(key: string) {
     setOpenDateKey((current) => (current === key ? null : current))
   }
-  function togglePopover(key: string, anchor: HTMLElement) {
-    setOpenDateKey((current) => {
-      if (current === key) return null
-      setAnchorRect(anchor.getBoundingClientRect())
-      return key
-    })
-  }
-
   useEffect(() => {
     function closeOnOutsideClick(event: MouseEvent) {
       if (!calendarGridRef.current?.contains(event.target as Node)) setOpenDateKey(null)
@@ -182,6 +174,15 @@ export default function PractitionerDashboardMain() {
     }
     return grouped
   }, [view.calendarItems])
+
+  function openCalendarDate(key: string, events: typeof view.calendarItems) {
+    const tasks = [...new Map(events.map((event) => [event.request_no, event])).values()]
+    if (tasks.length === 1) {
+      navigate(tasks[0].detail_route)
+      return
+    }
+    navigate(`/dashboard/tasks?due_from=${key}&due_to=${key}&page=1&page_size=30`)
+  }
 
   return (
     <PageWrapper>
@@ -292,9 +293,10 @@ export default function PractitionerDashboardMain() {
                       onMouseEnter={(event) => events.length > 0 && openPopover(key, event.currentTarget)}
                       onMouseLeave={() => closePopover(key)}
                       onFocus={(event) => events.length > 0 && openPopover(key, event.currentTarget)}
-                      onClick={(event) => {
-                        if (events.length === 1) navigate(events[0].detail_route)
-                        else if (events.length > 1) togglePopover(key, event.currentTarget)
+                      onClick={() => {
+                        const tasks = [...new Set(events.map((calendarEvent) => calendarEvent.request_no))]
+                        if (tasks.length === 1) navigate(events[0].detail_route)
+                        else openCalendarDate(key, events)
                       }}
                     >
                       {cell.getDate()}

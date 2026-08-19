@@ -5,6 +5,7 @@ import {
   type PipelineStatusFrame,
   type PipelineStreamItem,
 } from './pipelineEventStream'
+import { fetchPipelineRun } from './api'
 import type { LiveLogLine } from './LiveLogPanel'
 import { colors } from './theme'
 import { formatTime } from './datetime'
@@ -31,6 +32,7 @@ export type PipelineRunStreamState = {
   stepMessages: Record<string, string>
   logLines: LiveLogLine[]
   errorMessage: string | null
+  failureCode: string | null
 }
 
 const MAX_LOG_LINES = 200
@@ -44,6 +46,7 @@ const INITIAL_STATE: PipelineRunStreamState = {
   stepMessages: {},
   logLines: [],
   errorMessage: null,
+  failureCode: null,
 }
 
 /**
@@ -67,6 +70,11 @@ function agentColorFor(runStatus: string | null): string {
   if (runStatus === 'COMPLETED') return colors.success
   if (runStatus?.startsWith('WAITING')) return colors.warning
   return colors.flowPrimary
+}
+
+function failureCode(failure: Record<string, unknown> | null): string | null {
+  const code = failure?.failure_code
+  return typeof code === 'string' ? code : null
 }
 
 function failureLogLines(frame: PipelineSnapshotFrame): LiveLogLine[] {
@@ -117,9 +125,18 @@ export function applyStepStatus(
     return {
       ...item,
       status: nextStatus,
-      started_at: item.started_at ?? occurredAt,
-      completed_at: isTerminal ? (item.completed_at ?? occurredAt) : item.completed_at,
-      error_message: stepStatus === 'FAILED' ? message : item.error_message,
+      // A retry starts a new attempt for the same checklist item. Clear the
+      // previous attempt's terminal fields so the UI cannot keep showing a
+      // transient failure while attempt 2/3 is running.
+      started_at: stepStatus === 'RUNNING' ? occurredAt : item.started_at ?? occurredAt,
+      completed_at:
+        stepStatus === 'RUNNING'
+          ? null
+          : isTerminal
+            ? (item.completed_at ?? occurredAt)
+            : item.completed_at,
+      error_message:
+        stepStatus === 'FAILED' ? message : stepStatus === 'RUNNING' ? null : item.error_message,
     }
   })
 }
@@ -135,6 +152,31 @@ export function usePipelineRunStream(
     if (runId === null || !Number.isFinite(runId)) return
 
     setState(INITIAL_STATE)
+
+    // SSE가 일시적으로 끊긴 동안에도 실행 상태가 멈춰 보이지 않도록 정본 API를
+    // 주기적으로 확인한다. 단계별 항목은 SSE replay가 복원하고, 여기서는 실행의
+    // 상태·현재 단계·진행률·최종 실패만 보정한다.
+    let syncInFlight = false
+    const syncRunState = async () => {
+      if (syncInFlight) return
+      syncInFlight = true
+      try {
+        const run = await fetchPipelineRun(runId)
+        setState((prev) => ({
+          ...prev,
+          runStatus: run.run_status,
+          currentStage: run.current_stage,
+          progressPercent: run.progress_percent,
+          failureCode: failureCode(run.failure ?? null) ?? prev.failureCode,
+          errorMessage: prev.connectionState === 'error' ? prev.errorMessage : null,
+        }))
+      } catch {
+        // SSE가 정상인 동안의 일시적인 polling 실패는 화면을 오류 상태로 바꾸지 않는다.
+      } finally {
+        syncInFlight = false
+      }
+    }
+    const syncTimer = window.setInterval(() => void syncRunState(), 10_000)
 
     const unsubscribe = subscribePipelineRunEvents(runId, {
       onConnected: () => {
@@ -153,6 +195,7 @@ export function usePipelineRunStream(
             // 실행 실패는 타임라인과 로그에만 표시한다. 이 배너는 SSE 연결 실패처럼
             // 사용자가 복구할 수 있는 화면 통신 오류만 알린다.
             errorMessage: null,
+            failureCode: failureCode(frame.failure),
             logLines: snapshotFailureLogs.length > 0 ? snapshotFailureLogs : prev.logLines,
           }
         })
@@ -200,6 +243,7 @@ export function usePipelineRunStream(
             runStatus: frame.run_status ?? prev.runStatus,
             currentStage: frame.current_stage ?? prev.currentStage,
             progressPercent: frame.progress_percent,
+            failureCode: failureCode(frame.failure) ?? prev.failureCode,
             items,
             stepMessages,
             logLines: [...prev.logLines, ...newLogLines].slice(-MAX_LOG_LINES),
@@ -218,7 +262,10 @@ export function usePipelineRunStream(
       },
     })
 
-    return unsubscribe
+    return () => {
+      window.clearInterval(syncTimer)
+      unsubscribe()
+    }
   }, [runId, stepField, stepStatusField])
 
   return state

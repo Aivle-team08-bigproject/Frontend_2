@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { applyStepStatus } from './usePipelineRunStream'
-import { buildStepTimelineItems } from './pipelineLabels'
+import { aggregateStepStatus, buildStepTimelineItems } from './pipelineLabels'
 import type { PipelineStreamItem } from './pipelineEventStream'
 
 const STEPS = [
@@ -64,5 +64,29 @@ describe('진행 화면 단계 시각', () => {
     const applied = applyStepStatus(fromSnapshot, 'SOURCE_COLUMN_SELECTION', 'COMPLETED', '2026-08-12T14:00:00+00:00', '완료')
 
     expect(applied[0].completed_at).toBe(DONE_AT)
+  })
+
+  it('재시도 중인 실패는 진행 중으로 표시하고 이전 오류를 지운다', () => {
+    const running = applyStepStatus(INITIAL, 'SOURCE_COLUMN_SELECTION', 'RUNNING', RUNNING_AT, '선별 중')
+    const failedAttempt = applyStepStatus(running, 'SOURCE_COLUMN_SELECTION', 'FAILED', DONE_AT, '1회차 검증 실패')
+    const retrying = applyStepStatus(failedAttempt, 'SOURCE_COLUMN_SELECTION', 'RUNNING', RUNNING_AT, '2회차 재시도 중')
+
+    expect(retrying[0].status).toBe('RUNNING')
+    expect(retrying[0].completed_at).toBeNull()
+    expect(retrying[0].error_message).toBeNull()
+    expect(aggregateStepStatus(failedAttempt, 'RUNNING')).toBe('RUNNING')
+    expect(aggregateStepStatus(failedAttempt, 'FAILED')).toBe('FAILED')
+  })
+
+  it('최종 실패 전의 개별 실패는 X 대신 재시도 중으로 표시한다', () => {
+    const running = applyStepStatus(INITIAL, 'DERIVED_COLUMN_DESIGN', 'RUNNING', RUNNING_AT, '정의 중')
+    const failedAttempt = applyStepStatus(running, 'DERIVED_COLUMN_DESIGN', 'FAILED', DONE_AT, '2회차 검증 실패')
+
+    const retrying = buildStepTimelineItems(failedAttempt, STEPS, {}, 'RUNNING')[1]
+    expect(retrying.state).toBe('active')
+    expect(retrying.description).toBe('재시도하고 있습니다.')
+
+    const terminal = buildStepTimelineItems(failedAttempt, STEPS, {}, 'FAILED')[1]
+    expect(terminal.state).toBe('failed')
   })
 })

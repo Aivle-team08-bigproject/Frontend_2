@@ -112,7 +112,7 @@ export default function GNB() {
               {user.permissions.includes('CONTRACT_MANAGE') && (
                 <ProfileMenuItem to="/dashboard/overview" role="menuitem">관리자 Dashboard</ProfileMenuItem>
               )}
-              <ProfileMenuItem to="/dev-dashboard" role="menuitem">개발자 페이지</ProfileMenuItem>
+              <ProfileMenuItem to="/dev-dashboard/members" role="menuitem">회원 관리</ProfileMenuItem>
               <ProfileMenuButton
                 type="button"
                 role="menuitem"

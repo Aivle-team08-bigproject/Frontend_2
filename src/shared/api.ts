@@ -1,4 +1,4 @@
-import { clearAccessToken, getAccessToken, remembersLogin, saveAccessToken } from './auth'
+import { clearAccessToken, getAccessToken, redirectToLoginForSessionExpiry, remembersLogin, saveAccessToken } from './auth'
 
 /**
  * 개발 서버만 localhost를 기본값으로 사용한다. 운영 Docker 빌드는 빈 값으로 두어
@@ -141,6 +141,8 @@ export type PipelineRunResponse = {
   stages: PipelineStage[]
   events: PipelineEvent[]
   requirement_analysis: RequirementAnalysisResponse | null
+  error_message?: string | null
+  failure?: Record<string, unknown> | null
 }
 
 export type RequirementAnalysisResponse = {
@@ -499,6 +501,11 @@ export type DashboardTasksQuery = {
   /** YYYY-MM-DD */
   created_from?: string
   created_to?: string
+  /** YYYY-MM-DD — 납기일 범위 */
+  due_from?: string
+  due_to?: string
+  /** 등록일 정렬 방향. 기본값 desc. */
+  created_sort?: 'asc' | 'desc'
   page?: number
   page_size?: DashboardPageSize
 }
@@ -544,6 +551,20 @@ export type TaskHistoryEntry = {
 
 export type TaskDetailAction = 'APPROVE' | 'REQUEST_CHANGES' | 'RETRY' | 'DOWNLOAD'
 
+export type RequirementDraft = {
+  raw_requirement: string
+  title: string
+  customer_name: string
+  business_registration_number?: string | null
+  contact_name?: string | null
+  contact_email?: string | null
+  contact_phone?: string | null
+  start_date?: string | null
+  end_date?: string | null
+  delivery_due_date?: string | null
+  data_sensitivity: 'NONE' | 'POSSIBLE' | 'UNKNOWN' | string
+}
+
 /** `GET /api/v1/tasks/{request_no}/runs/{run_id}/detail` */
 export type TaskDetailResponse = {
   request_no: string
@@ -559,9 +580,21 @@ export type TaskDetailResponse = {
   attempt_no: number | null
   rollback_to_stage: string | null
   error_message: string | null
+  failure_code: FailureCode | string | null
+  requirement_draft: RequirementDraft
   stages: TaskStageDetail[]
   available_actions: TaskDetailAction[]
   history: TaskHistoryEntry[]
+}
+
+export type AdminPipelineRecoveryMode = 'RESTART' | 'REQUIREMENT_ANALYSIS'
+
+export type AdminPipelineRecoveryResponse = {
+  run_id: number
+  mode: AdminPipelineRecoveryMode
+  run_status: string
+  next_stage: string
+  execution_id: string | null
 }
 
 export type TaskViewResponse<T extends object> = {
@@ -577,12 +610,19 @@ export async function refreshAccessToken(): Promise<string> {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
-    })
+      })
       .then(async (response) => {
+        const body = (await response.json().catch(() => null)) as
+          | { access_token?: string; detail?: { message?: string; code?: string } }
+          | null
         if (!response.ok) {
-          throw new Error('로그인 세션이 만료되었습니다.')
+          throw new ApiError(
+            body?.detail?.message ?? '로그인 세션이 만료되었습니다.',
+            response.status,
+            body?.detail?.code,
+          )
         }
-        const body = (await response.json()) as { access_token: string }
+        if (!body?.access_token) throw new Error('새 로그인 토큰을 받지 못했습니다.')
         saveAccessToken(body.access_token, remembersLogin())
         return body.access_token
       })
@@ -613,7 +653,13 @@ async function request<T>(path: string, init?: RequestInit, retried = false): Pr
       return request<T>(path, init, true)
     } catch (refreshError) {
       clearAccessToken()
-      if (window.location.pathname !== '/login') window.location.assign('/login')
+      if (window.location.pathname !== '/login') {
+        redirectToLoginForSessionExpiry(
+          refreshError instanceof ApiError && refreshError.code === 'SESSION_MAX_LIFETIME_EXCEEDED'
+            ? 'max-session'
+            : 'session-expired',
+        )
+      }
       throw refreshError
     }
   }
@@ -635,6 +681,11 @@ export function login(email: string, password: string, rememberMe: boolean): Pro
     method: 'POST',
     body: JSON.stringify({ email, password, remember_me: rememberMe }),
   })
+}
+
+/** 심사 기간에만 서버 런타임 설정으로 활성화되는 자동 로그인 경로. */
+export function reviewAutoLogin(): Promise<LoginResponse> {
+  return request('/api/auth/review-auto-login', { method: 'POST' })
 }
 
 export function fetchPublicDepartments(): Promise<Department[]> {
@@ -770,6 +821,9 @@ export function fetchDashboardTasks(query: DashboardTasksQuery): Promise<Dashboa
   if (query.assignee) params.set('assignee', query.assignee)
   if (query.created_from) params.set('created_from', query.created_from)
   if (query.created_to) params.set('created_to', query.created_to)
+  if (query.due_from) params.set('due_from', query.due_from)
+  if (query.due_to) params.set('due_to', query.due_to)
+  if (query.created_sort) params.set('created_sort', query.created_sort)
   if (query.page !== undefined) params.set('page', String(query.page))
   if (query.page_size !== undefined) params.set('page_size', String(query.page_size))
   const queryString = params.toString()
@@ -780,6 +834,13 @@ export function fetchTaskDetail(requestNo: string, runId: number): Promise<TaskD
   return request<TaskDetailResponse>(
     `/api/v1/tasks/${encodeURIComponent(requestNo)}/runs/${runId}/detail`,
   )
+}
+
+export function adminRecoverPipelineRun(runId: number, mode: AdminPipelineRecoveryMode): Promise<AdminPipelineRecoveryResponse> {
+  return request<AdminPipelineRecoveryResponse>(`/api/v1/runs/${runId}/admin-recovery`, {
+    method: 'POST',
+    body: JSON.stringify({ mode }),
+  })
 }
 
 export function fetchDashboardTaskLookup<T>(): Promise<T> {

@@ -5,6 +5,7 @@ export type MemberStatus = '활성' | '비활성'
 export type Member = {
   name: string
   userId: string
+  email: string
   role: string
   roleBg: string
   roleColor: string
@@ -46,6 +47,7 @@ type MemberManagementApiResponse = {
   members: Array<{
     name: string
     user_id: string
+    email: string | null
     role: string
     role_bg: string
     role_color: string
@@ -71,6 +73,7 @@ export async function fetchMemberManagementData(): Promise<MemberManagementData>
     members: data.members.map((member) => ({
       name: member.name,
       userId: member.user_id,
+      email: member.email ?? '',
       role: member.role,
       roleBg: member.role_bg,
       roleColor: member.role_color,

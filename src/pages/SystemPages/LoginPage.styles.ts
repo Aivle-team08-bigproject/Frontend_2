@@ -48,6 +48,14 @@ export const Subtitle = styled.p`
   font-weight: 500;
 `
 
+export const AutoLoginMessage = styled.p`
+  margin: 56px 0 0;
+  color: #008485;
+  font-size: 16px;
+  font-weight: 700;
+  text-align: center;
+`
+
 export const Form = styled.form`
   display: flex;
   flex-direction: column;
@@ -187,4 +195,50 @@ export const SuccessText = styled.p`
   color: #087f5b;
   font-size: 12px;
   text-align: center;
+`
+
+export const SessionExpiryBackdrop = styled.div`
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(17, 24, 39, 0.42);
+`
+
+export const SessionExpiryDialog = styled.div`
+  width: min(430px, 100%);
+  padding: 32px;
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 24px 64px rgba(15, 23, 42, 0.2);
+`
+
+export const SessionExpiryTitle = styled.h2`
+  margin: 0 0 12px;
+  color: #1a1a1b;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+`
+
+export const SessionExpiryMessage = styled.p`
+  margin: 0;
+  color: #495057;
+  font-size: 15px;
+  line-height: 1.65;
+`
+
+export const SessionExpiryConfirm = styled.button`
+  width: 100%;
+  height: 46px;
+  margin-top: 24px;
+  border: 0;
+  border-radius: 10px;
+  background: #008c8d;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
 `

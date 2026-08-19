@@ -65,7 +65,7 @@ export default function DataProcessingInProgress() {
               statusLabel={tone.label}
               statusBg={tone.bg}
               statusColor={tone.color}
-              items={buildStepTimelineItems(displayItems, PROCESSING_STEPS, stream.stepMessages)}
+              items={buildStepTimelineItems(displayItems, PROCESSING_STEPS, stream.stepMessages, stream.runStatus)}
             />
           </LeftPanel>
           <LiveLogPanel lines={stream.logLines} />

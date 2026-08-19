@@ -39,6 +39,10 @@ import {
   FileName,
   FileRow,
   FileSize,
+  FileSkeletonIcon,
+  FileSkeletonRow,
+  FileSkeletonSize,
+  FileSkeletonText,
   GoDashboardButton,
   IconBadge,
   IconImg,
@@ -60,7 +64,10 @@ export default function TaskComplete() {
   const { requestNo, runId } = useParams()
   const numericRunId = Number(runId)
   const detailFetcher = useCallback(() => fetchTaskDetail(requestNo!, numericRunId), [requestNo, numericRunId])
-  const { data: detail, loading, error } = useAsyncData(detailFetcher)
+  // 마지막 단계 승인 직후에는 산출물 S3 저장과 Artifact DB 등록이 별도 트랜잭션으로
+  // 마무리될 수 있다. 완료 화면 진입 시 한 번만 조회하면 파일이 없는 상태가 고정되므로
+  // 화면이 열려 있는 동안 상세를 재조회해 파일 등록을 즉시 반영한다.
+  const { data: detail, loading, error } = useAsyncData(detailFetcher, { intervalMs: 3000 })
   const navigate = useNavigate()
   const [emailModalOpen, setEmailModalOpen] = useState(false)
   const [issuedApiKey, setIssuedApiKey] = useState<CustomerApiKeyResponse | null>(null)
@@ -68,10 +75,18 @@ export default function TaskComplete() {
   const [apiKeyError, setApiKeyError] = useState<string | null>(null)
   const [apiKeyCopied, setApiKeyCopied] = useState(false)
   const view = { ...EMPTY_TASK_COMPLETE, reqId: detail?.request_no ?? EMPTY_TASK_COMPLETE.reqId, requestTitle: detail?.title ?? EMPTY_TASK_COMPLETE.requestTitle }
+  // 동일 단계는 재시도될 수 있으므로 첫 DATA_PROCESSING 실행만 보면 안 된다.
+  // FINAL 산출물은 run 단위로 유일하므로, 모든 단계 이력에서 최신 FINAL 산출물을 찾는다.
+  // 그렇지 않으면 산출물이 이미 등록됐어도 첫 시도의 빈 artifact 목록 때문에
+  // 완료 화면이 스켈레톤에 계속 머문다.
   const finalArtifact = detail?.stages
-    .find((stage) => stage.stage_code === 'DATA_PROCESSING')
-    ?.artifacts.find((artifact) => artifact.artifact_type === 'FINAL')
-  const files = finalArtifact || issuedApiKey
+    .flatMap((stage) => stage.artifacts)
+    .filter((artifact) => artifact.artifact_type === 'FINAL')
+    .at(-1)
+  // API Key 발급은 고객 연동 정보일 뿐, 최종 파일 생성의 근거가 아니다. 이전에는
+  // issuedApiKey를 fallback으로 사용해 서버 등록 버튼을 누른 순간 파일이 생긴 것처럼
+  // 보였고, 실제 Artifact가 늦게 등록되면 다운로드가 실패할 수 있었다.
+  const files = finalArtifact
     ? [{
       name: `${detail!.request_no}-run-${detail!.run_id}-result.csv`,
       size: formatFileSize(finalArtifact?.size_bytes ?? null),
@@ -148,7 +163,11 @@ export default function TaskComplete() {
               </ColHeader>
               <FileList>
                 {files.length === 0 ? (
-                  <FieldLabel>아직 생성된 산출물 파일이 없습니다.</FieldLabel>
+                  <FileSkeletonRow role="status" aria-label="산출물 파일 준비 중">
+                    <FileSkeletonIcon />
+                    <FileSkeletonText />
+                    <FileSkeletonSize />
+                  </FileSkeletonRow>
                 ) : (
                   files.map((file) => (
                     <FileRow

@@ -6,7 +6,6 @@ const PractitionerDashboardMain = lazy(() => import('./pages/PractitionerDashboa
 const TaskList = lazy(() => import('./pages/PractitionerDashboard/TaskList'))
 const TaskLookup = lazy(() => import('./pages/PractitionerDashboard/TaskLookup'))
 const AdminDashboard = lazy(() => import('./pages/PractitionerDashboard/AdminDashboard'))
-const DeveloperDashboardMain = lazy(() => import('./pages/DeveloperDashboard/DeveloperDashboardMain'))
 const MemberManagement = lazy(() => import('./pages/DeveloperDashboard/MemberManagement'))
 const RequirementAnalysisRegister = lazy(() => import('./pages/TaskFlow/RequirementAnalysisRegister'))
 const AnalysisInProgress = lazy(() => import('./pages/TaskFlow/AnalysisInProgress'))
@@ -54,7 +53,6 @@ function App() {
         <Route path="/notices/new" element={protectedPage(<NoticeCreatePage />)} />
         <Route path="/notices/:noticeId/edit" element={protectedPage(<NoticeEditPage />)} />
         <Route path="/notices/:noticeId" element={protectedPage(<NoticeDetailPage />)} />
-        <Route path="/dev-dashboard" element={protectedPage(<DeveloperDashboardMain />)} />
         <Route path="/dev-dashboard/members" element={protectedPage(<MemberManagement />)} />
         <Route path="/tasks/register" element={protectedPage(<RequirementAnalysisRegister />)} />
         <Route path="/tasks/analyzing" element={<Navigate to="/tasks/register" replace />} />
